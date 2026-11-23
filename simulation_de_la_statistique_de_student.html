@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adéquation de la statistique de Student — Simulation Interactive</title>
+  <!-- Police Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Icône courbe en cloche -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 19c3 0 4.5-1 6-6s2.5-8 4-8 2.5 3 4 8 3 6 6 6" />
+            <line x1="12" y1="5" x2="12" y2="19" stroke-dasharray="2 2" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Robustesse de la statistique de Student</h1>
+          <p class="text-xs sm:text-sm text-slate-500">
+            Adéquation de <span class="font-medium text-slate-700">T = (X̄ − μ) / (S / √n)</span> à la loi <span class="font-medium text-amber-600">t<sub>n−1</sub></span> selon la loi mère et la taille <span class="italic font-serif">n</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Légende -->
+      <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-sm bg-indigo-500/80 inline-block"></span>
+          Densité empirique de T
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-4 h-0.5 bg-amber-500 rounded-full inline-block"></span>
+          Loi de Student t<sub>n−1</sub>
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-4 h-0.5 bg-emerald-500 rounded-full inline-block border-t border-dashed border-emerald-600"></span>
+          Loi normale 𝒩(0, 1)
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Colonne Gauche (8 cols) : Graphiques -->
+      <div class="lg:col-span-8 space-y-5">
+
+        <!-- Graphique principal : Distribution empirique de T vs Student t_{n-1} -->
+        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Distribution de la statistique T</h2>
+              <p class="text-xs text-slate-500">Comparaison de l'histogramme simulé avec la densité théorique t<sub>n−1</sub> et les seuils ±t<sub>0,025 ; n−1</sub></p>
+            </div>
+            <span id="badge-tail-info" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 tabular-nums">
+              t<sub>0,025 ; 4</sub> = ±2,78
+            </span>
+          </div>
+
+          <div id="hist-wrapper" class="relative w-full h-[320px] sm:h-[360px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden select-none">
+            <canvas id="histCanvas" class="block w-full h-full cursor-crosshair"></canvas>
+
+            <!-- Badge d'état du tirage en haut à gauche -->
+            <div class="absolute top-2.5 left-2.5 flex items-center gap-2 pointer-events-none">
+              <span id="status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/90 text-slate-600 border border-slate-200 shadow-sm">
+                <span id="status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                <span id="status-text">En pause</span>
+              </span>
+            </div>
+
+            <!-- Encart des statistiques de l'échantillon courant en haut à droite -->
+            <div id="current-sample-box" class="absolute top-2.5 right-2.5 pointer-events-none bg-white/90 backdrop-blur-sm border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm text-[11px] text-slate-700 flex flex-wrap items-center justify-end gap-x-3 gap-y-0.5 tabular-nums max-w-[65%]">
+              <span class="font-semibold text-slate-400 uppercase tracking-wider text-[10px]">Échantillon</span>
+              <span><span class="text-slate-500">x̄ =</span> <strong id="cur-mean" class="text-slate-900">—</strong></span>
+              <span><span class="text-slate-500">s =</span> <strong id="cur-sd" class="text-slate-900">—</strong></span>
+              <span><span class="text-indigo-600 font-medium">t =</span> <strong id="cur-t" class="text-indigo-700">—</strong></span>
+            </div>
+
+            <!-- Info-bulle au survol d'une classe de l'histogramme -->
+            <div id="hist-tooltip" class="pointer-events-none hidden absolute z-10 bg-slate-900/95 text-white text-xs rounded-xl px-3.5 py-2.5 shadow-lg border border-slate-700/80 backdrop-blur-sm min-w-[205px]">
+              <div id="tt-range" class="font-semibold text-indigo-300 border-b border-slate-700 pb-1 mb-1.5 tabular-nums">T ∈ [0,00 ; 0,20]</div>
+              <div class="space-y-1">
+                <div class="flex justify-between gap-4">
+                  <span class="text-slate-300">Densité empirique :</span>
+                  <span id="tt-emp" class="font-semibold tabular-nums">0,000</span>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <span class="text-amber-300">Densité t<sub>n−1</sub> :</span>
+                  <span id="tt-stud" class="font-semibold text-amber-300 tabular-nums">0,000</span>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <span class="text-emerald-300">Densité 𝒩(0, 1) :</span>
+                  <span id="tt-norm" class="font-semibold text-emerald-300 tabular-nums">0,000</span>
+                </div>
+                <div class="flex justify-between gap-4 pt-1 border-t border-slate-800">
+                  <span class="text-slate-400">Effectif dans la classe :</span>
+                  <span id="tt-cnt" class="font-medium text-slate-200 tabular-nums">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p id="out-of-range-note" class="mt-2 text-[11px] text-slate-500 text-right tabular-nums">
+            Fenêtre affichée : [−5 ; +5]
+          </p>
+        </section>
+
+        <!-- Ligne inférieure : Population mère + Q-Q Plot -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <!-- Carte Population mère & dernier échantillon -->
+          <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-col">
+            <div class="flex items-start justify-between gap-2 mb-2.5">
+              <div>
+                <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Population mère X</h2>
+                <p id="pop-subtitle" class="text-xs text-slate-500">Exponentielle ℰ(1)</p>
+              </div>
+              <span id="pop-skew-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 tabular-nums">
+                Asymétrie γ₁ = 2,00
+              </span>
+            </div>
+            <div id="pop-wrapper" class="relative w-full h-[220px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden select-none">
+              <canvas id="popCanvas" class="block w-full h-full"></canvas>
+            </div>
+            <div class="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+                Dernier échantillon (<span id="last-sample-n">n = 5</span>)
+              </span>
+              <span id="last-sample-t" class="font-medium text-slate-700 tabular-nums">Dernier T = —</span>
+            </div>
+          </section>
+
+          <!-- Carte Q-Q Plot Empirique vs t_{n-1} -->
+          <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-col">
+            <div class="flex items-start justify-between gap-2 mb-2.5">
+              <div>
+                <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Diagramme Quantile-Quantile</h2>
+                <p class="text-xs text-slate-500">Quantiles empiriques de T vs loi t<sub>n−1</sub></p>
+              </div>
+              <span id="qq-status-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                Alignement = adéquation
+              </span>
+            </div>
+            <div id="qq-wrapper" class="relative w-full h-[220px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden select-none">
+              <canvas id="qqCanvas" class="block w-full h-full"></canvas>
+            </div>
+            <p class="mt-2 text-[11px] text-slate-500">
+              Plus les points bleus suivent la première bissectrice (y = x), meilleure est l'adéquation, y compris dans les queues.
+            </p>
+          </section>
+
+        </div>
+      </div>
+
+      <!-- Colonne Droite (4 cols) : Contrôles & Diagnostics -->
+      <aside class="lg:col-span-4 space-y-5">
+
+        <!-- Carte 1 : Choix de la loi et paramètres -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Paramètres</h2>
+            <button id="btn-reset" type="button" class="text-xs font-medium text-slate-500 hover:text-rose-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-rose-50">
+              Effacer
+            </button>
+          </div>
+
+          <!-- Sélecteur de distribution continue -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700">Distribution de la population</label>
+            <div id="dist-grid" class="grid grid-cols-2 gap-2">
+              <button type="button" data-dist="normal" class="dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left">
+                Normale 𝒩(0,1)
+              </button>
+              <button type="button" data-dist="uniform" class="dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left">
+                Uniforme 𝒰(0,1)
+              </button>
+              <button type="button" data-dist="triangular" class="dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left">
+                Triangulaire
+              </button>
+              <button type="button" data-dist="exponential" class="dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left">
+                Exponentielle ℰ(1)
+              </button>
+              <button type="button" data-dist="bimodal" class="dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left">
+                Bimodale
+              </button>
+              <button type="button" data-dist="lognormal" class="dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left">
+                Log-normale
+              </button>
+            </div>
+          </div>
+
+          <!-- Taille de l'échantillon n -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-n" class="font-medium text-slate-700">Taille d'échantillon (<span class="italic font-serif">n</span>)</label>
+              <span id="val-n" class="font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md tabular-nums">5</span>
+            </div>
+            <input id="slider-n" type="range" min="2" max="100" step="1" value="5" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>n = 2</span>
+              <span>n = 15</span>
+              <span>n = 30</span>
+              <span>n = 100</span>
+            </div>
+            <!-- Raccourcis de taille d'échantillon -->
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              <button type="button" data-set-n="3" class="quick-n px-2 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 transition-colors">n = 3</button>
+              <button type="button" data-set-n="5" class="quick-n px-2 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 transition-colors">n = 5</button>
+              <button type="button" data-set-n="15" class="quick-n px-2 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 transition-colors">n = 15</button>
+              <button type="button" data-set-n="30" class="quick-n px-2 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 transition-colors">n = 30</button>
+              <button type="button" data-set-n="60" class="quick-n px-2 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 transition-colors">n = 60</button>
+              <button type="button" data-set-n="100" class="quick-n px-2 py-1 text-[11px] font-medium rounded-lg bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 transition-colors">n = 100</button>
+            </div>
+          </div>
+
+          <!-- Boutons de tirage d'échantillons -->
+          <div class="space-y-2.5 pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tirage progressif</span>
+              <span id="stat-M" class="text-xs font-bold text-slate-700 tabular-nums">M = 0</span>
+            </div>
+
+            <!-- Bouton principal Lancer / Pause du flux continu -->
+            <button id="btn-toggle" type="button" class="w-full py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2">
+              <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+              </svg>
+              <span id="btn-toggle-label">Lancer le flux continu</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-draw-1" type="button" class="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition-colors active:scale-95">
+                +1 échantillon
+              </button>
+              <button id="btn-draw-500" type="button" class="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition-colors active:scale-95">
+                +500
+              </button>
+              <button id="btn-draw-2000" type="button" class="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors active:scale-95">
+                +2 000
+              </button>
+              <button id="btn-draw-10000" type="button" class="py-2 px-3 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors active:scale-95">
+                +10 000
+              </button>
+            </div>
+
+            <!-- Vitesse de construction progressive -->
+            <div class="space-y-1 pt-1">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-speed" class="font-medium text-slate-700">Vitesse de tirage</label>
+                <span id="val-speed" class="font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">Normale (~150/s)</span>
+              </div>
+              <input id="slider-speed" type="range" min="1" max="12" step="1" value="8" class="w-full accent-indigo-600 cursor-pointer" />
+              <div class="flex justify-between text-[11px] text-slate-400">
+                <span>1 / 10 s</span>
+                <span>Normale</span>
+                <span>Très rapide</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Options d'affichage -->
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Affichage</p>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1 -mx-1 rounded-lg hover:bg-slate-50">
+              <input id="chk-student" type="checkbox" checked class="w-4 h-4 rounded accent-amber-500 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Densité de Student <span class="text-amber-600 font-semibold">t<sub>n−1</sub></span></span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1 -mx-1 rounded-lg hover:bg-slate-50">
+              <input id="chk-normal" type="checkbox" checked class="w-4 h-4 rounded accent-emerald-600 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Densité normale <span class="text-emerald-600 font-semibold">𝒩(0, 1)</span></span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1 -mx-1 rounded-lg hover:bg-slate-50">
+              <input id="chk-crit" type="checkbox" checked class="w-4 h-4 rounded accent-rose-500 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Zones |t| &gt; t<sub>0,025 ; n−1</sub> <span class="text-rose-600 font-semibold">(IC à 95 % qui manquent μ)</span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Carte 2 : Diagnostics d'adéquation -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Diagnostics d'adéquation</h2>
+            <span id="adequacy-pill" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">—</span>
+          </div>
+
+          <!-- Taux de rejet empirique à alpha = 5% -->
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-2.5">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-slate-600">IC à 95 % qui manquent μ <span class="font-normal text-slate-400">(attendu : 5 %)</span></span>
+              <span id="stat-alpha-total" class="text-xl font-bold text-slate-900 tabular-nums">—</span>
+            </div>
+            <!-- Répartition queue gauche vs queue droite -->
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/80 text-xs">
+              <div class="bg-white rounded-lg p-2 border border-slate-200/60">
+                <p class="text-[11px] text-slate-500">t &lt; −t<sub>0,025</sub> (attendu : 2,5 %)</p>
+                <p id="stat-alpha-left" class="font-bold text-slate-800 tabular-nums mt-0.5">—</p>
+              </div>
+              <div class="bg-white rounded-lg p-2 border border-slate-200/60">
+                <p class="text-[11px] text-slate-500">t &gt; +t<sub>0,025</sub> (attendu : 2,5 %)</p>
+                <p id="stat-alpha-right" class="font-bold text-slate-800 tabular-nums mt-0.5">—</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Distance KS & Moments de T -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 space-y-1">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-indigo-700">Écart maximal à <span class="normal-case">t<sub>n−1</sub></span></p>
+              <p id="stat-ks" class="text-lg font-bold text-slate-900 tabular-nums">—</p>
+              <p class="text-[11px] text-slate-500">entre les fonctions de répartition (0 = adéquation parfaite)</p>
+            </div>
+
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 space-y-1">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-indigo-700">Asymétrie de T</p>
+              <p id="stat-t-skew" class="text-lg font-bold text-slate-900 tabular-nums">—</p>
+              <p class="text-[11px] text-slate-500">Théorique : 0,00</p>
+            </div>
+          </div>
+
+          <!-- Moyenne et écart-type de T -->
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-slate-500">Moy. de T :</span>
+              <span id="stat-t-mean" class="font-semibold text-slate-800 tabular-nums">—</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2.5 flex items-center justify-between">
+              <span class="text-slate-500">Éc.-type T :</span>
+              <span id="stat-t-sd" class="font-semibold text-slate-800 tabular-nums">—</span>
+            </div>
+          </div>
+
+          <!-- Note pédagogique dynamique -->
+          <p id="pedagogical-note" class="text-[11px] leading-relaxed text-slate-500 bg-amber-50/60 border border-amber-200/60 rounded-xl p-3">
+            Observez comment une loi asymétrique (comme l'exponentielle) déforme fortement T pour petit n : la queue gauche s'allonge et la proportion d'IC à 95 % qui manquent μ s'écarte de 5 %. En augmentant n (vers 30–60+), l'adéquation à t<sub>n−1</sub> se rétablit.
+          </p>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. FONCTIONS MATHÉMATIQUES SPÉCIALES (GAMMA, BÊTA, STUDENT t_{df})
+      // =========================================================================
+
+      /** Approximation de Lanczos pour ln(Gamma(z)), précision ~15 décimales. */
+      function logGamma(z) {
+        const g = 7;
+        const p = [
+          0.99999999999980993,
+          676.5203681218851,
+          -1259.1392167224028,
+          771.32342877765313,
+          -176.61502916214059,
+          12.507343278686905,
+          -0.13857109526572012,
+          9.9843695780195716e-6,
+          1.5056327351493116e-7
+        ];
+        if (z < 0.5) {
+          return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+        }
+        z -= 1;
+        let x = p[0];
+        for (let i = 1; i < g + 2; i++) {
+          x += p[i] / (z + i);
+        }
+        const t = z + g + 0.5;
+        return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+      }
+
+      /** Fraction continue de Lentz pour la fonction Bêta incomplète régularisée I_x(a, b). */
+      function betacf(a, b, x) {
+        const MAXIT = 200;
+        const EPS = 3e-12;
+        const FPMIN = 1e-30;
+        const qab = a + b;
+        const qap = a + 1;
+        const qam = a - 1;
+        let c = 1;
+        let d = 1 - (qab * x) / qap;
+        if (Math.abs(d) < FPMIN) d = FPMIN;
+        d = 1 / d;
+        let h = d;
+        for (let m = 1; m <= MAXIT; m++) {
+          const m2 = 2 * m;
+          let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+          d = 1 + aa * d;
+          if (Math.abs(d) < FPMIN) d = FPMIN;
+          c = 1 + aa / c;
+          if (Math.abs(c) < FPMIN) c = FPMIN;
+          d = 1 / d;
+          h *= d * c;
+          aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+          d = 1 + aa * d;
+          if (Math.abs(d) < FPMIN) d = FPMIN;
+          c = 1 + aa / c;
+          if (Math.abs(c) < FPMIN) c = FPMIN;
+          d = 1 / d;
+          const del = d * c;
+          h *= del;
+          if (Math.abs(del - 1) < EPS) break;
+        }
+        return h;
+      }
+
+      /** Fonction Bêta incomplète régularisée I_x(a, b). */
+      function regularizedIncompleteBeta(x, a, b) {
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
+        const bt = Math.exp(
+          logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x)
+        );
+        if (x < (a + 1) / (a + b + 2)) {
+          return (bt * betacf(a, b, x)) / a;
+        }
+        return 1 - (bt * betacf(b, a, 1 - x)) / b;
+      }
+
+      /** Densité de la loi normale centrée réduite N(0, 1). */
+      function normalPDF(x) {
+        return Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+      }
+
+      /** Densité de la loi de Student à df degrés de liberté. */
+      function studentPDF(t, df) {
+        const logCoef = logGamma((df + 1) / 2) - logGamma(df / 2) - 0.5 * Math.log(df * Math.PI);
+        return Math.exp(logCoef - ((df + 1) / 2) * Math.log(1 + (t * t) / df));
+      }
+
+      /** Fonction de répartition P(T <= t) de la loi de Student à df degrés de liberté. */
+      function studentCDF(t, df) {
+        if (t === 0) return 0.5;
+        const x = df / (df + t * t);
+        const ib = regularizedIncompleteBeta(x, df / 2, 0.5);
+        return t > 0 ? 1 - 0.5 * ib : 0.5 * ib;
+      }
+
+      /** Quantile inverse de la loi de Student par dichotomie haute précision. */
+      function studentQuantile(p, df) {
+        if (p <= 0) return -Infinity;
+        if (p >= 1) return Infinity;
+        if (Math.abs(p - 0.5) < 1e-12) return 0;
+        const sign = p < 0.5 ? -1 : 1;
+        const target = p < 0.5 ? 1 - p : p;
+
+        let lo = 0;
+        let hi = 1;
+        while (studentCDF(hi, df) < target && hi < 1e6) {
+          hi *= 2;
+        }
+        for (let i = 0; i < 60; i++) {
+          const mid = 0.5 * (lo + hi);
+          if (studentCDF(mid, df) < target) lo = mid;
+          else hi = mid;
+        }
+        return sign * 0.5 * (lo + hi);
+      }
+
+      /** Générateur de variable aléatoire normale centrée réduite (Box-Muller). */
+      function randn() {
+        let u = 0;
+        let v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      }
+
+      /** Formatage français d'un nombre décimal. */
+      function fmt(val, dec) {
+        if (!Number.isFinite(val)) return '—';
+        return val.toFixed(dec).replace('.', ',');
+      }
+
+      // =========================================================================
+      // 2. CATALOGUE DES DISTRIBUTIONS CONTINUES MÈRES
+      // =========================================================================
+      const LOGNORM_SIGMA = 0.8;
+      const LOGNORM_MU = Math.exp(0.5 * LOGNORM_SIGMA * LOGNORM_SIGMA);
+      const LOGNORM_VAR = (Math.exp(LOGNORM_SIGMA * LOGNORM_SIGMA) - 1) * Math.exp(LOGNORM_SIGMA * LOGNORM_SIGMA);
+      const LOGNORM_SKEW = (Math.exp(LOGNORM_SIGMA * LOGNORM_SIGMA) + 2) * Math.sqrt(Math.exp(LOGNORM_SIGMA * LOGNORM_SIGMA) - 1);
+
+      const DISTRIBUTIONS = {
+        normal: {
+          name: 'Normale 𝒩(0, 1)',
+          mean: 0,
+          sd: 1,
+          skew: 0,
+          domain: [-4, 4],
+          sample: function () {
+            return randn();
+          },
+          pdf: function (x) {
+            return normalPDF(x);
+          },
+          note: 'Cas de référence exact : lorsque X suit une loi normale, T suit exactement la loi de Student t_{n−1} dès n = 2.'
+        },
+        uniform: {
+          name: 'Uniforme 𝒰(0, 1)',
+          mean: 0.5,
+          sd: 1 / Math.sqrt(12),
+          skew: 0,
+          domain: [-0.2, 1.2],
+          sample: function () {
+            return Math.random();
+          },
+          pdf: function (x) {
+            return x >= 0 && x <= 1 ? 1 : 0;
+          },
+          note: 'Loi symétrique à queues bornées : la convergence vers t_{n−1} est très rapide (l’adéquation est déjà remarquable dès n = 5 à 10).'
+        },
+        triangular: {
+          name: 'Triangulaire symétrique [0, 1]',
+          mean: 0.5,
+          sd: 1 / Math.sqrt(24),
+          skew: 0,
+          domain: [-0.15, 1.15],
+          sample: function () {
+            return 0.5 * (Math.random() + Math.random());
+          },
+          pdf: function (x) {
+            if (x < 0 || x > 1) return 0;
+            return x <= 0.5 ? 4 * x : 4 * (1 - x);
+          },
+          note: 'Loi unimodale et symétrique : très proche d’une cloche, sa statistique T s’ajuste quasi parfaitement à t_{n−1} même pour de petits échantillons.'
+        },
+        exponential: {
+          name: 'Exponentielle ℰ(1)',
+          mean: 1,
+          sd: 1,
+          skew: 2,
+          domain: [0, 6],
+          sample: function () {
+            let u = Math.random();
+            if (u >= 1) u = 1 - 1e-12;
+            return -Math.log(1 - u);
+          },
+          pdf: function (x) {
+            return x >= 0 ? Math.exp(-x) : 0;
+          },
+          note: 'Forte asymétrie à droite (γ₁ = 2) : pour petit n, X̄ et S sont corrélés positivement, ce qui allonge la queue gauche de T. Il faut n ≥ 30–50 pour retrouver une bonne adéquation.'
+        },
+        bimodal: {
+          name: 'Bimodale (mélange de 2 normales)',
+          mean: 0,
+          sd: Math.sqrt(4 + 0.36),
+          skew: 0,
+          domain: [-4.5, 4.5],
+          sample: function () {
+            return (Math.random() < 0.5 ? -2 : 2) + 0.6 * randn();
+          },
+          pdf: function (x) {
+            const s = 0.6;
+            return 0.5 * (normalPDF((x + 2) / s) / s + normalPDF((x - 2) / s) / s);
+          },
+          note: 'Loi symétrique mais fortement bimodale : pour n = 3 ou 4, un échantillon peut tomber d’un seul côté et générer des valeurs extrêmes de T. La convergence devient rapide au-delà de n = 15.'
+        },
+        lognormal: {
+          name: 'Log-normale (σ = 0,8)',
+          mean: LOGNORM_MU,
+          sd: Math.sqrt(LOGNORM_VAR),
+          skew: LOGNORM_SKEW,
+          domain: [0, 7],
+          sample: function () {
+            return Math.exp(LOGNORM_SIGMA * randn());
+          },
+          pdf: function (x) {
+            if (x <= 0) return 0;
+            const s = LOGNORM_SIGMA;
+            return Math.exp(-Math.pow(Math.log(x), 2) / (2 * s * s)) / (x * s * Math.sqrt(2 * Math.PI));
+          },
+          note: 'Asymétrie sévère et queue lourde (γ₁ ≈ 2,94) : même à n = 30, la queue gauche reste sur-représentée. Il faut n = 60 à 100 pour que l’IC à 95 % contienne μ dans 95 % des cas, en se trompant autant de chaque côté.'
+        }
+      };
+
+      // =========================================================================
+      // 3. ÉTAT GLOBAL & RÉFÉRENCES DOM
+      // =========================================================================
+      const MAX_TOTAL_SAMPLES = 40000;
+      const SPEED_CONFIG = [
+        null,
+        { rate: 0.1, label: '1 éch. / 10 s' },
+        { rate: 0.25, label: '1 éch. / 4 s' },
+        { rate: 0.5, label: '1 éch. / 2 s' },
+        { rate: 1, label: '1 éch. / s' },
+        { rate: 4, label: 'Lente (~4/s)' },
+        { rate: 15, label: 'Modérée (~15/s)' },
+        { rate: 60, label: 'Fluide (~60/s)' },
+        { rate: 150, label: 'Normale (~150/s)' },
+        { rate: 400, label: 'Soutenue (~400/s)' },
+        { rate: 1000, label: 'Rapide (~1 000/s)' },
+        { rate: 2200, label: 'Très rapide (~2 200/s)' },
+        { rate: 4000, label: 'Maximale (~4 000/s)' }
+      ];
+
+      const state = {
+        distKey: 'exponential',
+        n: 5,
+        running: false,
+        speed: 8,
+        queuedSamples: 0,
+        spawnTimer: 0,
+        tValues: [],
+        tSorted: [],
+        lastSample: [],
+        lastSampleMean: 0,
+        lastSampleSd: null,
+        lastT: null,
+        showStudent: true,
+        showNormal: true,
+        showCrit: true,
+        histRange: 5,
+        histBins: 50,
+        binCounts: [],
+        binDensities: [],
+        binFlash: [],
+        outCount: 0,
+        rejectLeft: 0,
+        rejectRight: 0,
+        tCrit: 2.7764,
+        hoveredBin: -1,
+        displayMaxY: 0.48,
+        needsHeavyUpdate: false,
+        lastHeavyUpdateTime: 0,
+        lastTimestamp: 0
+      };
+
+      // Canvases et conteneurs
+      const histWrapper = document.getElementById('hist-wrapper');
+      const histCanvas = document.getElementById('histCanvas');
+      const histCtx = histCanvas.getContext('2d');
+      const histTooltip = document.getElementById('hist-tooltip');
+
+      const popWrapper = document.getElementById('pop-wrapper');
+      const popCanvas = document.getElementById('popCanvas');
+      const popCtx = popCanvas.getContext('2d');
+
+      const qqWrapper = document.getElementById('qq-wrapper');
+      const qqCanvas = document.getElementById('qqCanvas');
+      const qqCtx = qqCanvas.getContext('2d');
+
+      // Contrôles
+      const distBtns = document.querySelectorAll('.dist-btn');
+      const sliderN = document.getElementById('slider-n');
+      const valN = document.getElementById('val-n');
+      const quickNBtns = document.querySelectorAll('.quick-n');
+      const btnReset = document.getElementById('btn-reset');
+      const btnToggle = document.getElementById('btn-toggle');
+      const btnToggleLabel = document.getElementById('btn-toggle-label');
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const btnDraw1 = document.getElementById('btn-draw-1');
+      const btnDraw500 = document.getElementById('btn-draw-500');
+      const btnDraw2000 = document.getElementById('btn-draw-2000');
+      const btnDraw10000 = document.getElementById('btn-draw-10000');
+      const sliderSpeed = document.getElementById('slider-speed');
+      const valSpeed = document.getElementById('val-speed');
+      const chkStudent = document.getElementById('chk-student');
+      const chkNormal = document.getElementById('chk-normal');
+      const chkCrit = document.getElementById('chk-crit');
+
+      // Affichages DOM
+      const badgeTailInfo = document.getElementById('badge-tail-info');
+      const outOfRangeNote = document.getElementById('out-of-range-note');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+      const curMean = document.getElementById('cur-mean');
+      const curSd = document.getElementById('cur-sd');
+      const curT = document.getElementById('cur-t');
+      const popSubtitle = document.getElementById('pop-subtitle');
+      const popSkewBadge = document.getElementById('pop-skew-badge');
+      const lastSampleN = document.getElementById('last-sample-n');
+      const lastSampleT = document.getElementById('last-sample-t');
+      const statM = document.getElementById('stat-M');
+      const adequacyPill = document.getElementById('adequacy-pill');
+      const statAlphaTotal = document.getElementById('stat-alpha-total');
+      const statAlphaLeft = document.getElementById('stat-alpha-left');
+      const statAlphaRight = document.getElementById('stat-alpha-right');
+      const statKs = document.getElementById('stat-ks');
+      const statTSkew = document.getElementById('stat-t-skew');
+      const statTMean = document.getElementById('stat-t-mean');
+      const statTSd = document.getElementById('stat-t-sd');
+      const pedagogicalNote = document.getElementById('pedagogical-note');
+
+      // Info-bulle histogramme
+      const ttRange = document.getElementById('tt-range');
+      const ttEmp = document.getElementById('tt-emp');
+      const ttStud = document.getElementById('tt-stud');
+      const ttNorm = document.getElementById('tt-norm');
+      const ttCnt = document.getElementById('tt-cnt');
+
+      // Géométrie des canvases (pour conversion coordonnées)
+      const histGeom = { w: 600, h: 340, padL: 44, padR: 18, padT: 42, padB: 32 };
+      const popGeom = { w: 300, h: 220, padL: 34, padR: 14, padT: 16, padB: 26 };
+      const qqGeom = { w: 300, h: 220, padL: 38, padR: 14, padT: 16, padB: 28 };
+
+      // =========================================================================
+      // 4. ÉCHANTILLONNAGE INCRÉMENTAL & DIAGNOSTICS STATISTIQUES
+      // =========================================================================
+
+      /** Tire `count` nouveaux échantillons de taille n et met à jour l'histogramme incrémentalement. */
+      function simulateSamples(count) {
+        const remaining = MAX_TOTAL_SAMPLES - state.tValues.length;
+        const toDraw = Math.min(count, remaining);
+        if (toDraw <= 0) {
+          state.running = false;
+          state.queuedSamples = 0;
+          updateToggleButton();
+          return 0;
+        }
+
+        const dist = DISTRIBUTIONS[state.distKey];
+        const n = state.n;
+        const mu = dist.mean;
+        const sqrtN = Math.sqrt(n);
+        const R = state.histRange;
+        const B = state.histBins;
+        const binW = (2 * R) / B;
+
+        let lastSample = null;
+        let lastMean = 0;
+        let lastSd = null;
+        let lastT = null;
+        const buf = new Array(n);
+
+        for (let m = 0; m < toDraw; m++) {
+          let sum = 0;
+          const isLast = m === toDraw - 1;
+          if (isLast) lastSample = new Array(n);
+
+          for (let i = 0; i < n; i++) {
+            const x = dist.sample();
+            buf[i] = x;
+            if (isLast) lastSample[i] = x;
+            sum += x;
+          }
+          const mean = sum / n;
+          let sumSq = 0;
+          for (let i = 0; i < n; i++) {
+            const d = buf[i] - mean;
+            sumSq += d * d;
+          }
+          const s = Math.sqrt(sumSq / (n - 1));
+          if (s > 1e-12) {
+            const tVal = (mean - mu) / (s / sqrtN);
+            state.tValues.push(tVal);
+
+            if (tVal < -state.tCrit) state.rejectLeft++;
+            else if (tVal > state.tCrit) state.rejectRight++;
+
+            if (tVal < -R || tVal >= R) {
+              state.outCount++;
+            } else {
+              const idx = Math.min(B - 1, Math.floor((tVal + R) / binW));
+              state.binCounts[idx]++;
+              if (toDraw <= 8 || isLast) {
+                state.binFlash[idx] = 1.0;
+              }
+            }
+
+            if (isLast) {
+              lastMean = mean;
+              lastSd = s;
+              lastT = tVal;
+            }
+          }
+        }
+
+        if (lastSample) {
+          state.lastSample = lastSample;
+          state.lastSampleMean = lastMean;
+          state.lastSampleSd = lastSd;
+          state.lastT = lastT;
+        }
+
+        updateFastStatsUI();
+        state.needsHeavyUpdate = true;
+        return toDraw;
+      }
+
+      /** Met à jour les densités de l'histogramme et les compteurs rapides (exécuté à 60 FPS). */
+      function updateFastStatsUI() {
+        const M = state.tValues.length;
+        const R = state.histRange;
+        const B = state.histBins;
+        const binW = (2 * R) / B;
+
+        statM.textContent = 'M = ' + M.toLocaleString('fr-FR');
+
+        for (let i = 0; i < B; i++) {
+          state.binDensities[i] = M > 0 ? state.binCounts[i] / (M * binW) : 0;
+        }
+
+        const outPct = M > 0 ? (state.outCount / M) * 100 : 0;
+        outOfRangeNote.textContent = M > 0
+          ? 'Fenêtre affichée : [−' + R + ' ; +' + R + '] — ' + state.outCount.toLocaleString('fr-FR') + ' valeur' + (state.outCount > 1 ? 's' : '') + ' hors fenêtre (' + fmt(outPct, 2) + ' %)'
+          : 'Fenêtre affichée : [−' + R + ' ; +' + R + ']';
+
+        if (M === 0) {
+          statAlphaTotal.textContent = '—';
+          statAlphaLeft.textContent = '—';
+          statAlphaRight.textContent = '—';
+          lastSampleT.textContent = 'Dernier T = —';
+          curMean.textContent = '—';
+          curSd.textContent = '—';
+          curT.textContent = '—';
+        } else {
+          const pLeft = (state.rejectLeft / M) * 100;
+          const pRight = (state.rejectRight / M) * 100;
+          statAlphaTotal.textContent = fmt(pLeft + pRight, 2) + ' %';
+          statAlphaLeft.textContent = fmt(pLeft, 2) + ' %';
+          statAlphaRight.textContent = fmt(pRight, 2) + ' %';
+          if (state.lastT !== null) {
+            lastSampleT.textContent = 'Dernier T = ' + fmt(state.lastT, 2);
+            curMean.textContent = fmt(state.lastSampleMean, 3);
+            curSd.textContent = fmt(state.lastSampleSd, 3);
+            curT.textContent = fmt(state.lastT, 3);
+          }
+        }
+      }
+
+      /** Calcule les diagnostics complets (tri, distance KS, moments de T, badge d'adéquation). */
+      function computeHeavyDiagnostics() {
+        const M = state.tValues.length;
+        const df = state.n - 1;
+        state.needsHeavyUpdate = false;
+
+        if (M === 0) {
+          state.tSorted = [];
+          statKs.textContent = '—';
+          statTSkew.textContent = '—';
+          statTMean.textContent = '—';
+          statTSd.textContent = '—';
+          adequacyPill.textContent = '—';
+          adequacyPill.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600';
+          return;
+        }
+
+        state.tSorted = state.tValues.slice().sort(function (a, b) {
+          return a - b;
+        });
+
+        let sum = 0;
+        for (let i = 0; i < M; i++) sum += state.tValues[i];
+        const meanT = sum / M;
+
+        let m2 = 0;
+        let m3 = 0;
+        for (let i = 0; i < M; i++) {
+          const d = state.tValues[i] - meanT;
+          const d2 = d * d;
+          m2 += d2;
+          m3 += d2 * d;
+        }
+        const varT = M > 1 ? m2 / (M - 1) : 0;
+        const sdT = Math.sqrt(varT);
+        const skewT = sdT > 1e-12 && M >= 3 ? (m3 / M) / Math.pow(m2 / M, 1.5) : 0;
+
+        let ks = 0;
+        const step = Math.max(1, Math.floor(M / 400));
+        for (let i = 0; i < M; i += step) {
+          const tVal = state.tSorted[i];
+          const fTheo = studentCDF(tVal, df);
+          const d1 = Math.abs((i + 1) / M - fTheo);
+          const d2 = Math.abs(i / M - fTheo);
+          if (d1 > ks) ks = d1;
+          if (d2 > ks) ks = d2;
+        }
+        const lastF = studentCDF(state.tSorted[M - 1], df);
+        ks = Math.max(ks, Math.abs(1 - lastF));
+
+        statTMean.textContent = fmt(meanT, 3);
+        statTSd.textContent = M > 1 ? fmt(sdT, 3) : '—';
+        statTSkew.textContent = M >= 3 ? fmt(skewT, 2) : '—';
+        statKs.textContent = fmt(ks, 3);
+
+        if (M < 100) {
+          adequacyPill.textContent = 'Échantillonnage…';
+          adequacyPill.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600';
+        } else {
+          const alphaErr = Math.abs(((state.rejectLeft + state.rejectRight) / M) * 100 - 5);
+          if (ks < 0.025 && alphaErr < 0.8) {
+            adequacyPill.textContent = 'Excellente';
+            adequacyPill.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+          } else if (ks < 0.05 && alphaErr < 1.8) {
+            adequacyPill.textContent = 'Bonne';
+            adequacyPill.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700';
+          } else if (ks < 0.10) {
+            adequacyPill.textContent = 'Modérée';
+            adequacyPill.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700';
+          } else {
+            adequacyPill.textContent = 'Faible';
+            adequacyPill.className = 'text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700';
+          }
+        }
+      }
+
+      /** Met à jour le badge d'état visuel (Flux continu / Tirage en cours / En pause). */
+      function updateStatusBadge() {
+        if (state.running) {
+          statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+          statusText.textContent = 'Flux continu';
+        } else if (state.queuedSamples > 0) {
+          statusDot.className = 'w-2 h-2 rounded-full bg-indigo-500 animate-pulse';
+          statusText.textContent = 'Tirage (' + state.queuedSamples.toLocaleString('fr-FR') + ' restants)';
+        } else {
+          statusDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+          statusText.textContent = state.tValues.length >= MAX_TOTAL_SAMPLES ? 'Limite atteinte' : 'En pause';
+        }
+      }
+
+      /** Met à jour le style du bouton principal Lancer / Pause. */
+      function updateToggleButton() {
+        if (state.running) {
+          btnToggle.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+          btnToggle.classList.add('bg-amber-500', 'hover:bg-amber-600');
+          btnToggleLabel.textContent = 'Mettre en pause';
+          iconPlay.classList.add('hidden');
+          iconPause.classList.remove('hidden');
+        } else {
+          btnToggle.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+          btnToggle.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+          btnToggleLabel.textContent = 'Lancer le flux continu';
+          iconPlay.classList.remove('hidden');
+          iconPause.classList.add('hidden');
+        }
+        updateStatusBadge();
+      }
+
+      /** Met à jour l'interface liée à la distribution choisie et à la taille n. */
+      function updateDistributionUI() {
+        const dist = DISTRIBUTIONS[state.distKey];
+        const df = state.n - 1;
+        state.tCrit = studentQuantile(0.975, df);
+
+        distBtns.forEach(function (btn) {
+          const active = btn.dataset.dist === state.distKey;
+          if (active) {
+            btn.className = 'dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left bg-indigo-600 text-white border-indigo-600 shadow-sm';
+          } else {
+            btn.className = 'dist-btn py-2 px-2.5 rounded-xl text-xs font-semibold border transition-all text-left bg-slate-50 hover:bg-indigo-50 text-slate-700 border-slate-200 hover:border-indigo-200';
+          }
+        });
+
+        valN.textContent = String(state.n);
+        sliderN.value = String(state.n);
+        lastSampleN.textContent = 'n = ' + state.n;
+        badgeTailInfo.innerHTML = 't<sub>0,025 ; ' + df + '</sub> = ±' + fmt(state.tCrit, 3) + ' <span class="text-slate-400 ml-1">(ddl = ' + df + ')</span>';
+        popSubtitle.textContent = dist.name + ' — μ = ' + fmt(dist.mean, 2);
+
+        if (Math.abs(dist.skew) < 0.01) {
+          popSkewBadge.textContent = 'Symétrique (γ₁ = 0)';
+          popSkewBadge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 tabular-nums';
+        } else {
+          popSkewBadge.textContent = 'Asymétrie γ₁ = ' + fmt(dist.skew, 2);
+          popSkewBadge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 tabular-nums';
+        }
+
+        pedagogicalNote.textContent = dist.note;
+      }
+
+      // =========================================================================
+      // 5. REDIMENSIONNEMENT & RENDU DES 3 CANVASES
+      // =========================================================================
+
+      /** Adapte un canvas à la taille de son conteneur et au devicePixelRatio. */
+      function fitCanvas(canvas, ctx, wrapper, geomObj) {
+        const rect = wrapper.getBoundingClientRect();
+        const w = Math.max(200, rect.width);
+        const h = Math.max(160, rect.height);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        geomObj.w = w;
+        geomObj.h = h;
+      }
+
+      function resizeAll() {
+        fitCanvas(histCanvas, histCtx, histWrapper, histGeom);
+        fitCanvas(popCanvas, popCtx, popWrapper, popGeom);
+        fitCanvas(qqCanvas, qqCtx, qqWrapper, qqGeom);
+        drawAll();
+      }
+
+      /** 5.1 Dessin de l'histogramme principal de T + densités théoriques. */
+      function drawHistogram() {
+        const ctx = histCtx;
+        const w = histGeom.w;
+        const h = histGeom.h;
+        const padL = histGeom.padL;
+        const padR = histGeom.padR;
+        const padT = histGeom.padT;
+        const padB = histGeom.padB;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+        const R = state.histRange;
+        const B = state.histBins;
+        const df = state.n - 1;
+        const maxY = state.displayMaxY;
+
+        function xToPx(x) {
+          return padL + ((x + R) / (2 * R)) * plotW;
+        }
+        function yToPx(y) {
+          return padT + plotH - Math.min(1, y / maxY) * plotH;
+        }
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+
+        // Zones critiques bilatérales à 5 %
+        if (state.showCrit && state.tCrit < R) {
+          const xLeft = xToPx(-state.tCrit);
+          const xRight = xToPx(state.tCrit);
+          ctx.fillStyle = 'rgba(244, 63, 94, 0.08)';
+          ctx.fillRect(padL, padT, Math.max(0, xLeft - padL), plotH);
+          ctx.fillRect(xRight, padT, Math.max(0, padL + plotW - xRight), plotH);
+        }
+
+        // Grille horizontale
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        const ySteps = 4;
+        for (let i = 1; i <= ySteps; i++) {
+          const yVal = (maxY * i) / ySteps;
+          const py = yToPx(yVal);
+          ctx.beginPath();
+          ctx.moveTo(padL, py);
+          ctx.lineTo(padL + plotW, py);
+          ctx.stroke();
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '500 10px Inter, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(fmt(yVal, 2), padL - 6, py);
+        }
+        ctx.setLineDash([]);
+
+        // Barres de l'histogramme empirique
+        const barPxW = plotW / B;
+        for (let i = 0; i < B; i++) {
+          const dens = state.binDensities[i] || 0;
+          if (dens <= 0) continue;
+
+          const x0 = padL + i * barPxW;
+          const yTop = yToPx(dens);
+          const barH = padT + plotH - yTop;
+          const flash = state.binFlash[i] || 0;
+          const isHovered = i === state.hoveredBin;
+
+          if (isHovered) {
+            ctx.fillStyle = '#4338ca';
+          } else if (flash > 0.02) {
+            ctx.fillStyle = 'rgba(79, 70, 229, ' + (0.72 + 0.28 * flash).toFixed(2) + ')';
+          } else {
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.68)';
+          }
+
+          ctx.fillRect(x0 + 0.6, yTop, Math.max(1, barPxW - 1.2), barH);
+
+          if (flash > 0.05) {
+            ctx.fillStyle = 'rgba(251, 191, 36, ' + flash.toFixed(2) + ')';
+            ctx.fillRect(x0 + 0.6, Math.max(padT, yTop - 2.5), Math.max(1, barPxW - 1.2), 2.5);
+          }
+        }
+
+        // Traits verticaux des seuils critiques +/- tCrit
+        if (state.showCrit && state.tCrit < R) {
+          ctx.strokeStyle = 'rgba(225, 29, 72, 0.65)';
+          ctx.lineWidth = 1.4;
+          ctx.setLineDash([4, 3]);
+          [-state.tCrit, state.tCrit].forEach(function (tc) {
+            const px = xToPx(tc);
+            ctx.beginPath();
+            ctx.moveTo(px, padT);
+            ctx.lineTo(px, padT + plotH);
+            ctx.stroke();
+          });
+          ctx.setLineDash([]);
+        }
+
+        // Courbe théorique : Loi normale N(0, 1)
+        if (state.showNormal) {
+          ctx.beginPath();
+          const steps = 200;
+          for (let i = 0; i <= steps; i++) {
+            const x = -R + (2 * R * i) / steps;
+            const px = xToPx(x);
+            const py = yToPx(normalPDF(x));
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.strokeStyle = '#10b981';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // Courbe théorique : Loi de Student t_{n-1}
+        if (state.showStudent) {
+          ctx.beginPath();
+          const steps = 240;
+          for (let i = 0; i <= steps; i++) {
+            const x = -R + (2 * R * i) / steps;
+            const px = xToPx(x);
+            const py = yToPx(studentPDF(x, df));
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2.6;
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        }
+
+        // Repère du dernier T tiré sur l'axe des abscisses
+        if (state.lastT !== null && state.lastT >= -R && state.lastT <= R) {
+          const px = xToPx(state.lastT);
+          const baseY = padT + plotH;
+          ctx.beginPath();
+          ctx.moveTo(px, baseY);
+          ctx.lineTo(px - 4.5, baseY + 7);
+          ctx.lineTo(px + 4.5, baseY + 7);
+          ctx.closePath();
+          ctx.fillStyle = '#4f46e5';
+          ctx.fill();
+        }
+
+        // Axes principaux
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        ctx.lineTo(padL, padT + plotH);
+        ctx.lineTo(padL + plotW, padT + plotH);
+        ctx.stroke();
+
+        // Graduations de l'axe X (-5 à +5)
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let tick = -R; tick <= R; tick += 1) {
+          const px = xToPx(tick);
+          ctx.beginPath();
+          ctx.moveTo(px, padT + plotH);
+          ctx.lineTo(px, padT + plotH + 4);
+          ctx.strokeStyle = '#94a3b8';
+          ctx.stroke();
+          ctx.fillText(tick === 0 ? '0' : (tick > 0 ? '+' + tick : '−' + Math.abs(tick)), px, padT + plotH + 8);
+        }
+
+        ctx.restore();
+      }
+
+      /** 5.2 Dessin de la population mère X et des n points du dernier échantillon. */
+      function drawPopulation() {
+        const ctx = popCtx;
+        const w = popGeom.w;
+        const h = popGeom.h;
+        const padL = popGeom.padL;
+        const padR = popGeom.padR;
+        const padT = popGeom.padT;
+        const padB = popGeom.padB;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+        const dist = DISTRIBUTIONS[state.distKey];
+        const xMin = dist.domain[0];
+        const xMax = dist.domain[1];
+
+        const steps = 180;
+        let maxPdf = 0.1;
+        const pts = new Array(steps + 1);
+        for (let i = 0; i <= steps; i++) {
+          const x = xMin + ((xMax - xMin) * i) / steps;
+          const y = dist.pdf(x);
+          pts[i] = { x: x, y: y };
+          if (Number.isFinite(y) && y > maxPdf) maxPdf = y;
+        }
+        const yMax = maxPdf * 1.18;
+
+        function xToPx(x) {
+          return padL + ((x - xMin) / (xMax - xMin)) * plotW;
+        }
+        function yToPx(y) {
+          return padT + plotH - (y / yMax) * plotH;
+        }
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+
+        // Aire sous la densité théorique
+        ctx.beginPath();
+        ctx.moveTo(xToPx(pts[0].x), padT + plotH);
+        for (let i = 0; i <= steps; i++) {
+          ctx.lineTo(xToPx(pts[i].x), yToPx(pts[i].y));
+        }
+        ctx.lineTo(xToPx(pts[steps].x), padT + plotH);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(99, 102, 241, 0.12)';
+        ctx.fill();
+
+        // Courbe de densité
+        ctx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const px = xToPx(pts[i].x);
+          const py = yToPx(pts[i].y);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Ligne verticale de la vraie moyenne μ
+        const muPx = xToPx(dist.mean);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(muPx, padT);
+        ctx.lineTo(muPx, padT + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#d97706';
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = muPx > w - 40 ? 'right' : 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('μ = ' + fmt(dist.mean, 2), muPx + (muPx > w - 40 ? -4 : 4), padT + 2);
+
+        // Points du dernier échantillon tiré (x_1, ..., x_n)
+        if (state.lastSample.length > 0) {
+          const baseY = padT + plotH - 6;
+          for (let i = 0; i < state.lastSample.length; i++) {
+            const x = Math.max(xMin, Math.min(xMax, state.lastSample[i]));
+            const px = xToPx(x);
+            const jitter = state.lastSample.length > 15 ? ((i % 5) - 2) * 2.5 : 0;
+            ctx.beginPath();
+            ctx.arc(px, baseY - Math.abs(jitter), 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(79, 70, 229, 0.85)';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+
+          const xBar = Math.max(xMin, Math.min(xMax, state.lastSampleMean));
+          const xBarPx = xToPx(xBar);
+          ctx.strokeStyle = '#4f46e5';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(xBarPx, padT + plotH - 18);
+          ctx.lineTo(xBarPx, padT + plotH);
+          ctx.stroke();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        ctx.lineTo(padL, padT + plotH);
+        ctx.lineTo(padL + plotW, padT + plotH);
+        ctx.stroke();
+
+        // Étiquettes X (min, milieu, max)
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        [xMin, 0.5 * (xMin + xMax), xMax].forEach(function (tk) {
+          const px = xToPx(tk);
+          ctx.fillText(fmt(tk, 1), px, padT + plotH + 6);
+        });
+
+        ctx.restore();
+      }
+
+      /** 5.3 Dessin du Diagramme Quantile-Quantile (Empirique vs Student t_{n-1}). */
+      function drawQQPlot() {
+        const ctx = qqCtx;
+        const w = qqGeom.w;
+        const h = qqGeom.h;
+        const padL = qqGeom.padL;
+        const padR = qqGeom.padR;
+        const padT = qqGeom.padT;
+        const padB = qqGeom.padB;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+        const Q = 4.5;
+
+        function xToPx(x) {
+          return padL + ((x + Q) / (2 * Q)) * plotW;
+        }
+        function yToPx(y) {
+          return padT + plotH - ((y + Q) / (2 * Q)) * plotH;
+        }
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.save();
+
+        // Grille légère
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        [-4, -2, 0, 2, 4].forEach(function (v) {
+          const px = xToPx(v);
+          const py = yToPx(v);
+          ctx.beginPath();
+          ctx.moveTo(px, padT);
+          ctx.lineTo(px, padT + plotH);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(padL, py);
+          ctx.lineTo(padL + plotW, py);
+          ctx.stroke();
+        });
+
+        // Première bissectrice y = x
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(xToPx(-Q), yToPx(-Q));
+        ctx.lineTo(xToPx(Q), yToPx(Q));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Points du Q-Q plot
+        const M = state.tSorted.length;
+        const df = state.n - 1;
+        if (M >= 5) {
+          const numPts = Math.min(85, M);
+          ctx.fillStyle = 'rgba(79, 70, 229, 0.82)';
+          for (let i = 0; i < numPts; i++) {
+            const p = (i + 0.5) / numPts;
+            const theoQ = studentQuantile(p, df);
+            const empIdx = Math.min(M - 1, Math.floor(p * M));
+            const empQ = state.tSorted[empIdx];
+
+            if (Math.abs(theoQ) <= Q && Math.abs(empQ) <= Q) {
+              ctx.beginPath();
+              ctx.arc(xToPx(theoQ), yToPx(empQ), 2.3, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        } else {
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '500 11px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('En attente de tirages…', padL + plotW / 2, padT + plotH / 2);
+        }
+
+        // Axes et graduations
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        ctx.lineTo(padL, padT + plotH);
+        ctx.lineTo(padL + plotW, padT + plotH);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 9.5px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        [-4, -2, 0, 2, 4].forEach(function (v) {
+          ctx.fillText(String(v), xToPx(v), padT + plotH + 6);
+        });
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        [-4, -2, 0, 2, 4].forEach(function (v) {
+          ctx.fillText(String(v), padL - 6, yToPx(v));
+        });
+
+        ctx.restore();
+      }
+
+      function drawAll() {
+        drawHistogram();
+        drawPopulation();
+        drawQQPlot();
+      }
+
+      // =========================================================================
+      // 6. INFO-BULLE AU SURVOL DE L'HISTOGRAMME
+      // =========================================================================
+
+      function updateTooltip(binIndex) {
+        const R = state.histRange;
+        const B = state.histBins;
+        const binW = (2 * R) / B;
+        const lo = -R + binIndex * binW;
+        const hi = lo + binW;
+        const mid = 0.5 * (lo + hi);
+        const df = state.n - 1;
+
+        ttRange.textContent = 'T ∈ [' + fmt(lo, 2) + ' ; ' + fmt(hi, 2) + ']';
+        ttEmp.textContent = fmt(state.binDensities[binIndex] || 0, 3);
+        ttStud.textContent = fmt(studentPDF(mid, df), 3);
+        ttNorm.textContent = fmt(normalPDF(mid), 3);
+        ttCnt.textContent = (state.binCounts[binIndex] || 0).toLocaleString('fr-FR');
+      }
+
+      function handleHistPointer(clientX, clientY) {
+        const rect = histCanvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const w = histGeom.w;
+        const h = histGeom.h;
+        const padL = histGeom.padL;
+        const padR = histGeom.padR;
+        const padT = histGeom.padT;
+        const padB = histGeom.padB;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+
+        if (x >= padL && x <= padL + plotW && y >= padT && y <= padT + plotH) {
+          const idx = Math.min(state.histBins - 1, Math.max(0, Math.floor(((x - padL) / plotW) * state.histBins)));
+          state.hoveredBin = idx;
+          updateTooltip(idx);
+          histTooltip.classList.remove('hidden');
+
+          const tw = histTooltip.offsetWidth || 210;
+          const th = histTooltip.offsetHeight || 115;
+          let left = x + 14;
+          if (left + tw + 10 > w) left = x - tw - 14;
+          left = Math.max(8, Math.min(w - tw - 8, left));
+          let top = y - th - 10;
+          if (top < 8) top = y + 14;
+          top = Math.max(8, Math.min(h - th - 8, top));
+
+          histTooltip.style.left = left + 'px';
+          histTooltip.style.top = top + 'px';
+        } else {
+          state.hoveredBin = -1;
+          histTooltip.classList.add('hidden');
+        }
+      }
+
+      // =========================================================================
+      // 7. BOUCLE D'ANIMATION PROGRESSIVE (60 FPS)
+      // =========================================================================
+
+      /** Fait avancer la simulation progressive sur un pas de temps dt (en secondes). */
+      function stepSimulation(dt, now) {
+        const baseRate = SPEED_CONFIG[state.speed].rate;
+        let drew = 0;
+
+        // 1. Débit de tirage (file d'attente prioritaire, sinon flux continu)
+        if (state.queuedSamples > 0) {
+          const effectiveRate = baseRate <= 1
+            ? baseRate
+            : Math.max(baseRate, Math.min(baseRate * 2.5, state.queuedSamples * 1.2));
+          state.spawnTimer += dt * effectiveRate;
+          let toSpawn = Math.floor(state.spawnTimer);
+          if (toSpawn > 0) {
+            state.spawnTimer -= toSpawn;
+            toSpawn = Math.min(toSpawn, state.queuedSamples, 250);
+            drew = simulateSamples(toSpawn);
+            state.queuedSamples = Math.max(0, state.queuedSamples - drew);
+          }
+        } else if (state.running) {
+          state.spawnTimer += dt * baseRate;
+          let toSpawn = Math.floor(state.spawnTimer);
+          if (toSpawn > 0) {
+            state.spawnTimer -= toSpawn;
+            toSpawn = Math.min(toSpawn, 250);
+            drew = simulateSamples(toSpawn);
+          }
+        }
+
+        // 2. Décroissance douce de la surbrillance des barres nouvellement alimentées
+        for (let i = 0; i < state.histBins; i++) {
+          if (state.binFlash[i] > 0) {
+            state.binFlash[i] = Math.max(0, state.binFlash[i] - dt * 3.2);
+          }
+        }
+
+        // 3. Mise à l'échelle verticale lissée de l'histogramme
+        const df = state.n - 1;
+        let targetMaxY = Math.max(0.45, studentPDF(0, df) * 1.18, normalPDF(0) * 1.15);
+        for (let i = 0; i < state.histBins; i++) {
+          if (state.binDensities[i] * 1.12 > targetMaxY) {
+            targetMaxY = Math.min(1.6, state.binDensities[i] * 1.12);
+          }
+        }
+        state.displayMaxY += (targetMaxY - state.displayMaxY) * Math.min(1, dt * 8);
+
+        // 4. Recalcul périodique (toutes les ~140 ms) du Q-Q plot et de KS
+        if (state.needsHeavyUpdate && (now - state.lastHeavyUpdateTime > 140 || (!state.running && state.queuedSamples === 0))) {
+          computeHeavyDiagnostics();
+          state.lastHeavyUpdateTime = now;
+        }
+
+        if (drew > 0 && state.hoveredBin >= 0) {
+          updateTooltip(state.hoveredBin);
+        }
+        updateStatusBadge();
+      }
+
+      function animate(timestamp) {
+        try {
+          if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+          const dt = Math.min(0.05, (timestamp - state.lastTimestamp) / 1000);
+          state.lastTimestamp = timestamp;
+
+          stepSimulation(dt, timestamp);
+          drawAll();
+        } catch (err) {
+          console.error('Erreur dans la boucle de simulation :', err);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      // =========================================================================
+      // 8. RÉINITIALISATION & ÉVÉNEMENTS UTILISATEUR
+      // =========================================================================
+
+      /** Réinitialise tous les tirages et lance éventuellement une file initiale. */
+      function resetSimulation(initialQueue) {
+        state.running = false;
+        state.queuedSamples = initialQueue || 0;
+        state.spawnTimer = 0;
+        state.tValues = [];
+        state.tSorted = [];
+        state.lastSample = [];
+        state.lastSampleMean = 0;
+        state.lastSampleSd = null;
+        state.lastT = null;
+        state.binCounts = new Array(state.histBins).fill(0);
+        state.binDensities = new Array(state.histBins).fill(0);
+        state.binFlash = new Array(state.histBins).fill(0);
+        state.outCount = 0;
+        state.rejectLeft = 0;
+        state.rejectRight = 0;
+        state.displayMaxY = 0.48;
+        state.needsHeavyUpdate = false;
+
+        updateDistributionUI();
+        updateFastStatsUI();
+        computeHeavyDiagnostics();
+        updateToggleButton();
+        drawAll();
+      }
+
+      // Sélection de la loi mère
+      distBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          state.distKey = btn.dataset.dist;
+          resetSimulation(0);
+        });
+      });
+
+      // Curseur et raccourcis de la taille d'échantillon n
+      sliderN.addEventListener('input', function () {
+        state.n = parseInt(sliderN.value, 10);
+        resetSimulation(500);
+      });
+
+      quickNBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          state.n = parseInt(btn.dataset.setN, 10);
+          resetSimulation(500);
+        });
+      });
+
+      // Bouton Effacer
+      btnReset.addEventListener('click', function () {
+        resetSimulation(0);
+      });
+
+      // Bouton Lancer / Pause du flux continu
+      btnToggle.addEventListener('click', function () {
+        if (!state.running && state.tValues.length >= MAX_TOTAL_SAMPLES) {
+          resetSimulation(0);
+        }
+        state.running = !state.running;
+        if (state.running) {
+          state.queuedSamples = 0;
+          if (SPEED_CONFIG[state.speed].rate <= 1) {
+            state.spawnTimer = 1;
+          }
+        }
+        updateToggleButton();
+      });
+
+      // Boutons de tirage ponctuel ou par lots progressifs
+      btnDraw1.addEventListener('click', function () {
+        simulateSamples(1);
+        computeHeavyDiagnostics();
+        updateStatusBadge();
+      });
+
+      btnDraw500.addEventListener('click', function () {
+        state.queuedSamples += 500;
+        updateStatusBadge();
+      });
+
+      btnDraw2000.addEventListener('click', function () {
+        state.queuedSamples += 2000;
+        updateStatusBadge();
+      });
+
+      btnDraw10000.addEventListener('click', function () {
+        state.queuedSamples += 10000;
+        updateStatusBadge();
+      });
+
+      // Curseur de vitesse
+      sliderSpeed.addEventListener('input', function () {
+        state.speed = parseInt(sliderSpeed.value, 10);
+        valSpeed.textContent = SPEED_CONFIG[state.speed].label;
+      });
+
+      // Cases à cocher d'affichage
+      chkStudent.addEventListener('change', function () {
+        state.showStudent = chkStudent.checked;
+        drawHistogram();
+      });
+
+      chkNormal.addEventListener('change', function () {
+        state.showNormal = chkNormal.checked;
+        drawHistogram();
+      });
+
+      chkCrit.addEventListener('change', function () {
+        state.showCrit = chkCrit.checked;
+        drawHistogram();
+      });
+
+      // Survol souris et tactile sur l'histogramme
+      histCanvas.addEventListener('mousemove', function (e) {
+        handleHistPointer(e.clientX, e.clientY);
+      });
+      histCanvas.addEventListener('mouseleave', function () {
+        state.hoveredBin = -1;
+        histTooltip.classList.add('hidden');
+      });
+      histCanvas.addEventListener('touchstart', function (e) {
+        if (e.touches.length > 0) handleHistPointer(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      histCanvas.addEventListener('touchend', function () {
+        setTimeout(function () {
+          state.hoveredBin = -1;
+          histTooltip.classList.add('hidden');
+        }, 1800);
+      });
+
+      window.addEventListener('resize', resizeAll);
+
+      // Initialisation au chargement complet de la page
+      function initSimulation() {
+        valSpeed.textContent = SPEED_CONFIG[state.speed].label;
+        resetSimulation(0);
+        resizeAll();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'complete') {
+        initSimulation();
+      } else {
+        window.addEventListener('load', initSimulation);
+      }
+    })();
+  </script>
+</body>
+</html>
