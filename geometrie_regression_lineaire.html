@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Régression linéaire — Projection orthogonale dans ℝ³</title>
+  <!-- Police Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <!-- Three.js r128 via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Icône projection orthogonale -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17l7-5 11 4-7 5z" />
+            <path d="M12 4v11" />
+            <path d="M12 12h3v3" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">La régression comme projection orthogonale</h1>
+          <p class="text-xs sm:text-sm text-slate-500">
+            Espace des variables <span class="font-semibold text-slate-700">ℝ³</span> (3 plants) :
+            <span class="font-medium text-slate-700">x = (2 ; 0 ; 4)</span>,
+            <span class="font-medium text-slate-700">y = <span id="header-y">(0,50 ; 2,50 ; 4,50)</span></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Légende synthétique -->
+      <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[11px] font-medium text-slate-600">
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500/40 border border-emerald-600 inline-block"></span>Plan Vect(1, x)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#9a3412] inline-block"></span><b>1</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#1e3a8a] inline-block"></span><b>x</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-orange-500 inline-block"></span>b₀<b>1</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-sky-600 inline-block"></span>b₁<b>x</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-emerald-700 inline-block"></span><b>ŷ</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-slate-800 inline-block"></span><b>y</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-rose-600 inline-block"></span><b>e</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#be123c] inline-block"></span><b>e</b> (origine)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-purple-500/25 border border-purple-500 inline-block"></span>Plan <b>1</b><sup>⊥</sup></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-indigo-600 inline-block"></span><b>x</b>−x̄<b>1</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-sky-500 inline-block"></span>b₁(<b>x</b>−x̄<b>1</b>)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-fuchsia-700 inline-block"></span><b>y</b>−ȳ<b>1</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-teal-600 inline-block"></span><b>ŷ</b>−ŷ̄<b>1</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-pink-500 inline-block"></span><b>e</b>−ē<b>1</b></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal : Disposition 2 colonnes (60 % scène 3D à gauche, 40 % contrôles & nuage 2D à droite) -->
+  <main class="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-10 gap-5 items-start">
+
+      <!-- Colonne Gauche (6/10 = 60 %) : Scène 3D & Visibilité -->
+      <div class="lg:col-span-6 space-y-5">
+
+        <!-- Carte Scène 3D -->
+        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3 sm:p-4 flex flex-col w-full">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Espace des variables ℝ³ (rotation autour de l'origine)</span>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="cam-latex" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Vue LaTeX
+              </button>
+              <button id="cam-ortho" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Vue rasante (⊥)
+              </button>
+              <button id="cam-top" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Vue de dessus
+              </button>
+              <button id="cam-center" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Recentrer la vue sur l'origine">
+                Recentrer
+              </button>
+            </div>
+          </div>
+
+          <!-- Conteneur Canvas 3D + Étiquettes projetées -->
+          <div id="scene-wrapper" class="relative w-full h-[620px] sm:h-[680px] lg:h-[760px] rounded-xl bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/80 overflow-hidden select-none">
+            <canvas id="threeCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+            <!-- Couche d'étiquettes 2D projetées depuis la 3D -->
+            <div id="labels-layer" class="pointer-events-none absolute inset-0 overflow-hidden"></div>
+
+            <!-- Badge d'orthogonalité en haut à gauche -->
+            <div class="pointer-events-none absolute top-3 left-3 flex flex-col gap-1.5">
+              <span id="ortho-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50/95 text-emerald-700 border border-emerald-200 shadow-sm backdrop-blur-sm">
+                <span id="ortho-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span id="ortho-text">Projection orthogonale (MCO)</span>
+              </span>
+            </div>
+
+            <!-- Encart SCR en haut à droite -->
+            <div class="pointer-events-none absolute top-3 right-3 bg-white/92 backdrop-blur-sm border border-slate-200 rounded-xl px-3 py-2 shadow-sm text-xs tabular-nums">
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Somme des carrés des résidus</div>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span class="font-bold text-rose-600 text-sm">‖e‖² = <span id="overlay-scr">6,00</span></span>
+                <span class="text-[11px] text-slate-500">(min MCO : <span id="overlay-scr-min">6,00</span>)</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="mt-2 text-xs text-slate-500 text-center">
+            Clic gauche : rotation · Clic droit ou Maj + glisser (2 doigts sur tactile) : translation · Molette : zoom.
+          </p>
+        </section>
+
+        <!-- Carte Visibilité individuelle des éléments (3 colonnes) -->
+        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Éléments affichés</h2>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-vis-all" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Tout
+              </button>
+              <button id="btn-vis-none" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 transition-colors">
+                Aucun
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <!-- Colonne 1 : Vecteurs dans l'espace 3D -->
+            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3 space-y-1">
+              <h3 class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Vecteurs dans ℝ³</h3>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="vec1" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#9a3412] cursor-pointer" />
+                <span class="text-slate-700">Vecteur <b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="vecX" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#1e3a8a] cursor-pointer" />
+                <span class="text-slate-700">Vecteur <b>x</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="b0" checked class="vis-chk w-3.5 h-3.5 rounded accent-orange-500 cursor-pointer" />
+                <span class="text-slate-700">b₀<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="b1" checked class="vis-chk w-3.5 h-3.5 rounded accent-sky-600 cursor-pointer" />
+                <span class="text-slate-700">b₁<b>x</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="yhat" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-700 cursor-pointer" />
+                <span class="text-slate-700"><b>ŷ</b> prédit</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="y" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-800 cursor-pointer" />
+                <span class="text-slate-700"><b>y</b> observé</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="e" checked class="vis-chk w-3.5 h-3.5 rounded accent-rose-600 cursor-pointer" />
+                <span class="text-slate-700">Résidu <b>e</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="eOrigin" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#be123c] cursor-pointer" />
+                <span class="text-slate-700">Résidu <b>e</b> (origine)</span>
+              </label>
+            </div>
+
+            <!-- Colonne 2 : Projection dans le plan orthogonal à 1 -->
+            <div class="bg-purple-50/40 border border-purple-200/60 rounded-xl p-3 space-y-1">
+              <h3 class="text-[11px] font-semibold text-purple-700 uppercase tracking-wider mb-2">Projection sur 1<sup>⊥</sup></h3>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="perpPlane" checked class="vis-chk w-3.5 h-3.5 rounded accent-purple-600 cursor-pointer" />
+                <span class="text-slate-700">Plan <b>1</b><sup>⊥</sup></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="xCentered" checked class="vis-chk w-3.5 h-3.5 rounded accent-indigo-600 cursor-pointer" />
+                <span class="text-slate-700"><b>x</b> − x̄<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="b1xCentered" checked class="vis-chk w-3.5 h-3.5 rounded accent-sky-500 cursor-pointer" />
+                <span class="text-slate-700">b₁(<b>x</b> − x̄<b>1</b>)</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="yCentered" checked class="vis-chk w-3.5 h-3.5 rounded accent-fuchsia-700 cursor-pointer" />
+                <span class="text-slate-700"><b>y</b> − ȳ<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="yhatCentered" checked class="vis-chk w-3.5 h-3.5 rounded accent-teal-600 cursor-pointer" />
+                <span class="text-slate-700"><b>ŷ</b> − ŷ̄<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="eCentered" checked class="vis-chk w-3.5 h-3.5 rounded accent-pink-500 cursor-pointer" />
+                <span class="text-slate-700"><b>e</b> − ē<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="projPerp" checked class="vis-chk w-3.5 h-3.5 rounded accent-purple-600 cursor-pointer" />
+                <span class="text-slate-700">Pointillés proj. sur <b>1</b><sup>⊥</sup></span>
+              </label>
+            </div>
+
+            <!-- Colonne 3 : Autres éléments -->
+            <div class="bg-emerald-50/40 border border-emerald-200/60 rounded-xl p-3 space-y-1">
+              <h3 class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider mb-2">Autres éléments</h3>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="plane" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-600 cursor-pointer" />
+                <span class="text-slate-700">Plan du modèle (losange)</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="para" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-600 cursor-pointer" />
+                <span class="text-slate-700">Pointillés ŷ</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="mco" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-600 cursor-pointer" />
+                <span class="text-slate-700">Référence <b>ŷ</b><sub>MCO</sub> &amp; pointillés</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="rightAngle" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-700 cursor-pointer" />
+                <span class="text-slate-700">Angles droits</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="labels" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-700 cursor-pointer" />
+                <span class="text-slate-700">Étiquettes 3D</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="coord1" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#9a3412] cursor-pointer" />
+                <span class="text-slate-700">Coordonnées de <b>1</b> (axes)</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="coordX" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#1e3a8a] cursor-pointer" />
+                <span class="text-slate-700">Coordonnées de <b>x</b> (axes)</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="coordY" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-800 cursor-pointer" />
+                <span class="text-slate-700">Coordonnées de <b>y</b> (axes)</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Colonne Droite (4/10 = 40 %) : Contrôles, Nuage 2D & Diagnostics -->
+      <aside class="lg:col-span-4 space-y-4">
+
+        <!-- Carte 1 : Curseurs b0 et b1 -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-3.5">
+          <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Coefficients du modèle</h2>
+
+          <!-- Curseur b0 -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs gap-1">
+              <label for="slider-b0" class="font-medium text-slate-700 flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full bg-orange-500 inline-block shrink-0"></span>
+                Ordonnée (<span class="italic font-serif">b₀</span>)
+              </label>
+              <span id="val-b0" class="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md tabular-nums shrink-0">1,50</span>
+            </div>
+            <input id="slider-b0" type="range" min="-2.5" max="7" step="0.05" value="1.5" class="w-full accent-orange-500 cursor-pointer" />
+            <div class="flex justify-between text-[10px] text-slate-400 tabular-nums">
+              <span>−2,5</span>
+              <span class="text-emerald-600 font-semibold">MCO : <span id="hint-b0-mco">1,50</span></span>
+              <span>7,0</span>
+            </div>
+          </div>
+
+          <!-- Curseur b1 -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs gap-1">
+              <label for="slider-b1" class="font-medium text-slate-700 flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full bg-sky-600 inline-block shrink-0"></span>
+                Pente (<span class="italic font-serif">b₁</span>)
+              </label>
+              <span id="val-b1" class="font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md tabular-nums shrink-0">0,50</span>
+            </div>
+            <input id="slider-b1" type="range" min="-2" max="2" step="0.05" value="0.5" class="w-full accent-sky-600 cursor-pointer" />
+            <div class="flex justify-between text-[10px] text-slate-400 tabular-nums">
+              <span>−2,0</span>
+              <span class="text-emerald-600 font-semibold">MCO : <span id="hint-b1-mco">0,50</span></span>
+              <span>2,0</span>
+            </div>
+          </div>
+
+          <!-- Boutons rapides -->
+          <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+            <button id="btn-mco" type="button" aria-pressed="true" class="py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5">
+              <span id="btn-mco-dot" class="w-2 h-2 rounded-full bg-white shrink-0"></span>
+              <span id="btn-mco-label">Projeter MCO : ON</span>
+            </button>
+            <button id="btn-mean-only" type="button" class="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 transition-all">
+              Modèle nul (b₁=0)
+            </button>
+          </div>
+        </div>
+
+        <!-- Carte 1b : Curseurs des valeurs observées y = (y1, y2, y3) -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-3">
+          <div class="flex items-center justify-between gap-1">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Valeurs observées (<b>y</b>)</h2>
+            <button id="btn-reset-y" type="button" class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors shrink-0">
+              Réinitialiser
+            </button>
+          </div>
+
+          <!-- Curseur y1 -->
+          <div class="space-y-0.5">
+            <div class="flex items-center justify-between text-xs">
+              <label for="slider-y0" class="font-medium text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-slate-800 inline-block"></span>
+                Plant 1 (<span class="italic font-serif">y₁</span>)
+              </label>
+              <span id="val-y0" class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">0,50</span>
+            </div>
+            <input id="slider-y0" type="range" min="-1" max="5.5" step="0.1" value="0.5" class="w-full accent-slate-800 cursor-pointer" />
+          </div>
+
+          <!-- Curseur y2 -->
+          <div class="space-y-0.5">
+            <div class="flex items-center justify-between text-xs">
+              <label for="slider-y1" class="font-medium text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-slate-800 inline-block"></span>
+                Plant 2 (<span class="italic font-serif">y₂</span>)
+              </label>
+              <span id="val-y1" class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">2,50</span>
+            </div>
+            <input id="slider-y1" type="range" min="-1" max="5.5" step="0.1" value="2.5" class="w-full accent-slate-800 cursor-pointer" />
+          </div>
+
+          <!-- Curseur y3 -->
+          <div class="space-y-0.5">
+            <div class="flex items-center justify-between text-xs">
+              <label for="slider-y2" class="font-medium text-slate-700 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-slate-800 inline-block"></span>
+                Plant 3 (<span class="italic font-serif">y₃</span>)
+              </label>
+              <span id="val-y2" class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">4,50</span>
+            </div>
+            <input id="slider-y2" type="range" min="-1" max="5.5" step="0.1" value="4.5" class="w-full accent-slate-800 cursor-pointer" />
+          </div>
+        </div>
+
+        <!-- Carte 2 : Nuage de points 2D (Espace des individus) placé au-dessus de Géométrie du résidu -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-1">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Individus (X, Y)</h2>
+            <div class="flex flex-wrap items-center gap-2.5 text-[10px] font-medium text-slate-600">
+              <span class="inline-flex items-center gap-1">
+                <span class="w-3 h-0.5 bg-emerald-700 inline-block"></span>
+                <span>ŷ = b₀ + b₁x</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="w-2.5 h-0.5 bg-rose-600 inline-block"></span>
+                <span>eᵢ</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="w-3 h-0.5 border-t-2 border-dashed border-orange-600 inline-block"></span>
+                <span>y = ȳ</span>
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="w-2.5 h-0.5 border-t-2 border-dotted border-orange-500 inline-block"></span>
+                <span>yᵢ − ȳ</span>
+              </span>
+            </div>
+          </div>
+          <div id="scatter-wrapper" class="relative w-full h-[210px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden">
+            <canvas id="scatterCanvas" class="block w-full h-full"></canvas>
+          </div>
+        </div>
+
+        <!-- Carte 3 : Diagnostics géométriques -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-2.5">
+          <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Géométrie du résidu</h2>
+
+          <div class="grid grid-cols-2 gap-2 text-[11px] tabular-nums">
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Norme ‖<b>e</b>‖</p>
+              <p id="stat-norm-e" class="font-bold text-rose-600 mt-0.5 leading-tight">2,45 (‖e‖² = 6,00)</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Angle(<b>e</b>, plan)</p>
+              <p id="stat-angle" class="font-bold text-emerald-700 mt-0.5">90,0°</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Surcoût ‖ŷ − ŷ<sub>MCO</sub>‖²</p>
+              <p id="stat-excess" class="font-bold text-slate-800 mt-0.5">+0,00</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Produits scalaires</p>
+              <p class="font-semibold text-slate-700 mt-0.5 leading-snug">
+                ⟨e,1⟩=<span id="stat-dot1">0,00</span><br />⟨e,x⟩=<span id="stat-dotx">0,00</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-emerald-50/70 border border-emerald-200/70 rounded-xl p-2 text-[10px] text-slate-700 tabular-nums space-y-0.5">
+            <p class="font-semibold text-emerald-800">Pythagore : ‖e<sub>MCO</sub>‖² + ‖ŷ − ŷ<sub>MCO</sub>‖² = ‖e‖²</p>
+            <p id="pythagore-eq" class="font-mono text-emerald-900">6,00 + 0,00 = 6,00</p>
+          </div>
+
+          <div class="text-[11px] space-y-1 text-slate-600 tabular-nums pt-1 border-t border-slate-100">
+            <div class="flex justify-between gap-1">
+              <span><b>ŷ</b> = b₀<b>1</b> + b₁<b>x</b></span>
+              <span id="coord-yhat" class="font-semibold text-emerald-700">(2,50 ; 1,50 ; 3,50)</span>
+            </div>
+            <div class="flex justify-between gap-1">
+              <span><b>e</b> = <b>y</b> − <b>ŷ</b></span>
+              <span id="coord-e" class="font-semibold text-rose-600">(−2,00 ; 1,00 ; 1,00)</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+    <!-- Carte Tableau de données dynamique (pleine largeur en bas de la fenêtre) -->
+    <section class="mt-5 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Tableau de données</h2>
+        <span class="text-xs text-slate-500">Modèle : ŷ<sub>i</sub> = b₀ + b₁x<sub>i</sub></span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm text-right tabular-nums border-collapse">
+          <thead>
+            <tr class="border-b-2 border-slate-200 text-slate-500 text-xs uppercase">
+              <th class="py-2 pr-2 text-left font-semibold">Individu</th>
+              <th class="py-2 px-2 font-semibold">1</th>
+              <th class="py-2 px-2 font-semibold">x</th>
+              <th class="py-2 px-2 font-semibold">y</th>
+              <th class="py-2 px-2 font-semibold text-emerald-700">ŷ</th>
+              <th class="py-2 px-2 font-semibold text-rose-600">e = y − ŷ</th>
+              <th class="py-2 pl-2 font-semibold">e²</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 1</td>
+              <td class="py-2 px-2 text-slate-500">1</td>
+              <td class="py-2 px-2 text-slate-700 font-medium">2,0</td>
+              <td id="tbl-y-0" class="py-2 px-2 text-slate-800 font-medium">0,50</td>
+              <td id="tbl-yhat-0" class="py-2 px-2 font-semibold text-emerald-700">2,50</td>
+              <td id="tbl-e-0" class="py-2 px-2 font-semibold text-rose-600">−2,00</td>
+              <td id="tbl-e2-0" class="py-2 pl-2 text-slate-700">4,00</td>
+            </tr>
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 2</td>
+              <td class="py-2 px-2 text-slate-500">1</td>
+              <td class="py-2 px-2 text-slate-700 font-medium">0,0</td>
+              <td id="tbl-y-1" class="py-2 px-2 text-slate-800 font-medium">2,50</td>
+              <td id="tbl-yhat-1" class="py-2 px-2 font-semibold text-emerald-700">1,50</td>
+              <td id="tbl-e-1" class="py-2 px-2 font-semibold text-rose-600">1,00</td>
+              <td id="tbl-e2-1" class="py-2 pl-2 text-slate-700">1,00</td>
+            </tr>
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 3</td>
+              <td class="py-2 px-2 text-slate-500">1</td>
+              <td class="py-2 px-2 text-slate-700 font-medium">4,0</td>
+              <td id="tbl-y-2" class="py-2 px-2 text-slate-800 font-medium">4,50</td>
+              <td id="tbl-yhat-2" class="py-2 px-2 font-semibold text-emerald-700">3,50</td>
+              <td id="tbl-e-2" class="py-2 px-2 font-semibold text-rose-600">1,00</td>
+              <td id="tbl-e2-2" class="py-2 pl-2 text-slate-700">1,00</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="border-t-2 border-slate-200 bg-slate-50/80 font-semibold">
+              <td class="py-2 pr-2 text-left text-slate-700">Somme</td>
+              <td class="py-2 px-2 text-slate-500">3</td>
+              <td class="py-2 px-2 text-slate-700">6,0</td>
+              <td id="tbl-sum-y" class="py-2 px-2 text-slate-800">7,50</td>
+              <td id="tbl-sum-yhat" class="py-2 px-2 text-emerald-700">7,50</td>
+              <td id="tbl-sum-e" class="py-2 px-2 text-emerald-700">0,00</td>
+              <td id="tbl-sum-e2" class="py-2 pl-2 text-rose-600">6,00</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Barre de contrôle de l'effet de perspective (fuite) en bas de la page -->
+    <section class="mt-4 bg-white border border-slate-200 rounded-2xl shadow-sm px-4 sm:px-5 py-3.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <label for="slider-fov" class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Effet de perspective (fuite)</label>
+          <span id="val-fov" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md tabular-nums">20° (Faible)</span>
+        </div>
+
+        <div class="flex-1 flex items-center gap-3 max-w-2xl">
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">Quasi-ortho (5°)</span>
+          <input id="slider-fov" type="range" min="5" max="60" step="1" value="20" class="w-full accent-emerald-600 cursor-pointer" />
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">Forte fuite (60°)</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-fov-ortho" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Quasi-ortho
+          </button>
+          <button id="btn-fov-std" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Douce (20°)
+          </button>
+        </div>
+      </div>
+
+      <!-- Contrôle de la vitesse de rotation automatique constante -->
+      <div class="mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <label for="slider-rot-speed" class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Rotation automatique</label>
+          <span id="val-rot-speed" class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">0°/s (Arrêt)</span>
+        </div>
+
+        <div class="flex-1 flex items-center gap-3 max-w-2xl">
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">−90°/s</span>
+          <input id="slider-rot-speed" type="range" min="-90" max="90" step="5" value="0" class="w-full accent-emerald-600 cursor-pointer" />
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">+90°/s</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-rot-stop" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 transition-colors">
+            Arrêt
+          </button>
+          <button id="btn-rot-slow" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Lente (15°/s)
+          </button>
+          <button id="btn-rot-med" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Normale (35°/s)
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. OUTILS MATHÉMATIQUES & DONNÉES DU CODE LATEX
+      // =========================================================================
+      const VEC_1 = [1, 1, 1];
+      const VEC_X = [2, 0, 4];
+      const DEFAULT_Y = [0.5, 2.5, 4.5];
+
+      function dot3(a, b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      }
+
+      function normSq3(a) {
+        return a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+      }
+
+      function fmt(val, dec) {
+        const clean = Math.abs(val) < 1e-9 ? 0 : val;
+        const s = clean.toFixed(dec).replace('.', ',');
+        return clean < 0 ? '−' + s.slice(1) : s;
+      }
+
+      function fmtVec(v) {
+        return '(' + fmt(v[0], 2) + ' ; ' + fmt(v[1], 2) + ' ; ' + fmt(v[2], 2) + ')';
+      }
+
+      // Conversion (plant 1, plant 2, plant 3) -> coordonnées Three.js (X, Y vertical, Z)
+      function toThree(p1, p2, p3) {
+        return new THREE.Vector3(p1, p3, p2);
+      }
+
+      function vecToThree(v) {
+        return new THREE.Vector3(v[0], v[2], v[1]);
+      }
+
+      // Vecteur x centré (orthogonal à 1, donc contenu dans le plan 1⊥)
+      const X_BAR = (VEC_X[0] + VEC_X[1] + VEC_X[2]) / 3; // 2
+      const VEC_X_CENTERED = [VEC_X[0] - X_BAR, VEC_X[1] - X_BAR, VEC_X[2] - X_BAR]; // (0, -2, 2)
+      const SUM_SQ_XC = normSq3(VEC_X_CENTERED); // 8
+
+      // Vecteur normal unitaire au plan Vect(1, x) : (-2, 1, 1) / sqrt(6)
+      const PLANE_NORMAL_MATH = [-2 / Math.sqrt(6), 1 / Math.sqrt(6), 1 / Math.sqrt(6)];
+
+      // Base orthonormée du plan 1⊥ (x1 + x2 + x3 = 0)
+      const PERP_U1 = [0, -1 / Math.SQRT2, 1 / Math.SQRT2];
+      const PERP_U2 = [2 / Math.sqrt(6), -1 / Math.sqrt(6), -1 / Math.sqrt(6)];
+
+      /** Calcule la solution MCO (projection orthogonale) et les grandeurs associées pour un vecteur y donné. */
+      function computeOls(vecY) {
+        const yBar = (vecY[0] + vecY[1] + vecY[2]) / 3;
+        const yCentered = [vecY[0] - yBar, vecY[1] - yBar, vecY[2] - yBar];
+        const b1Mco = dot3(VEC_X_CENTERED, yCentered) / SUM_SQ_XC;
+        const b0Mco = yBar - b1Mco * X_BAR;
+        const yhatMco = [
+          b0Mco * VEC_1[0] + b1Mco * VEC_X[0],
+          b0Mco * VEC_1[1] + b1Mco * VEC_X[1],
+          b0Mco * VEC_1[2] + b1Mco * VEC_X[2]
+        ];
+        const eMco = [
+          vecY[0] - yhatMco[0],
+          vecY[1] - yhatMco[1],
+          vecY[2] - yhatMco[2]
+        ];
+        return {
+          yBar: yBar,
+          yCentered: yCentered,
+          b0Mco: b0Mco,
+          b1Mco: b1Mco,
+          yhatMco: yhatMco,
+          eMco: eMco,
+          scrMco: normSq3(eMco)
+        };
+      }
+
+      // =========================================================================
+      // 2. ÉTAT GLOBAL & RÉFÉRENCES DOM
+      // =========================================================================
+      const origin3 = toThree(0, 0, 0);
+      const BASE_FOV = 42;
+      const BASE_TAN_HALF_FOV = Math.tan((BASE_FOV * Math.PI) / 360);
+
+      const state = {
+        y: DEFAULT_Y.slice(),
+        b0: 1.5,
+        b1: 0.5,
+        autoMco: true,
+        visibility: {
+          plane: true,
+          para: true,
+          vec1: true,
+          vecX: true,
+          b0: true,
+          b1: true,
+          yhat: true,
+          y: true,
+          e: true,
+          eOrigin: true,
+          mco: true,
+          rightAngle: true,
+          labels: true,
+          perpPlane: true,
+          xCentered: true,
+          b1xCentered: true,
+          yCentered: true,
+          yhatCentered: true,
+          eCentered: true,
+          projPerp: true,
+          coord1: true,
+          coordX: true,
+          coordY: true
+        },
+        // Coordonnées sphériques de la caméra autour de l'origine du repère (0, 0, 0)
+        camTheta: 0.96,
+        camPhi: 1.24,
+        camRadius: 15.2,
+        targetTheta: 0.96,
+        targetPhi: 1.24,
+        targetRadius: 15.2,
+        camFov: 20,
+        targetFov: 20,
+        rotSpeedDeg: 0,
+        lastAnimTime: 0,
+        camTarget: toThree(0, 0, 0),
+        targetCamTarget: toThree(0, 0, 0),
+        isDragging: false,
+        dragMode: null,
+        lastPointerX: 0,
+        lastPointerY: 0,
+        lastPinchDist: 0,
+        lastPinchCenterX: 0,
+        lastPinchCenterY: 0
+      };
+
+      const sceneWrapper = document.getElementById('scene-wrapper');
+      const threeCanvas = document.getElementById('threeCanvas');
+      const labelsLayer = document.getElementById('labels-layer');
+      const scatterWrapper = document.getElementById('scatter-wrapper');
+      const scatterCanvas = document.getElementById('scatterCanvas');
+      const scatterCtx = scatterCanvas.getContext('2d');
+
+      const sliderB0 = document.getElementById('slider-b0');
+      const sliderB1 = document.getElementById('slider-b1');
+      const valB0 = document.getElementById('val-b0');
+      const valB1 = document.getElementById('val-b1');
+      const hintB0Mco = document.getElementById('hint-b0-mco');
+      const hintB1Mco = document.getElementById('hint-b1-mco');
+      const btnMco = document.getElementById('btn-mco');
+      const btnMcoDot = document.getElementById('btn-mco-dot');
+      const btnMcoLabel = document.getElementById('btn-mco-label');
+      const btnMeanOnly = document.getElementById('btn-mean-only');
+
+      const sliderY = [
+        document.getElementById('slider-y0'),
+        document.getElementById('slider-y1'),
+        document.getElementById('slider-y2')
+      ];
+      const valY = [
+        document.getElementById('val-y0'),
+        document.getElementById('val-y1'),
+        document.getElementById('val-y2')
+      ];
+      const btnResetY = document.getElementById('btn-reset-y');
+      const headerY = document.getElementById('header-y');
+
+      const camLatexBtn = document.getElementById('cam-latex');
+      const camOrthoBtn = document.getElementById('cam-ortho');
+      const camTopBtn = document.getElementById('cam-top');
+      const camCenterBtn = document.getElementById('cam-center');
+      const orthoBadge = document.getElementById('ortho-badge');
+      const orthoDot = document.getElementById('ortho-dot');
+      const orthoText = document.getElementById('ortho-text');
+      const overlayScr = document.getElementById('overlay-scr');
+      const overlayScrMin = document.getElementById('overlay-scr-min');
+      const pythagoreEq = document.getElementById('pythagore-eq');
+
+      const statNormE = document.getElementById('stat-norm-e');
+      const statAngle = document.getElementById('stat-angle');
+      const statExcess = document.getElementById('stat-excess');
+      const statDot1 = document.getElementById('stat-dot1');
+      const statDotX = document.getElementById('stat-dotx');
+      const coordYhat = document.getElementById('coord-yhat');
+      const coordE = document.getElementById('coord-e');
+
+      const tblY = [
+        document.getElementById('tbl-y-0'),
+        document.getElementById('tbl-y-1'),
+        document.getElementById('tbl-y-2')
+      ];
+      const tblYhat = [
+        document.getElementById('tbl-yhat-0'),
+        document.getElementById('tbl-yhat-1'),
+        document.getElementById('tbl-yhat-2')
+      ];
+      const tblE = [
+        document.getElementById('tbl-e-0'),
+        document.getElementById('tbl-e-1'),
+        document.getElementById('tbl-e-2')
+      ];
+      const tblE2 = [
+        document.getElementById('tbl-e2-0'),
+        document.getElementById('tbl-e2-1'),
+        document.getElementById('tbl-e2-2')
+      ];
+      const tblSumY = document.getElementById('tbl-sum-y');
+      const tblSumYhat = document.getElementById('tbl-sum-yhat');
+      const tblSumE = document.getElementById('tbl-sum-e');
+      const tblSumE2 = document.getElementById('tbl-sum-e2');
+
+      const visCheckboxes = document.querySelectorAll('.vis-chk');
+      const btnVisAll = document.getElementById('btn-vis-all');
+      const btnVisNone = document.getElementById('btn-vis-none');
+      const sliderFov = document.getElementById('slider-fov');
+      const valFov = document.getElementById('val-fov');
+      const btnFovOrtho = document.getElementById('btn-fov-ortho');
+      const btnFovStd = document.getElementById('btn-fov-std');
+      const sliderRotSpeed = document.getElementById('slider-rot-speed');
+      const valRotSpeed = document.getElementById('val-rot-speed');
+      const btnRotStop = document.getElementById('btn-rot-stop');
+      const btnRotSlow = document.getElementById('btn-rot-slow');
+      const btnRotMed = document.getElementById('btn-rot-med');
+
+      // =========================================================================
+      // 3. INITIALISATION DE LA SCÈNE THREE.JS
+      // =========================================================================
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(20, 1, 0.2, 600);
+      const renderer = new THREE.WebGLRenderer({
+        canvas: threeCanvas,
+        antialias: true,
+        alpha: true
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      // Éclairage doux
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.78);
+      scene.add(ambientLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.45);
+      dirLight.position.set(8, 14, 10);
+      scene.add(dirLight);
+
+      // =========================================================================
+      // 4. OUTILS DE CONSTRUCTION 3D (AXES, FLÈCHES, PLANS, ANGLES DROITS)
+      // =========================================================================
+
+      /** Construit le repère des 3 plants (axes, pointes, graduations et grille au sol). */
+      function buildAxesAndGrid() {
+        const group = new THREE.Group();
+        const axisMat = new THREE.LineBasicMaterial({ color: 0x64748b });
+        const tickMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
+        const gridMat = new THREE.LineBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.85 });
+
+        const specs = [
+          { from: toThree(-1, 0, 0), to: toThree(4.6, 0, 0), dir: toThree(1, 0, 0), ticks: [1, 2, 3, 4] },
+          { from: toThree(0, -1, 0), to: toThree(0, 4.6, 0), dir: toThree(0, 1, 0), ticks: [1, 2, 3, 4] },
+          { from: toThree(0, 0, -1), to: toThree(0, 0, 5.6), dir: toThree(0, 0, 1), ticks: [1, 2, 3, 4, 5] }
+        ];
+
+        const coneGeo = new THREE.ConeGeometry(0.065, 0.22, 12);
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0x64748b });
+
+        specs.forEach(function (sp) {
+          const lineGeo = new THREE.BufferGeometry().setFromPoints([sp.from, sp.to]);
+          group.add(new THREE.Line(lineGeo, axisMat));
+
+          const cone = new THREE.Mesh(coneGeo, coneMat);
+          cone.position.copy(sp.to);
+          cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), sp.dir.clone().normalize());
+          group.add(cone);
+
+          // Graduations entières
+          sp.ticks.forEach(function (t) {
+            const p = sp.dir.clone().multiplyScalar(t);
+            const perp = Math.abs(sp.dir.y) > 0.5 ? new THREE.Vector3(0.07, 0, 0) : new THREE.Vector3(0, 0.07, 0);
+            const tGeo = new THREE.BufferGeometry().setFromPoints([
+              p.clone().sub(perp),
+              p.clone().add(perp)
+            ]);
+            group.add(new THREE.Line(tGeo, tickMat));
+          });
+        });
+
+        // Grille légère sur le plan (plant 1, plant 2) à z = 0
+        for (let i = 0; i <= 4; i++) {
+          const g1 = new THREE.BufferGeometry().setFromPoints([toThree(i, 0, 0), toThree(i, 4, 0)]);
+          const g2 = new THREE.BufferGeometry().setFromPoints([toThree(0, i, 0), toThree(4, i, 0)]);
+          group.add(new THREE.Line(g1, gridMat));
+          group.add(new THREE.Line(g2, gridMat));
+        }
+
+        // Petit repère à l'origine
+        const origMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.055, 14, 14),
+          new THREE.MeshBasicMaterial({ color: 0x475569 })
+        );
+        group.add(origMesh);
+
+        scene.add(group);
+      }
+
+      /** Crée une flèche 3D cylindrique + cône redimensionnable dynamiquement. */
+      function createArrow(colorHex, baseRadius) {
+        const group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: colorHex,
+          roughness: 0.35,
+          metalness: 0.08
+        });
+        const shaftGeo = new THREE.CylinderGeometry(1, 1, 1, 14);
+        const headGeo = new THREE.ConeGeometry(1, 1, 16);
+        const shaft = new THREE.Mesh(shaftGeo, mat);
+        const head = new THREE.Mesh(headGeo, mat);
+        group.add(shaft);
+        group.add(head);
+        scene.add(group);
+
+        const upVec = new THREE.Vector3(0, 1, 0);
+
+        return {
+          group: group,
+          setEndpoints: function (start, end, radiusOverride) {
+            const diff = new THREE.Vector3().subVectors(end, start);
+            const len = diff.length();
+            if (len < 1e-4) {
+              group.visible = false;
+              return;
+            }
+            const r = radiusOverride || baseRadius;
+            const headLen = Math.min(len * 0.32, Math.max(0.18, r * 5.2));
+            const headRad = r * 2.5;
+            const shaftLen = Math.max(1e-4, len - headLen);
+            const dir = diff.clone().divideScalar(len);
+
+            group.position.copy(start);
+            group.quaternion.setFromUnitVectors(upVec, dir);
+
+            shaft.scale.set(r, shaftLen, r);
+            shaft.position.set(0, shaftLen * 0.5, 0);
+
+            head.scale.set(headRad, headLen, headRad);
+            head.position.set(0, shaftLen + headLen * 0.5, 0);
+          }
+        };
+      }
+
+      /** Crée un segment en pointillés dynamique. */
+      function createDashedSegment(colorHex, dashSize, gapSize) {
+        const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 1, 0)]);
+        const mat = new THREE.LineDashedMaterial({
+          color: colorHex,
+          dashSize: dashSize || 0.14,
+          gapSize: gapSize || 0.09
+        });
+        const line = new THREE.Line(geo, mat);
+        line.frustumCulled = false;
+        scene.add(line);
+        return {
+          line: line,
+          setEndpoints: function (a, b) {
+            const pos = line.geometry.attributes.position;
+            pos.setXYZ(0, a.x, a.y, a.z);
+            pos.setXYZ(1, b.x, b.y, b.z);
+            pos.needsUpdate = true;
+            line.computeLineDistances();
+            line.geometry.computeBoundingSphere();
+          }
+        };
+      }
+
+      /** Crée un symbole d'angle droit dynamique (3 sommets). */
+      function createRightAngleMark(colorHex) {
+        const geo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(),
+          new THREE.Vector3(),
+          new THREE.Vector3()
+        ]);
+        const mat = new THREE.LineBasicMaterial({ color: colorHex });
+        const line = new THREE.Line(geo, mat);
+        line.frustumCulled = false;
+        scene.add(line);
+        return {
+          line: line,
+          setCorner: function (vertex, dirA, dirB, size) {
+            const u = dirA.clone().normalize().multiplyScalar(size);
+            const v = dirB.clone().normalize().multiplyScalar(size);
+            const p1 = vertex.clone().add(u);
+            const p2 = vertex.clone().add(u).add(v);
+            const p3 = vertex.clone().add(v);
+            const pos = line.geometry.attributes.position;
+            pos.setXYZ(0, p1.x, p1.y, p1.z);
+            pos.setXYZ(1, p2.x, p2.y, p2.z);
+            pos.setXYZ(2, p3.x, p3.y, p3.z);
+            pos.needsUpdate = true;
+            line.geometry.computeBoundingSphere();
+          }
+        };
+      }
+
+      // =========================================================================
+      // 5. OBJETS 3D DE LA SCÈNE
+      // =========================================================================
+      buildAxesAndGrid();
+
+      // 5.1 Plan du modèle limité au parallélogramme (losange) de sommets 0, b0*1, b1*x, yhat
+      const modelPlaneGroup = new THREE.Group();
+      const modelPlaneGeo = new THREE.BufferGeometry();
+      const modelPlaneVerts = new Float32Array(12); // 4 sommets
+      modelPlaneGeo.setAttribute('position', new THREE.BufferAttribute(modelPlaneVerts, 3));
+      modelPlaneGeo.setIndex([0, 1, 2, 0, 2, 3]);
+      const modelPlaneMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981,
+        transparent: true,
+        opacity: 0.34,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const modelPlaneMesh = new THREE.Mesh(modelPlaneGeo, modelPlaneMat);
+      modelPlaneMesh.frustumCulled = false;
+      modelPlaneGroup.add(modelPlaneMesh);
+
+      // Quadrillage interne du parallélogramme (4 subdivisions x 4 subdivisions)
+      const SUBDIV = 4;
+      const modelGridGeo = new THREE.BufferGeometry();
+      const modelGridVerts = new Float32Array((SUBDIV + 1) * 2 * 2 * 3);
+      modelGridGeo.setAttribute('position', new THREE.BufferAttribute(modelGridVerts, 3));
+      const modelGridMat = new THREE.LineBasicMaterial({
+        color: 0x059669,
+        transparent: true,
+        opacity: 0.55
+      });
+      const modelGridLines = new THREE.LineSegments(modelGridGeo, modelGridMat);
+      modelGridLines.frustumCulled = false;
+      modelPlaneGroup.add(modelGridLines);
+      scene.add(modelPlaneGroup);
+
+      /** Recalcule les sommets du parallélogramme du modèle (0, b0*1, yhat, b1*x). */
+      function updateSubspacePlane(pB0, pB1, pYhat) {
+        const areaCheck = new THREE.Vector3().crossVectors(pB0, pB1).length();
+        const show = state.visibility.plane && areaCheck > 1e-4;
+        modelPlaneGroup.visible = show;
+        if (!show) return;
+
+        const pos = modelPlaneGeo.attributes.position;
+        pos.setXYZ(0, 0, 0, 0);
+        pos.setXYZ(1, pB0.x, pB0.y, pB0.z);
+        pos.setXYZ(2, pYhat.x, pYhat.y, pYhat.z);
+        pos.setXYZ(3, pB1.x, pB1.y, pB1.z);
+        pos.needsUpdate = true;
+        modelPlaneGeo.computeVertexNormals();
+        modelPlaneGeo.computeBoundingSphere();
+
+        const gPos = modelGridGeo.attributes.position;
+        let idx = 0;
+        for (let i = 0; i <= SUBDIV; i++) {
+          const t = i / SUBDIV;
+          // Lignes parallèles à b1*x
+          const a1 = pB0.clone().multiplyScalar(t);
+          const b1 = a1.clone().add(pB1);
+          gPos.setXYZ(idx++, a1.x, a1.y, a1.z);
+          gPos.setXYZ(idx++, b1.x, b1.y, b1.z);
+          // Lignes parallèles à b0*1
+          const a2 = pB1.clone().multiplyScalar(t);
+          const b2 = a2.clone().add(pB0);
+          gPos.setXYZ(idx++, a2.x, a2.y, a2.z);
+          gPos.setXYZ(idx++, b2.x, b2.y, b2.z);
+        }
+        gPos.needsUpdate = true;
+        modelGridGeo.computeBoundingSphere();
+      }
+
+      // 5.2 Plan orthogonal au vecteur 1 (1⊥ : x1 + x2 + x3 = 0)
+      const perpPlaneGroup = new THREE.Group();
+      (function buildPerpPlane() {
+        const halfSize = 3.2;
+        const u1 = vecToThree(PERP_U1);
+        const u2 = vecToThree(PERP_U2);
+        const c0 = u1.clone().multiplyScalar(-halfSize).addScaledVector(u2, -halfSize);
+        const c1 = u1.clone().multiplyScalar(halfSize).addScaledVector(u2, -halfSize);
+        const c2 = u1.clone().multiplyScalar(halfSize).addScaledVector(u2, halfSize);
+        const c3 = u1.clone().multiplyScalar(-halfSize).addScaledVector(u2, halfSize);
+
+        const geo = new THREE.BufferGeometry().setFromPoints([c0, c1, c2, c0, c2, c3]);
+        geo.computeVertexNormals();
+        const mat = new THREE.MeshBasicMaterial({
+          color: 0x9333ea,
+          transparent: true,
+          opacity: 0.14,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        perpPlaneGroup.add(new THREE.Mesh(geo, mat));
+
+        // Quadrillage du plan 1⊥
+        const gridPts = [];
+        const steps = 6;
+        for (let i = -steps; i <= steps; i++) {
+          const s = (i / steps) * halfSize;
+          gridPts.push(
+            u1.clone().multiplyScalar(s).addScaledVector(u2, -halfSize),
+            u1.clone().multiplyScalar(s).addScaledVector(u2, halfSize),
+            u2.clone().multiplyScalar(s).addScaledVector(u1, -halfSize),
+            u2.clone().multiplyScalar(s).addScaledVector(u1, halfSize)
+          );
+        }
+        const gGeo = new THREE.BufferGeometry().setFromPoints(gridPts);
+        const gMat = new THREE.LineBasicMaterial({ color: 0xa855f7, transparent: true, opacity: 0.3 });
+        perpPlaneGroup.add(new THREE.LineSegments(gGeo, gMat));
+        scene.add(perpPlaneGroup);
+      })();
+
+      // 5.3 Vecteurs dans ℝ³
+      const arrowVec1 = createArrow(0x9a3412, 0.036);      // 1 (orange foncé)
+      const arrowVecX = createArrow(0x1e3a8a, 0.036);      // x (bleu foncé)
+      const arrowB0 = createArrow(0xea580c, 0.032);        // b0 * 1 (orange)
+      const arrowB1 = createArrow(0x0284c7, 0.032);        // b1 * x (bleu ciel)
+      const arrowYhat = createArrow(0x047857, 0.038);      // y_hat (émeraude)
+      const arrowY = createArrow(0x0f172a, 0.038);         // y (ardoise foncé)
+      const arrowE = createArrow(0xe11d48, 0.038);         // e = y - y_hat (rose)
+      const arrowEOrigin = createArrow(0xbe123c, 0.034);   // e depuis l'origine
+
+      // Sphères aux extrémités de y, y_hat et y_hat_MCO
+      const sphereY = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3 })
+      );
+      const sphereYhat = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0x047857, roughness: 0.3 })
+      );
+      const sphereMco = new THREE.Mesh(
+        new THREE.SphereGeometry(0.075, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.3 })
+      );
+      scene.add(sphereY);
+      scene.add(sphereYhat);
+      scene.add(sphereMco);
+
+      // 5.4 Vecteurs projetés sur le plan 1⊥
+      const arrowXCentered = createArrow(0x4f46e5, 0.032);     // x - xbar*1 (indigo)
+      const arrowB1XCentered = createArrow(0x0ea5e9, 0.030);   // b1*(x - xbar*1) (bleu ciel)
+      const arrowYCentered = createArrow(0xa21caf, 0.032);     // y - ybar*1 (fuchsia)
+      const arrowYhatCentered = createArrow(0x0d9488, 0.032);  // yhat - yhatbar*1 (sarcelle)
+      const arrowECentered = createArrow(0xec4899, 0.030);     // e - ebar*1 (rose)
+
+      // 5.5 Segments en pointillés
+      const dashPara1 = createDashedSegment(0x065f46, 0.14, 0.09);     // b0*1 -> yhat
+      const dashPara2 = createDashedSegment(0x065f46, 0.14, 0.09);     // b1*x -> yhat
+      const dashMcoE = createDashedSegment(0x10b981, 0.12, 0.09);      // yhat_mco -> y
+      const dashMcoDiff = createDashedSegment(0x059669, 0.12, 0.09);   // yhat_mco -> yhat
+      const dashProjX = createDashedSegment(0x4f46e5, 0.12, 0.08);     // x -> x - xbar*1
+      const dashProjB1X = createDashedSegment(0x0ea5e9, 0.12, 0.08);   // b1*x -> b1*(x - xbar*1)
+      const dashProjY = createDashedSegment(0xa21caf, 0.12, 0.08);     // y -> y - ybar*1
+      const dashProjYhat = createDashedSegment(0x0d9488, 0.12, 0.08);  // yhat -> yhat - yhatbar*1
+
+      // Pointillés en parallélépipède et marqueurs des coordonnées de 1, x et y dans le repère des plants
+      function createCoordGuideSet(colorHex) {
+        const dotGeo = new THREE.SphereGeometry(0.055, 12, 12);
+        const dotMat = new THREE.MeshBasicMaterial({ color: colorHex });
+        const dots = [
+          new THREE.Mesh(dotGeo, dotMat),
+          new THREE.Mesh(dotGeo, dotMat),
+          new THREE.Mesh(dotGeo, dotMat)
+        ];
+        dots.forEach(function (d) { scene.add(d); });
+        const edges = [];
+        for (let i = 0; i < 9; i++) {
+          edges.push(createDashedSegment(colorHex, 0.10, 0.08));
+        }
+        return {
+          edges: edges,
+          dots: dots
+        };
+      }
+      const coordGuides1 = createCoordGuideSet(0x9a3412);
+      const coordGuidesX = createCoordGuideSet(0x1e3a8a);
+      const coordGuidesY = createCoordGuideSet(0x334155);
+
+      // 5.6 Marques d'angles droits
+      const rightAngleMco = createRightAngleMark(0x0f172a);
+      const rightAngleOriginPerp = createRightAngleMark(0x7e22ce);
+      const rightAngleProjX = createRightAngleMark(0x4f46e5);
+      const rightAngleProjB1X = createRightAngleMark(0x0ea5e9);
+      const rightAngleProjY = createRightAngleMark(0xa21caf);
+      const rightAngleProjYhat = createRightAngleMark(0x0d9488);
+
+      // =========================================================================
+      // 6. ÉTIQUETTES 3D PROJETÉES EN 2D
+      // =========================================================================
+      function createLabelDef(html, colorClass) {
+        const el = document.createElement('div');
+        el.className = 'absolute px-2 py-1 rounded bg-white/85 backdrop-blur-[1px] text-sm font-bold leading-none shadow-sm border border-slate-200/70 whitespace-nowrap ' + colorClass;
+        el.style.transform = 'translate(-50%, -50%)';
+        el.innerHTML = html;
+        labelsLayer.appendChild(el);
+        return { el: el, pos: new THREE.Vector3(), visible: true };
+      }
+
+      const labels = {
+        axis1: createLabelDef('plant 1', 'text-slate-500 font-semibold'),
+        axis2: createLabelDef('plant 2', 'text-slate-500 font-semibold'),
+        axis3: createLabelDef('plant 3', 'text-slate-500 font-semibold'),
+        vec1: createLabelDef('1', 'text-[#9a3412]'),
+        vecX: createLabelDef('x', 'text-[#1e3a8a]'),
+        b0: createLabelDef('b₀<b>1</b>', 'text-orange-600'),
+        b1: createLabelDef('b₁<b>x</b>', 'text-sky-700'),
+        yhat: createLabelDef('ŷ', 'text-emerald-700'),
+        y: createLabelDef('y', 'text-slate-900'),
+        e: createLabelDef('e', 'text-rose-600'),
+        eOrigin: createLabelDef('e (origine)', 'text-[#be123c]'),
+        mco: createLabelDef('ŷ<sub>MCO</sub>', 'text-emerald-600'),
+        xCentered: createLabelDef('x − x̄1', 'text-indigo-700'),
+        b1xCentered: createLabelDef('b₁(x − x̄1)', 'text-sky-600'),
+        yCentered: createLabelDef('y − ȳ1', 'text-fuchsia-700'),
+        yhatCentered: createLabelDef('ŷ − ŷ̄1', 'text-teal-700'),
+        eCentered: createLabelDef('e − ē1', 'text-pink-600'),
+        coord11: createLabelDef('1₁=1', 'text-[#9a3412] border-orange-200/90 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coord12: createLabelDef('1₂=1', 'text-[#9a3412] border-orange-200/90 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coord13: createLabelDef('1₃=1', 'text-[#9a3412] border-orange-200/90 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coordX1: createLabelDef('x₁=2', 'text-[#1e3a8a] border-blue-200/90 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coordX2: createLabelDef('x₂=0', 'text-[#1e3a8a] border-blue-200/90 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coordX3: createLabelDef('x₃=4', 'text-[#1e3a8a] border-blue-200/90 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coordY1: createLabelDef('y₁=0,5', 'text-slate-800 border-slate-300 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coordY2: createLabelDef('y₂=2,5', 'text-slate-800 border-slate-300 !text-xs !py-0.5 !px-1.5 tabular-nums'),
+        coordY3: createLabelDef('y₃=4,5', 'text-slate-800 border-slate-300 !text-xs !py-0.5 !px-1.5 tabular-nums')
+      };
+
+      labels.axis1.pos.copy(toThree(4.85, 0, 0));
+      labels.axis2.pos.copy(toThree(0, 4.85, 0));
+      labels.axis3.pos.copy(toThree(0, 0, 5.85));
+
+      const projVec = new THREE.Vector3();
+
+      function updateLabels2D() {
+        const w = sceneWrapper.clientWidth;
+        const h = sceneWrapper.clientHeight;
+        const showAny = state.visibility.labels;
+
+        Object.keys(labels).forEach(function (key) {
+          const item = labels[key];
+          const isAlwaysAllowed = key.indexOf('axis') === 0 || key.indexOf('coord') === 0;
+          if (!item.visible || (!isAlwaysAllowed && !showAny)) {
+            item.el.style.display = 'none';
+            return;
+          }
+          projVec.copy(item.pos).project(camera);
+          if (projVec.z < -1 || projVec.z > 1) {
+            item.el.style.display = 'none';
+            return;
+          }
+          const sx = (projVec.x * 0.5 + 0.5) * w;
+          const sy = (-projVec.y * 0.5 + 0.5) * h;
+          if (sx < -30 || sx > w + 30 || sy < -20 || sy > h + 20) {
+            item.el.style.display = 'none';
+            return;
+          }
+          item.el.style.display = 'block';
+          item.el.style.left = sx.toFixed(1) + 'px';
+          item.el.style.top = sy.toFixed(1) + 'px';
+        });
+      }
+
+      // =========================================================================
+      // 7. MISE À JOUR DU MODÈLE, DU TABLEAU ET DU GRAPHIQUE 2D
+      // =========================================================================
+
+      /** Met à jour le parallélépipède en pointillés, les points sur les axes et les valeurs numériques pour v = (v1, v2, v3). */
+      function updateCoordGuides(vec, show, guides, labelKeys, prefix, decimals, offsetSign) {
+        const v1 = vec[0];
+        const v2 = vec[1];
+        const v3 = vec[2];
+        const has1 = Math.abs(v1) > 1e-3;
+        const has2 = Math.abs(v2) > 1e-3;
+        const has3 = Math.abs(v3) > 1e-3;
+
+        const pVec = toThree(v1, v2, v3);
+        const p12 = toThree(v1, v2, 0);
+        const p13 = toThree(v1, 0, v3);
+        const p23 = toThree(0, v2, v3);
+        const pAx1 = toThree(v1, 0, 0);
+        const pAx2 = toThree(0, v2, 0);
+        const pAx3 = toThree(0, 0, v3);
+
+        // Les 9 arêtes hors-axes du parallélépipède rectangle [0, v1] x [0, v2] x [0, v3]
+        const edgeSpecs = [
+          // Arêtes parallèles à l'axe plant 1
+          { visible: has1 && has2, a: pAx2, b: p12 },
+          { visible: has1 && has3, a: pAx3, b: p13 },
+          { visible: has1 && has2 && has3, a: p23, b: pVec },
+          // Arêtes parallèles à l'axe plant 2
+          { visible: has2 && has1, a: pAx1, b: p12 },
+          { visible: has2 && has3, a: pAx3, b: p23 },
+          { visible: has2 && has1 && has3, a: p13, b: pVec },
+          // Arêtes parallèles à l'axe plant 3
+          { visible: has3 && has1, a: pAx1, b: p13 },
+          { visible: has3 && has2, a: pAx2, b: p23 },
+          { visible: has3 && has1 && has2, a: p12, b: pVec }
+        ];
+
+        for (let i = 0; i < guides.edges.length; i++) {
+          const spec = edgeSpecs[i];
+          const edge = guides.edges[i];
+          edge.line.visible = show && spec.visible;
+          if (edge.line.visible) {
+            edge.setEndpoints(spec.a, spec.b);
+          }
+        }
+
+        guides.dots[0].visible = show;
+        guides.dots[0].position.copy(pAx1);
+        guides.dots[1].visible = show;
+        guides.dots[1].position.copy(pAx2);
+        guides.dots[2].visible = show;
+        guides.dots[2].position.copy(pAx3);
+
+        const lbl1 = labels[labelKeys[0]];
+        const lbl2 = labels[labelKeys[1]];
+        const lbl3 = labels[labelKeys[2]];
+
+        lbl1.visible = show;
+        lbl1.el.textContent = prefix + '₁=' + fmt(v1, decimals);
+        lbl1.pos.copy(offsetSign === 0 ? toThree(v1, -0.38, 0) : toThree(v1, 0, offsetSign * 0.34));
+
+        lbl2.visible = show;
+        lbl2.el.textContent = prefix + '₂=' + fmt(v2, decimals);
+        lbl2.pos.copy(offsetSign === 0 ? toThree(-0.38, v2, 0) : toThree(0, v2, offsetSign * 0.34));
+
+        lbl3.visible = show;
+        lbl3.el.textContent = prefix + '₃=' + fmt(v3, decimals);
+        lbl3.pos.copy(offsetSign === 0 ? toThree(0, -0.38, v3) : toThree(offsetSign * 0.40, 0, v3));
+      }
+
+      function updateModel() {
+        const vis = state.visibility;
+        const yVec = state.y;
+        const ols = computeOls(yVec);
+
+        const b0 = state.b0;
+        const b1 = state.b1;
+
+        const vB0 = [b0 * VEC_1[0], b0 * VEC_1[1], b0 * VEC_1[2]];
+        const vB1 = [b1 * VEC_X[0], b1 * VEC_X[1], b1 * VEC_X[2]];
+        const vYhat = [vB0[0] + vB1[0], vB0[1] + vB1[1], vB0[2] + vB1[2]];
+        const vE = [yVec[0] - vYhat[0], yVec[1] - vYhat[1], yVec[2] - vYhat[2]];
+
+        const yhatBar = (vYhat[0] + vYhat[1] + vYhat[2]) / 3;
+        const vYhatCentered = [vYhat[0] - yhatBar, vYhat[1] - yhatBar, vYhat[2] - yhatBar];
+        const vB1XCentered = [b1 * VEC_X_CENTERED[0], b1 * VEC_X_CENTERED[1], b1 * VEC_X_CENTERED[2]];
+        const eBar = (vE[0] + vE[1] + vE[2]) / 3;
+        const vECentered = [vE[0] - eBar, vE[1] - eBar, vE[2] - eBar];
+
+        // Conversion Three.js
+        const p1 = vecToThree(VEC_1);
+        const pX = vecToThree(VEC_X);
+        const pB0 = vecToThree(vB0);
+        const pB1 = vecToThree(vB1);
+        const pYhat = vecToThree(vYhat);
+        const pY = vecToThree(yVec);
+        const pE = vecToThree(vE);
+        const pMco = vecToThree(ols.yhatMco);
+        const pXc = vecToThree(VEC_X_CENTERED);
+        const pB1Xc = vecToThree(vB1XCentered);
+        const pYc = vecToThree(ols.yCentered);
+        const pYhatc = vecToThree(vYhatCentered);
+
+        // 1. Plan du modèle (losange)
+        updateSubspacePlane(pB0, pB1, pYhat);
+
+        // 2. Plan 1⊥
+        perpPlaneGroup.visible = vis.perpPlane;
+
+        // 3. Vecteurs dans ℝ³ (épaisseur adaptative en cas de superposition colinéaire)
+        const r1 = Math.abs(b0) < 1 ? 0.028 : 0.040;
+        const rB0 = Math.abs(b0) < 1 ? 0.040 : 0.028;
+        const rX = Math.abs(b1) < 1 ? 0.028 : 0.040;
+        const rB1 = Math.abs(b1) < 1 ? 0.040 : 0.028;
+
+        arrowVec1.group.visible = vis.vec1;
+        if (vis.vec1) arrowVec1.setEndpoints(origin3, p1, r1);
+
+        arrowVecX.group.visible = vis.vecX;
+        if (vis.vecX) arrowVecX.setEndpoints(origin3, pX, rX);
+
+        arrowB0.group.visible = vis.b0 && Math.abs(b0) > 1e-3;
+        if (arrowB0.group.visible) arrowB0.setEndpoints(origin3, pB0, rB0);
+
+        arrowB1.group.visible = vis.b1 && Math.abs(b1) > 1e-3;
+        if (arrowB1.group.visible) arrowB1.setEndpoints(origin3, pB1, rB1);
+
+        const yhatLen = pYhat.length();
+        arrowYhat.group.visible = vis.yhat && yhatLen > 1e-3;
+        if (arrowYhat.group.visible) arrowYhat.setEndpoints(origin3, pYhat);
+        sphereYhat.visible = vis.yhat;
+        sphereYhat.position.copy(pYhat);
+
+        arrowY.group.visible = vis.y && pY.length() > 1e-3;
+        if (arrowY.group.visible) arrowY.setEndpoints(origin3, pY);
+        sphereY.visible = vis.y;
+        sphereY.position.copy(pY);
+
+        const eLen = Math.sqrt(normSq3(vE));
+        arrowE.group.visible = vis.e && eLen > 1e-3;
+        if (arrowE.group.visible) arrowE.setEndpoints(pYhat, pY);
+
+        arrowEOrigin.group.visible = vis.eOrigin && eLen > 1e-3;
+        if (arrowEOrigin.group.visible) arrowEOrigin.setEndpoints(origin3, pE);
+
+        // 4. Parallélogramme pointillé de ŷ
+        const showPara = vis.para && Math.abs(b0) > 1e-3 && Math.abs(b1) > 1e-3;
+        dashPara1.line.visible = showPara;
+        dashPara2.line.visible = showPara;
+        if (showPara) {
+          dashPara1.setEndpoints(pB0, pYhat);
+          dashPara2.setEndpoints(pB1, pYhat);
+        }
+
+        // 5. Référence MCO & pointillés de Pythagore
+        const diffMcoSq = normSq3([
+          vYhat[0] - ols.yhatMco[0],
+          vYhat[1] - ols.yhatMco[1],
+          vYhat[2] - ols.yhatMco[2]
+        ]);
+        const isNearMco = diffMcoSq < 1e-3;
+        sphereMco.visible = vis.mco;
+        sphereMco.position.copy(pMco);
+        dashMcoE.line.visible = vis.mco && !isNearMco && ols.scrMco > 1e-4;
+        if (dashMcoE.line.visible) dashMcoE.setEndpoints(pMco, pY);
+        dashMcoDiff.line.visible = vis.mco && !isNearMco;
+        if (dashMcoDiff.line.visible) dashMcoDiff.setEndpoints(pMco, pYhat);
+
+        // 6. Vecteurs centrés sur le plan 1⊥
+        const rXc = Math.abs(b1) < 1 ? 0.026 : 0.036;
+        const rYhatc = Math.abs(b1) < 1 ? 0.036 : 0.026;
+
+        arrowXCentered.group.visible = vis.xCentered;
+        if (vis.xCentered) arrowXCentered.setEndpoints(origin3, pXc, rXc);
+
+        const b1xcLen = pB1Xc.length();
+        arrowB1XCentered.group.visible = vis.b1xCentered && b1xcLen > 1e-3;
+        if (arrowB1XCentered.group.visible) {
+          // Léger décalage latéral dans 1⊥ si ŷ − ŷ̄1 est aussi affiché, pour rendre les deux vecteurs visibles côte à côte
+          if (vis.yhatCentered) {
+            const latShift = vecToThree(PERP_U2).multiplyScalar(0.055);
+            arrowB1XCentered.setEndpoints(origin3.clone().add(latShift), pB1Xc.clone().add(latShift), rYhatc);
+          } else {
+            arrowB1XCentered.setEndpoints(origin3, pB1Xc, rYhatc);
+          }
+        }
+
+        const ycLen = pYc.length();
+        arrowYCentered.group.visible = vis.yCentered && ycLen > 1e-3;
+        if (arrowYCentered.group.visible) arrowYCentered.setEndpoints(origin3, pYc);
+
+        const yhatcLen = pYhatc.length();
+        arrowYhatCentered.group.visible = vis.yhatCentered && yhatcLen > 1e-3;
+        if (arrowYhatCentered.group.visible) arrowYhatCentered.setEndpoints(origin3, pYhatc, rYhatc);
+
+        const ecLen = Math.sqrt(normSq3(vECentered));
+        arrowECentered.group.visible = vis.eCentered && ecLen > 1e-3;
+        if (arrowECentered.group.visible) arrowECentered.setEndpoints(pYhatc, pYc);
+
+        // 7. Pointillés de projection orthogonale sur 1⊥
+        dashProjX.line.visible = vis.projPerp;
+        if (vis.projPerp) dashProjX.setEndpoints(pX, pXc);
+
+        dashProjB1X.line.visible = vis.projPerp && vis.b1xCentered && Math.abs(b1) > 1e-3;
+        if (dashProjB1X.line.visible) dashProjB1X.setEndpoints(pB1, pB1Xc);
+
+        dashProjY.line.visible = vis.projPerp && Math.abs(ols.yBar) > 1e-3;
+        if (vis.projPerp && Math.abs(ols.yBar) > 1e-3) dashProjY.setEndpoints(pY, pYc);
+
+        dashProjYhat.line.visible = vis.projPerp && Math.abs(yhatBar) > 1e-3;
+        if (vis.projPerp && Math.abs(yhatBar) > 1e-3) dashProjYhat.setEndpoints(pYhat, pYhatc);
+        // 7b. Pointillés et valeurs des coordonnées de 1, x et y sur les axes des plants
+        updateCoordGuides(VEC_1, vis.coord1, coordGuides1, ['coord11', 'coord12', 'coord13'], '1', 0, 0);
+        updateCoordGuides(VEC_X, vis.coordX, coordGuidesX, ['coordX1', 'coordX2', 'coordX3'], 'x', 0, -1);
+        updateCoordGuides(yVec, vis.coordY, coordGuidesY, ['coordY1', 'coordY2', 'coordY3'], 'y', 1, 1);
+
+        // 8. Marques d'angles droits
+        const showRightMco = vis.rightAngle && isNearMco && eLen > 0.25 && yhatLen > 0.25;
+        rightAngleMco.line.visible = showRightMco;
+        if (showRightMco) {
+          rightAngleMco.setCorner(pYhat, new THREE.Vector3().subVectors(pY, pYhat), pYhat.clone().negate(), 0.34);
+        }
+
+        const showOriginPerp = vis.rightAngle && vis.perpPlane && (vis.vec1 || vis.b0);
+        rightAngleOriginPerp.line.visible = showOriginPerp;
+        if (showOriginPerp) {
+          rightAngleOriginPerp.setCorner(origin3, p1, pXc, 0.28);
+        }
+
+        const showProjXAngle = vis.rightAngle && vis.projPerp && vis.xCentered;
+        rightAngleProjX.line.visible = showProjXAngle;
+        if (showProjXAngle) {
+          rightAngleProjX.setCorner(pXc, new THREE.Vector3().subVectors(pX, pXc), pXc.clone().negate(), 0.24);
+        }
+
+        const showProjB1XAngle = vis.rightAngle && vis.projPerp && vis.b1xCentered && b1xcLen > 0.25 && Math.abs(b1 * X_BAR) > 0.2;
+        rightAngleProjB1X.line.visible = showProjB1XAngle;
+        if (showProjB1XAngle) {
+          rightAngleProjB1X.setCorner(pB1Xc, new THREE.Vector3().subVectors(pB1, pB1Xc), pB1Xc.clone().negate(), 0.20);
+        }
+
+        const showProjYAngle = vis.rightAngle && vis.projPerp && vis.yCentered && ycLen > 0.25 && Math.abs(ols.yBar) > 0.2;
+        rightAngleProjY.line.visible = showProjYAngle;
+        if (showProjYAngle) {
+          rightAngleProjY.setCorner(pYc, new THREE.Vector3().subVectors(pY, pYc), pYc.clone().negate(), 0.24);
+        }
+
+        const showProjYhatAngle = vis.rightAngle && vis.projPerp && vis.yhatCentered && yhatcLen > 0.25 && Math.abs(yhatBar) > 0.2;
+        rightAngleProjYhat.line.visible = showProjYhatAngle;
+        if (showProjYhatAngle) {
+          rightAngleProjYhat.setCorner(pYhatc, new THREE.Vector3().subVectors(pYhat, pYhatc), pYhatc.clone().negate(), 0.22);
+        }
+
+        // 9. Positions des étiquettes 3D
+        labels.vec1.visible = vis.vec1;
+        labels.vec1.pos.copy(p1).multiplyScalar(0.88).add(new THREE.Vector3(0.18, 0.14, 0));
+
+        labels.vecX.visible = vis.vecX;
+        labels.vecX.pos.copy(pX).multiplyScalar(0.92).add(new THREE.Vector3(-0.18, 0.18, 0));
+
+        labels.b0.visible = vis.b0 && Math.abs(b0) > 0.12;
+        labels.b0.pos.copy(pB0).multiplyScalar(0.65).add(new THREE.Vector3(0.22, -0.15, 0.12));
+
+        labels.b1.visible = vis.b1 && Math.abs(b1) > 0.08;
+        labels.b1.pos.copy(pB1).multiplyScalar(0.62).add(new THREE.Vector3(-0.22, 0.16, -0.1));
+
+        labels.yhat.visible = vis.yhat;
+        labels.yhat.pos.copy(pYhat).add(new THREE.Vector3(0.22, -0.18, 0.16));
+
+        labels.y.visible = vis.y;
+        labels.y.pos.copy(pY).add(new THREE.Vector3(0, 0.26, 0));
+
+        labels.e.visible = vis.e && eLen > 0.15;
+        labels.e.pos.copy(pYhat).lerp(pY, 0.52).add(new THREE.Vector3(0.22, 0.12, 0));
+
+        labels.eOrigin.visible = vis.eOrigin && eLen > 0.15;
+        labels.eOrigin.pos.copy(pE).multiplyScalar(0.85).add(new THREE.Vector3(-0.22, 0.18, 0));
+
+        labels.mco.visible = vis.mco && !isNearMco;
+        labels.mco.pos.copy(pMco).add(new THREE.Vector3(0.22, -0.22, 0.12));
+
+        labels.xCentered.visible = vis.xCentered;
+        labels.xCentered.pos.copy(pXc).multiplyScalar(0.82).add(new THREE.Vector3(0, 0.22, -0.18));
+
+        labels.b1xCentered.visible = vis.b1xCentered && b1xcLen > 0.15;
+        labels.b1xCentered.pos.copy(pB1Xc).multiplyScalar(0.68).add(new THREE.Vector3(-0.26, 0.22, -0.14));
+
+        labels.yCentered.visible = vis.yCentered && ycLen > 0.15;
+        labels.yCentered.pos.copy(pYc).multiplyScalar(0.82).add(new THREE.Vector3(-0.22, 0.18, 0));
+
+        labels.yhatCentered.visible = vis.yhatCentered && yhatcLen > 0.15;
+        labels.yhatCentered.pos.copy(pYhatc).multiplyScalar(0.62).add(new THREE.Vector3(0.24, -0.16, 0.12));
+
+        labels.eCentered.visible = vis.eCentered && ecLen > 0.15;
+        labels.eCentered.pos.copy(pYhatc).lerp(pYc, 0.5).add(new THREE.Vector3(-0.2, 0.16, 0.12));
+
+        // 10. Mise à jour des affichages numériques & tableau
+        const scr = normSq3(vE);
+        const dot1 = dot3(vE, VEC_1);
+        const dotX = dot3(vE, VEC_X);
+        const sinAngle = eLen > 1e-6 ? Math.min(1, Math.abs(dot3(vE, PLANE_NORMAL_MATH)) / eLen) : 1;
+        const angleDeg = (Math.asin(sinAngle) * 180) / Math.PI;
+
+        headerY.textContent = fmtVec(yVec);
+        valB0.textContent = fmt(b0, 2);
+        valB1.textContent = fmt(b1, 2);
+        hintB0Mco.textContent = fmt(ols.b0Mco, 2);
+        hintB1Mco.textContent = fmt(ols.b1Mco, 2);
+        for (let i = 0; i < 3; i++) {
+          valY[i].textContent = fmt(yVec[i], 2);
+        }
+
+        overlayScr.textContent = fmt(scr, 2);
+        overlayScrMin.textContent = fmt(ols.scrMco, 2);
+        statNormE.textContent = fmt(eLen, 2) + ' (‖e‖² = ' + fmt(scr, 2) + ')';
+        statAngle.textContent = fmt(angleDeg, 1) + '°';
+        statExcess.textContent = '+' + fmt(diffMcoSq, 2);
+        statDot1.textContent = fmt(dot1, 2);
+        statDotX.textContent = fmt(dotX, 2);
+        pythagoreEq.textContent = fmt(ols.scrMco, 2) + ' + ' + fmt(diffMcoSq, 2) + ' = ' + fmt(scr, 2);
+        coordYhat.textContent = fmtVec(vYhat);
+        coordE.textContent = fmtVec(vE);
+
+        if (isNearMco) {
+          orthoBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50/95 text-emerald-700 border border-emerald-200 shadow-sm backdrop-blur-sm';
+          orthoDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+          orthoText.textContent = 'Projection orthogonale (MCO)';
+          statAngle.className = 'font-bold text-emerald-700 mt-0.5';
+        } else {
+          orthoBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50/95 text-amber-700 border border-amber-200 shadow-sm backdrop-blur-sm';
+          orthoDot.className = 'w-2 h-2 rounded-full bg-amber-500';
+          orthoText.textContent = 'Projection oblique (non optimale)';
+          statAngle.className = 'font-bold text-amber-600 mt-0.5';
+        }
+
+        // Tableau de données
+        let sumY = 0;
+        let sumYhat = 0;
+        let sumE = 0;
+        let sumE2 = 0;
+        for (let i = 0; i < 3; i++) {
+          const e2 = vE[i] * vE[i];
+          tblY[i].textContent = fmt(yVec[i], 2);
+          tblYhat[i].textContent = fmt(vYhat[i], 2);
+          tblE[i].textContent = fmt(vE[i], 2);
+          tblE2[i].textContent = fmt(e2, 2);
+          sumY += yVec[i];
+          sumYhat += vYhat[i];
+          sumE += vE[i];
+          sumE2 += e2;
+        }
+        tblSumY.textContent = fmt(sumY, 2);
+        tblSumYhat.textContent = fmt(sumYhat, 2);
+        tblSumE.textContent = fmt(sumE, 2);
+        tblSumE.className = Math.abs(sumE) < 1e-2 ? 'py-2 px-2 text-emerald-700' : 'py-2 px-2 text-amber-600';
+        tblSumE2.textContent = fmt(sumE2, 2);
+
+        drawScatter2D(ols.yBar, vYhat);
+      }
+
+      /** Dessine le nuage 2D (Espace des individus) avec droite de régression, modèle constant et leurs erreurs. */
+      function drawScatter2D(yBar, vYhat) {
+        const w = scatterWrapper.clientWidth || 320;
+        const h = scatterWrapper.clientHeight || 210;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (scatterCanvas.width !== Math.round(w * dpr) || scatterCanvas.height !== Math.round(h * dpr)) {
+          scatterCanvas.width = Math.round(w * dpr);
+          scatterCanvas.height = Math.round(h * dpr);
+        }
+        scatterCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        scatterCtx.clearRect(0, 0, w, h);
+
+        const padL = 34;
+        const padR = 16;
+        const padT = 14;
+        const padB = 24;
+        const plotW = w - padL - padR;
+        const plotH = h - padT - padB;
+
+        const xMin = -0.6;
+        const xMax = 4.6;
+        const yMin = -1.5;
+        const yMax = 6.0;
+
+        function xToPx(x) {
+          return padL + ((x - xMin) / (xMax - xMin)) * plotW;
+        }
+        function yToPx(y) {
+          return padT + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+        }
+
+        const ctx = scatterCtx;
+        ctx.save();
+
+        // Grille légère
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        for (let gy = 0; gy <= 5; gy += 2) {
+          const py = yToPx(gy);
+          ctx.beginPath();
+          ctx.moveTo(padL, py);
+          ctx.lineTo(padL + plotW, py);
+          ctx.stroke();
+        }
+        for (let gx = 0; gx <= 4; gx += 2) {
+          const px = xToPx(gx);
+          ctx.beginPath();
+          ctx.moveTo(px, padT);
+          ctx.lineTo(px, padT + plotH);
+          ctx.stroke();
+        }
+
+        // Axes X=0 et Y=0
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(padL, yToPx(0));
+        ctx.lineTo(padL + plotW, yToPx(0));
+        ctx.moveTo(xToPx(0), padT);
+        ctx.lineTo(xToPx(0), padT + plotH);
+        ctx.stroke();
+
+        // Graduations
+        ctx.fillStyle = '#64748b';
+        ctx.font = '500 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        [0, 2, 4].forEach(function (gx) {
+          ctx.fillText(String(gx), xToPx(gx), padT + plotH + 5);
+        });
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        [0, 2, 4].forEach(function (gy) {
+          ctx.fillText(String(gy), padL - 6, yToPx(gy));
+        });
+
+        // Modèle constant : droite horizontale y = yBar (orange tireté)
+        const pyBar = yToPx(yBar);
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(padL, pyBar);
+        ctx.lineTo(padL + plotW, pyBar);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Erreurs du modèle constant (y_i - yBar) en orange pointillé, légèrement décalées à gauche
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([2, 3]);
+        for (let i = 0; i < 3; i++) {
+          const px = xToPx(VEC_X[i]) - 4;
+          ctx.beginPath();
+          ctx.moveTo(px, pyBar);
+          ctx.lineTo(px, yToPx(state.y[i]));
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Droite de régression : y = b0 + b1 * x
+        ctx.strokeStyle = '#047857';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(xToPx(xMin), yToPx(state.b0 + state.b1 * xMin));
+        ctx.lineTo(xToPx(xMax), yToPx(state.b0 + state.b1 * xMax));
+        ctx.stroke();
+
+        // Résidus e_i = y_i - yhat_i en rouge, légèrement décalés à droite
+        ctx.strokeStyle = '#e11d48';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+          const px = xToPx(VEC_X[i]) + 4;
+          ctx.beginPath();
+          ctx.moveTo(px, yToPx(vYhat[i]));
+          ctx.lineTo(px, yToPx(state.y[i]));
+          ctx.stroke();
+        }
+
+        // Points observés (les 3 plants)
+        for (let i = 0; i < 3; i++) {
+          const px = xToPx(VEC_X[i]);
+          const py = yToPx(state.y[i]);
+          ctx.beginPath();
+          ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#0f172a';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.4;
+          ctx.stroke();
+
+          ctx.fillStyle = '#334155';
+          ctx.font = '600 9.5px Inter, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('P' + (i + 1), px + 6, py - 3);
+        }
+
+        ctx.restore();
+      }
+
+      function resizeScene() {
+        const w = Math.max(240, sceneWrapper.clientWidth);
+        const h = Math.max(320, sceneWrapper.clientHeight);
+        camera.aspect = w / h;
+        // Décalage vertical vers le bas de l'origine dans le cadre tout en gardant le pivot à (0, 0, 0)
+        camera.setViewOffset(w, h, 0, -Math.round(h * 0.15), w, h);
+        renderer.setSize(w, h, false);
+        updateModel();
+      }
+
+      // =========================================================================
+      // 8. CONTRÔLES CAMÉRA (ORBITALE & TRANSLATION)
+      // =========================================================================
+      const panRight = new THREE.Vector3();
+      const panUp = new THREE.Vector3();
+
+      /** Translate la cible de la caméra dans le plan de l'écran (gauche/droite/haut/bas). */
+      function panCamera(dx, dy) {
+        const h = Math.max(200, sceneWrapper.clientHeight);
+        // Maintient une vitesse de translation constante indépendamment de l'angle de perspective (FOV)
+        const panScale = (2 * state.camRadius * BASE_TAN_HALF_FOV) / h;
+        camera.updateMatrixWorld();
+        panRight.setFromMatrixColumn(camera.matrixWorld, 0);
+        panUp.setFromMatrixColumn(camera.matrixWorld, 1);
+        state.targetCamTarget.addScaledVector(panRight, -dx * panScale);
+        state.targetCamTarget.addScaledVector(panUp, dy * panScale);
+      }
+
+      function updateCameraTransform() {
+        const lerp = 0.16;
+        state.camTheta += (state.targetTheta - state.camTheta) * lerp;
+        state.camPhi += (state.targetPhi - state.camPhi) * lerp;
+        state.camRadius += (state.targetRadius - state.camRadius) * lerp;
+        state.camFov += (state.targetFov - state.camFov) * lerp;
+        state.camTarget.lerp(state.targetCamTarget, lerp);
+
+        if (Math.abs(camera.fov - state.camFov) > 1e-4) {
+          camera.fov = state.camFov;
+          camera.updateProjectionMatrix();
+        }
+
+        // Compense la distance caméra selon le FOV (effet dolly-zoom) pour garder la même taille apparente
+        const tanHalfFov = Math.tan((state.camFov * Math.PI) / 360);
+        const actualDist = state.camRadius * (BASE_TAN_HALF_FOV / tanHalfFov);
+
+        const sinPhi = Math.sin(state.camPhi);
+        const x = state.camTarget.x + actualDist * sinPhi * Math.cos(state.camTheta);
+        const y = state.camTarget.y + actualDist * Math.cos(state.camPhi);
+        const z = state.camTarget.z + actualDist * sinPhi * Math.sin(state.camTheta);
+
+        camera.position.set(x, y, z);
+        camera.lookAt(state.camTarget);
+      }
+
+      // Souris : clic gauche = rotation ; clic droit / molette / Maj+clic gauche = translation
+      threeCanvas.addEventListener('contextmenu', function (e) {
+        e.preventDefault();
+      });
+
+      threeCanvas.addEventListener('mousedown', function (e) {
+        if (e.button === 2 || e.button === 1 || e.shiftKey) {
+          e.preventDefault();
+          state.dragMode = 'pan';
+        } else if (e.button === 0) {
+          state.dragMode = 'rotate';
+        }
+        state.isDragging = state.dragMode !== null;
+        state.lastPointerX = e.clientX;
+        state.lastPointerY = e.clientY;
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!state.isDragging) return;
+        const dx = e.clientX - state.lastPointerX;
+        const dy = e.clientY - state.lastPointerY;
+        state.lastPointerX = e.clientX;
+        state.lastPointerY = e.clientY;
+        if (state.dragMode === 'pan') {
+          panCamera(dx, dy);
+        } else {
+          state.targetTheta += dx * 0.008;
+          state.targetPhi = Math.max(0.12, Math.min(Math.PI - 0.12, state.targetPhi - dy * 0.008));
+        }
+      });
+
+      window.addEventListener('mouseup', function () {
+        state.isDragging = false;
+        state.dragMode = null;
+      });
+
+      // Molette zoom
+      threeCanvas.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        state.targetRadius = Math.max(5.5, Math.min(24, state.targetRadius + e.deltaY * 0.01));
+      }, { passive: false });
+
+      // Tactile : 1 doigt = rotation, 2 doigts = translation + pincement zoom
+      threeCanvas.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 1) {
+          state.isDragging = true;
+          state.dragMode = 'rotate';
+          state.lastPointerX = e.touches[0].clientX;
+          state.lastPointerY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          state.isDragging = false;
+          state.dragMode = 'pan';
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          state.lastPinchDist = Math.hypot(dx, dy);
+          state.lastPinchCenterX = 0.5 * (e.touches[0].clientX + e.touches[1].clientX);
+          state.lastPinchCenterY = 0.5 * (e.touches[0].clientY + e.touches[1].clientY);
+        }
+      }, { passive: true });
+
+      threeCanvas.addEventListener('touchmove', function (e) {
+        if (e.touches.length === 1 && state.isDragging) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - state.lastPointerX;
+          const dy = e.touches[0].clientY - state.lastPointerY;
+          state.lastPointerX = e.touches[0].clientX;
+          state.lastPointerY = e.touches[0].clientY;
+          state.targetTheta += dx * 0.009;
+          state.targetPhi = Math.max(0.12, Math.min(Math.PI - 0.12, state.targetPhi - dy * 0.009));
+        } else if (e.touches.length === 2) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.hypot(dx, dy);
+          const cx = 0.5 * (e.touches[0].clientX + e.touches[1].clientX);
+          const cy = 0.5 * (e.touches[0].clientY + e.touches[1].clientY);
+          if (state.lastPinchDist > 0) {
+            state.targetRadius = Math.max(5.5, Math.min(24, state.targetRadius - (dist - state.lastPinchDist) * 0.03));
+            panCamera(cx - state.lastPinchCenterX, cy - state.lastPinchCenterY);
+          }
+          state.lastPinchDist = dist;
+          state.lastPinchCenterX = cx;
+          state.lastPinchCenterY = cy;
+        }
+      }, { passive: false });
+
+      threeCanvas.addEventListener('touchend', function () {
+        state.isDragging = false;
+        state.dragMode = null;
+        state.lastPinchDist = 0;
+      });
+
+      // Préréglages de caméra (recentrés sur l'origine)
+      camLatexBtn.addEventListener('click', function () {
+        state.targetTheta = 0.96;
+        state.targetPhi = 1.24;
+        state.targetRadius = 15.2;
+        state.targetCamTarget.copy(origin3);
+      });
+
+      camOrthoBtn.addEventListener('click', function () {
+        state.targetTheta = 0.46;
+        state.targetPhi = 1.24;
+        state.targetRadius = 14.5;
+        state.targetCamTarget.copy(origin3);
+      });
+
+      camTopBtn.addEventListener('click', function () {
+        state.targetTheta = 0.78;
+        state.targetPhi = 0.25;
+        state.targetRadius = 14.8;
+        state.targetCamTarget.copy(origin3);
+      });
+
+      camCenterBtn.addEventListener('click', function () {
+        state.targetCamTarget.copy(origin3);
+      });
+
+      // =========================================================================
+      // 9. ÉVÉNEMENTS DES CURSEURS & VISIBILITÉ
+      // =========================================================================
+
+      /** Met à jour l'apparence du bouton bascule "Projeter MCO". */
+      function updateMcoButtonUI() {
+        btnMco.setAttribute('aria-pressed', state.autoMco ? 'true' : 'false');
+        if (state.autoMco) {
+          btnMco.className = 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5';
+          btnMcoDot.className = 'w-2 h-2 rounded-full bg-white shrink-0';
+          btnMcoLabel.textContent = 'Projeter MCO : ON';
+        } else {
+          btnMco.className = 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-300 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5';
+          btnMcoDot.className = 'w-2 h-2 rounded-full bg-slate-400 shrink-0';
+          btnMcoLabel.textContent = 'Projeter MCO : OFF';
+        }
+      }
+
+      /** Synchronise b0, b1 et leurs curseurs sur la projection orthogonale MCO de y courant. */
+      function syncCoefficientsToMco() {
+        const ols = computeOls(state.y);
+        state.b0 = ols.b0Mco;
+        state.b1 = ols.b1Mco;
+        sliderB0.value = String(ols.b0Mco);
+        sliderB1.value = String(ols.b1Mco);
+      }
+
+      sliderB0.addEventListener('input', function () {
+        if (state.autoMco) {
+          state.autoMco = false;
+          updateMcoButtonUI();
+        }
+        state.b0 = parseFloat(sliderB0.value);
+        updateModel();
+      });
+
+      sliderB1.addEventListener('input', function () {
+        if (state.autoMco) {
+          state.autoMco = false;
+          updateMcoButtonUI();
+        }
+        state.b1 = parseFloat(sliderB1.value);
+        updateModel();
+      });
+
+      sliderY.forEach(function (sl, idx) {
+        sl.addEventListener('input', function () {
+          state.y[idx] = parseFloat(sl.value);
+          if (state.autoMco) {
+            syncCoefficientsToMco();
+          }
+          updateModel();
+        });
+      });
+
+      btnResetY.addEventListener('click', function () {
+        state.y = DEFAULT_Y.slice();
+        for (let i = 0; i < 3; i++) {
+          sliderY[i].value = String(DEFAULT_Y[i]);
+        }
+        if (state.autoMco) {
+          syncCoefficientsToMco();
+        }
+        updateModel();
+      });
+
+      btnMco.addEventListener('click', function () {
+        state.autoMco = !state.autoMco;
+        if (state.autoMco) {
+          syncCoefficientsToMco();
+        }
+        updateMcoButtonUI();
+        updateModel();
+      });
+
+      btnMeanOnly.addEventListener('click', function () {
+        if (state.autoMco) {
+          state.autoMco = false;
+          updateMcoButtonUI();
+        }
+        const ols = computeOls(state.y);
+        state.b0 = ols.yBar;
+        state.b1 = 0;
+        sliderB0.value = String(ols.yBar);
+        sliderB1.value = '0';
+        updateModel();
+      });
+
+      visCheckboxes.forEach(function (chk) {
+        chk.addEventListener('change', function () {
+          state.visibility[chk.dataset.vis] = chk.checked;
+          updateModel();
+        });
+      });
+
+      btnVisAll.addEventListener('click', function () {
+        Object.keys(state.visibility).forEach(function (k) {
+          state.visibility[k] = true;
+        });
+        visCheckboxes.forEach(function (chk) {
+          chk.checked = true;
+        });
+        updateModel();
+      });
+
+      btnVisNone.addEventListener('click', function () {
+        Object.keys(state.visibility).forEach(function (k) {
+          state.visibility[k] = false;
+        });
+        visCheckboxes.forEach(function (chk) {
+          chk.checked = false;
+        });
+        updateModel();
+      });
+
+      function updateFovLabel(fov) {
+        const desc = fov <= 10 ? 'Quasi-ortho' : (fov <= 24 ? 'Faible' : (fov <= 40 ? 'Modérée' : 'Forte'));
+        valFov.textContent = Math.round(fov) + '° (' + desc + ')';
+      }
+
+      sliderFov.addEventListener('input', function () {
+        state.targetFov = parseFloat(sliderFov.value);
+        updateFovLabel(state.targetFov);
+      });
+
+      btnFovOrtho.addEventListener('click', function () {
+        state.targetFov = 5;
+        sliderFov.value = '5';
+        updateFovLabel(5);
+      });
+
+      btnFovStd.addEventListener('click', function () {
+        state.targetFov = 20;
+        sliderFov.value = '20';
+        updateFovLabel(20);
+      });
+
+      function updateRotSpeedLabel(deg) {
+        const rounded = Math.round(deg);
+        if (rounded === 0) {
+          valRotSpeed.textContent = '0°/s (Arrêt)';
+          valRotSpeed.className = 'text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums';
+        } else {
+          const sign = rounded > 0 ? '+' : '−';
+          valRotSpeed.textContent = sign + Math.abs(rounded) + '°/s';
+          valRotSpeed.className = 'text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md tabular-nums';
+        }
+      }
+
+      sliderRotSpeed.addEventListener('input', function () {
+        state.rotSpeedDeg = parseFloat(sliderRotSpeed.value);
+        updateRotSpeedLabel(state.rotSpeedDeg);
+      });
+
+      btnRotStop.addEventListener('click', function () {
+        state.rotSpeedDeg = 0;
+        sliderRotSpeed.value = '0';
+        updateRotSpeedLabel(0);
+      });
+
+      btnRotSlow.addEventListener('click', function () {
+        state.rotSpeedDeg = 15;
+        sliderRotSpeed.value = '15';
+        updateRotSpeedLabel(15);
+      });
+
+      btnRotMed.addEventListener('click', function () {
+        state.rotSpeedDeg = 35;
+        sliderRotSpeed.value = '35';
+        updateRotSpeedLabel(35);
+      });
+
+      window.addEventListener('resize', resizeScene);
+
+      // =========================================================================
+      // 10. BOUCLE D'ANIMATION PRINCIPALE
+      // =========================================================================
+      function animate(timestamp) {
+        try {
+          if (!state.lastAnimTime) state.lastAnimTime = timestamp || performance.now();
+          const now = timestamp || performance.now();
+          const dt = Math.min(0.05, Math.max(0, (now - state.lastAnimTime) / 1000));
+          state.lastAnimTime = now;
+
+          if (state.rotSpeedDeg !== 0 && !state.isDragging) {
+            state.targetTheta += ((state.rotSpeedDeg * Math.PI) / 180) * dt;
+          }
+
+          updateCameraTransform();
+          renderer.render(scene, camera);
+          updateLabels2D();
+        } catch (err) {
+          console.error('Erreur dans la boucle 3D :', err);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      function init() {
+        updateMcoButtonUI();
+        updateFovLabel(state.targetFov);
+        updateRotSpeedLabel(state.rotSpeedDeg);
+        updateModel();
+        resizeScene();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+    })();
+  </script>
+</body>
+</html>
