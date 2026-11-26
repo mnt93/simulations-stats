@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Géométrie des erreurs dans ℝ² — Espace des variables</title>
+  <style>
+    /* ==========================================================================
+       Variables de design — Palette sobre, lumineuse et académique
+       ========================================================================== */
+    :root {
+      --bg-page: #f6f8fb;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-main: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: #eff6ff;
+      --contour-color: #dc2626;
+      --axis-principal: #0f766e;
+
+      /* Couleurs des badges de diagnostic */
+      --badge-ok-bg: #ecfdf5;
+      --badge-ok-text: #065f46;
+      --badge-ok-border: #a7f3d0;
+
+      --badge-warn-bg: #fffbeb;
+      --badge-warn-text: #92400e;
+      --badge-warn-border: #fde68a;
+
+      --badge-alert-bg: #fef2f2;
+      --badge-alert-text: #991b1b;
+      --badge-alert-border: #fecaca;
+
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 24px 16px 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    /* En-tête académique */
+    header {
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    header h1 {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 0.96rem;
+      color: var(--text-secondary);
+      max-width: 780px;
+    }
+
+    /* Grille principale responsive */
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.25fr) minmax(300px, 0.95fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 20px;
+    }
+
+    /* ==========================================================================
+       Zone graphique (Canvas carré strictement orthonormé)
+       ========================================================================== */
+    .canvas-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .canvas-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .canvas-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    /* Infobulle flottante au survol d'un point */
+    .tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.92);
+      color: #ffffff;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+      opacity: 0;
+      transform: translate(-50%, -125%);
+      transition: opacity 0.12s ease;
+      z-index: 10;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+    }
+
+    .canvas-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 4px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .checkbox-label input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .legend-inline {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot-swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.72);
+    }
+
+    .line-swatch {
+      width: 16px;
+      height: 2px;
+      background: var(--contour-color);
+    }
+
+    /* ==========================================================================
+       Panneau de contrôles et indicateurs
+       ========================================================================== */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    /* Diagnostic dynamique */
+    .diagnostic-box {
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      border: 1px solid var(--badge-ok-border);
+      background: var(--badge-ok-bg);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .diagnostic-box.warn {
+      background: var(--badge-warn-bg);
+      border-color: var(--badge-warn-border);
+    }
+
+    .diagnostic-box.alert {
+      background: var(--badge-alert-bg);
+      border-color: var(--badge-alert-border);
+    }
+
+    .diagnostic-badge {
+      display: inline-block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--badge-ok-text);
+      margin-bottom: 5px;
+    }
+
+    .diagnostic-box.warn .diagnostic-badge {
+      color: var(--badge-warn-text);
+    }
+
+    .diagnostic-box.alert .diagnostic-badge {
+      color: var(--badge-alert-text);
+    }
+
+    .diagnostic-desc {
+      font-size: 0.86rem;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    /* Matrice Omega 2x2 */
+    .matrix-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      margin-top: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.95rem;
+    }
+
+    .matrix-label {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .matrix-brackets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(64px, auto));
+      gap: 6px 18px;
+      padding: 6px 14px;
+      border-left: 2px solid var(--text-main);
+      border-right: 2px solid var(--text-main);
+      border-radius: 6px / 14px;
+      text-align: right;
+    }
+
+    .matrix-val {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .matrix-val.off-diag {
+      color: var(--accent);
+    }
+
+    /* Contrôles : sélecteur de loi */
+    .segmented-control {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-subtle);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      margin-bottom: 18px;
+    }
+
+    .segmented-control button {
+      border: none;
+      background: transparent;
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .segmented-control button.active {
+      background: #ffffff;
+      color: var(--accent);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Curseurs */
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    .control-group:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .control-header label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .control-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+      height: 6px;
+    }
+
+    input[type="range"]:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .control-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+      min-height: 1.2em;
+    }
+
+    .control-note.highlight {
+      color: var(--badge-warn-text);
+      font-weight: 500;
+    }
+
+    /* Boutons de préréglages et action */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .btn-preset {
+      padding: 9px 10px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .btn-preset:hover {
+      background: var(--accent-soft);
+      border-color: #bfdbfe;
+      color: var(--accent);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.99);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Géométrie du vecteur des erreurs (ε₁, ε₂) dans ℝ²</h1>
+      <p>
+        Visualisation de 600 réalisations du vecteur d'erreurs dans l'espace des variables (pour <em>n</em> = 2 individus, avec σ₁ = 1).
+        Observez comment l'hétéroscédasticité, la corrélation ou la non-normalité déforment la sphère idéale des moindres carrés ordinaires.
+      </p>
+    </header>
+
+    <main class="layout">
+      <!-- Zone graphique principale -->
+      <section class="card canvas-card" aria-label="Graphique du nuage d'erreurs">
+        <div class="canvas-header">
+          <div>
+            <div class="canvas-title">Espace des variables ℝ² (repère orthonormé 1:1)</div>
+            <div class="canvas-subtitle">Survolez un point pour lire ses coordonnées exactes</div>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="errorCanvas"></canvas>
+          <div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="canvas-footer">
+          <label class="checkbox-label">
+            <input type="checkbox" id="toggleContour" checked>
+            Afficher le contour théorique (95 % / support)
+          </label>
+          <div class="legend-inline">
+            <span class="legend-item"><span class="dot-swatch"></span>600 tirages</span>
+            <span class="legend-item"><span class="line-swatch"></span>Contour théorique</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panneau latéral : diagnostic, matrice et contrôles -->
+      <aside class="sidebar">
+        <!-- Carte Diagnostic & Matrice Omega -->
+        <section class="card" aria-label="Diagnostic géométrique et matrice de covariance">
+          <div class="section-title">Diagnostic géométrique</div>
+          <div class="diagnostic-box" id="diagnosticBox">
+            <div class="diagnostic-badge" id="diagnosticBadge">Sphère / Disque</div>
+            <p class="diagnostic-desc" id="diagnosticDesc">
+              Erreurs indépendantes, homoscédastiques et normales : isotropie parfaite. Les MCO sont optimaux (BLUE) et les tests exacts.
+            </p>
+          </div>
+
+          <div class="matrix-container" aria-label="Matrice de variance-covariance Oméga">
+            <span class="matrix-label">Ω =</span>
+            <div class="matrix-brackets">
+              <span class="matrix-val" id="m00">1.00</span>
+              <span class="matrix-val off-diag" id="m01">0.00</span>
+              <span class="matrix-val off-diag" id="m10">0.00</span>
+              <span class="matrix-val" id="m11">1.00</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Carte Contrôles -->
+        <section class="card" aria-label="Paramètres de la simulation">
+          <div class="section-title">Paramètres de la loi des erreurs</div>
+
+          <div class="segmented-control" role="tablist" aria-label="Choix de la loi">
+            <button type="button" id="btnNormal" class="active" role="tab" aria-selected="true">Loi Normale</button>
+            <button type="button" id="btnUniform" role="tab" aria-selected="false">Loi Uniforme</button>
+          </div>
+
+          <div class="control-group">
+            <div class="control-header">
+              <label for="sliderSigma">Rapport d'écarts-types (σ₂ / σ₁)</label>
+              <span class="control-value" id="valSigma">1.0</span>
+            </div>
+            <input type="range" id="sliderSigma" min="0.3" max="2.5" step="0.1" value="1.0">
+            <div class="control-note">σ₁ est fixé à 1,0 — faire varier σ₂ introduit de l'hétéroscédasticité.</div>
+          </div>
+
+          <div class="control-group">
+            <div class="control-header">
+              <label for="sliderRho">Corrélation entre erreurs (ρ)</label>
+              <span class="control-value" id="valRho">0.0</span>
+            </div>
+            <input type="range" id="sliderRho" min="-0.9" max="0.9" step="0.1" value="0.0">
+            <div class="control-note" id="rhoNote">ρ ≠ 0 incline l'ellipse : les axes de ℝ² ne sont plus orthogonaux.</div>
+          </div>
+        </section>
+
+        <!-- Carte Préréglages et Nouveau tirage -->
+        <section class="card" aria-label="Préréglages rapides">
+          <div class="section-title">Préréglages rapides</div>
+          <div class="presets-grid">
+            <button type="button" class="btn-preset" id="presetSphere">Sphère (MCO idéal)</button>
+            <button type="button" class="btn-preset" id="presetHetero">Hétéroscédasticité</button>
+            <button type="button" class="btn-preset" id="presetCorr">Erreurs corrélées</button>
+            <button type="button" class="btn-preset" id="presetUniform">Loi uniforme</button>
+          </div>
+          <button type="button" class="btn-primary" id="btnRedraw">Nouveau tirage (N = 600)</button>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // Constantes et état global
+      // =========================================================================
+      const N_POINTS = 600;
+      const AXIS_MIN = -4;
+      const AXIS_MAX = 4;
+      const CHI2_95 = 5.991464547107979; // Quantile 95 % d'une loi chi-deux à 2 ddl
+      const SQRT3 = Math.sqrt(3);
+      const LERP_FACTOR = 0.14;          // Vitesse d'interpolation douce à 60 fps
+
+      const state = {
+        dist: 'normal',     // 'normal' ou 'uniform'
+        sigma1: 1.0,
+        sigma2: 1.0,
+        rho: 0.0,
+        showContour: true,
+        hoveredIndex: -1
+      };
+
+      // Stockage des 600 points : tirages de base fixes + positions courantes et cibles
+      const points = [];
+
+      // Éléments DOM
+      const canvas = document.getElementById('errorCanvas');
+      const ctx = canvas.getContext('2d');
+      const wrapper = document.getElementById('canvasWrapper');
+      const tooltip = document.getElementById('tooltip');
+
+      const btnNormal = document.getElementById('btnNormal');
+      const btnUniform = document.getElementById('btnUniform');
+      const sliderSigma = document.getElementById('sliderSigma');
+      const sliderRho = document.getElementById('sliderRho');
+      const valSigma = document.getElementById('valSigma');
+      const valRho = document.getElementById('valRho');
+      const rhoNote = document.getElementById('rhoNote');
+      const toggleContour = document.getElementById('toggleContour');
+      const btnRedraw = document.getElementById('btnRedraw');
+
+      const diagnosticBox = document.getElementById('diagnosticBox');
+      const diagnosticBadge = document.getElementById('diagnosticBadge');
+      const diagnosticDesc = document.getElementById('diagnosticDesc');
+
+      const m00 = document.getElementById('m00');
+      const m01 = document.getElementById('m01');
+      const m10 = document.getElementById('m10');
+      const m11 = document.getElementById('m11');
+
+      // Dimensions logiques du canvas (carré)
+      let canvasSize = 560;
+      let dpr = window.devicePixelRatio || 1;
+      const PADDING = 46;
+
+      // =========================================================================
+      // Génération aléatoire (Box-Muller pour Normale, Math.random pour Uniforme)
+      // =========================================================================
+      function randNormalPair() {
+        let u1 = 0;
+        let u2 = 0;
+        while (u1 === 0) u1 = Math.random();
+        while (u2 === 0) u2 = Math.random();
+        const r = Math.sqrt(-2.0 * Math.log(u1));
+        const theta = 2.0 * Math.PI * u2;
+        return [r * Math.cos(theta), r * Math.sin(theta)];
+      }
+
+      function generateBasePoints(snapImmediate) {
+        points.length = 0;
+        for (let i = 0; i < N_POINTS; i++) {
+          const [z1, z2] = randNormalPair();
+          const u1 = Math.random() * 2 - 1; // Uniforme sur [-1, 1]
+          const u2 = Math.random() * 2 - 1;
+          points.push({
+            z1, z2,
+            u1, u2,
+            x: 0, y: 0,
+            tx: 0, ty: 0
+          });
+        }
+        updateTargets(snapImmediate);
+      }
+
+      function updateTargets(snapImmediate = false) {
+        const s1 = state.sigma1;
+        const s2 = state.sigma2;
+        const rho = state.dist === 'uniform' ? 0 : state.rho;
+        const sqrtOneMinusRho2 = Math.sqrt(Math.max(0, 1 - rho * rho));
+
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
+          if (state.dist === 'normal') {
+            p.tx = s1 * p.z1;
+            p.ty = s2 * (rho * p.z1 + sqrtOneMinusRho2 * p.z2);
+          } else {
+            // Variance de U(-a, a) = a² / 3 => a = √3 * σ
+            p.tx = SQRT3 * s1 * p.u1;
+            p.ty = SQRT3 * s2 * p.u2;
+          }
+          if (snapImmediate) {
+            p.x = p.tx;
+            p.y = p.ty;
+          }
+        }
+      }
+
+      // =========================================================================
+      // Conversions coordonnées mathématiques <-> pixels (ratio 1:1 strict)
+      // =========================================================================
+      function mathToPxX(x) {
+        const plotSize = canvasSize - 2 * PADDING;
+        return PADDING + ((x - AXIS_MIN) / (AXIS_MAX - AXIS_MIN)) * plotSize;
+      }
+
+      function mathToPxY(y) {
+        const plotSize = canvasSize - 2 * PADDING;
+        return PADDING + ((AXIS_MAX - y) / (AXIS_MAX - AXIS_MIN)) * plotSize;
+      }
+
+      function resizeCanvas() {
+        const rect = wrapper.getBoundingClientRect();
+        canvasSize = Math.floor(rect.width);
+        dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(canvasSize * dpr);
+        canvas.height = Math.floor(canvasSize * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      // =========================================================================
+      // Mise à jour de l'interface (Diagnostic & Matrice Omega)
+      // =========================================================================
+      function formatNum(n) {
+        const val = Math.abs(n) < 1e-9 ? 0 : n;
+        return val.toFixed(2);
+      }
+
+      function updateUI() {
+        const s1 = state.sigma1;
+        const s2 = state.sigma2;
+        const rho = state.dist === 'uniform' ? 0 : state.rho;
+
+        // Valeurs affichées des curseurs
+        valSigma.textContent = s2.toFixed(1);
+        valRho.textContent = rho.toFixed(1);
+
+        // Gestion de l'état du curseur rho en mode Uniforme
+        if (state.dist === 'uniform') {
+          sliderRho.disabled = true;
+          sliderRho.value = '0';
+          rhoNote.textContent = 'En mode Uniforme, ρ est fixé à 0 (erreurs indépendantes de même variance).';
+          rhoNote.classList.add('highlight');
+        } else {
+          sliderRho.disabled = false;
+          rhoNote.textContent = 'ρ ≠ 0 incline l\'ellipse : les axes de ℝ² ne sont plus orthogonaux.';
+          rhoNote.classList.remove('highlight');
+        }
+
+        // Matrice de variance-covariance Omega (2x2)
+        const v1 = s1 * s1;
+        const v2 = s2 * s2;
+        const cov = rho * s1 * s2;
+        m00.textContent = formatNum(v1);
+        m01.textContent = formatNum(cov);
+        m10.textContent = formatNum(cov);
+        m11.textContent = formatNum(v2);
+
+        // Diagnostic géométrique
+        const isHomo = Math.abs(s2 - s1) < 0.05;
+        const isIndep = Math.abs(rho) < 0.05;
+
+        diagnosticBox.classList.remove('warn', 'alert');
+
+        if (state.dist === 'normal') {
+          if (isHomo && isIndep) {
+            diagnosticBadge.textContent = 'Sphère / Disque';
+            diagnosticDesc.textContent =
+              'Erreurs indépendantes, homoscédastiques et normales : isotropie parfaite. Les MCO sont optimaux (BLUE) et les tests t et F sont exacts.';
+          } else if (isIndep && !isHomo) {
+            diagnosticBox.classList.add('warn');
+            diagnosticBadge.textContent = 'Ellipse alignée (hétéroscédasticité)';
+            diagnosticDesc.textContent =
+              'Les axes restent orthogonaux mais de normes inégales. Les MCO restent sans biais mais perdent leur optimalité : les moindres carrés pondérés (MCP) sont préférables.';
+          } else {
+            diagnosticBox.classList.add('alert');
+            diagnosticBadge.textContent = 'Ellipse inclinée (dépendance)';
+            diagnosticDesc.textContent =
+              'Les erreurs sont corrélées : les axes de ℝ² deviennent obliques. Les MCO sous-estiment ou faussent les erreurs-types ; il faut recourir aux moindres carrés généralisés (MCG).';
+          }
+        } else {
+          if (isHomo) {
+            diagnosticBox.classList.add('warn');
+            diagnosticBadge.textContent = 'Carré (non-normalité)';
+            diagnosticDesc.textContent =
+              'Sphéricité au second ordre vérifiée (Ω = I₂) : les MCO restent optimaux (théorème de Gauss-Markov), mais l\'absence de normalité brise l\'invariance par rotation.';
+          } else {
+            diagnosticBox.classList.add('warn');
+            diagnosticBadge.textContent = 'Rectangle (hétéroscédasticité + non-normalité)';
+            diagnosticDesc.textContent =
+              'Erreurs indépendantes mais de variances inégales et non normales. Les MCO ne sont plus optimaux et les tests classiques sur petits échantillons sont approximatifs.';
+          }
+        }
+      }
+
+      // =========================================================================
+      // Rendu Canvas : Grille, Axes, Contour théorique et Nuage de points
+      // =========================================================================
+      function drawGridAndAxes() {
+        const originX = mathToPxX(0);
+        const originY = mathToPxY(0);
+        const left = mathToPxX(AXIS_MIN);
+        const right = mathToPxX(AXIS_MAX);
+        const top = mathToPxY(AXIS_MAX);
+        const bottom = mathToPxY(AXIS_MIN);
+
+        // Grille légère
+        ctx.strokeStyle = '#eef2f6';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let v = AXIS_MIN; v <= AXIS_MAX; v++) {
+          const px = mathToPxX(v);
+          const py = mathToPxY(v);
+          ctx.moveTo(px, top);
+          ctx.lineTo(px, bottom);
+          ctx.moveTo(left, py);
+          ctx.lineTo(right, py);
+        }
+        ctx.stroke();
+
+        // Axes principaux passant par l'origine
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(left, originY);
+        ctx.lineTo(right, originY);
+        ctx.moveTo(originX, bottom);
+        ctx.lineTo(originX, top);
+        ctx.stroke();
+
+        // Flèches aux extrémités positives
+        ctx.fillStyle = '#64748b';
+        // Flèche axe ε₁ (droite)
+        ctx.beginPath();
+        ctx.moveTo(right + 2, originY);
+        ctx.lineTo(right - 7, originY - 4);
+        ctx.lineTo(right - 7, originY + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        // Flèche axe ε₂ (haut)
+        ctx.beginPath();
+        ctx.moveTo(originX, top - 2);
+        ctx.lineTo(originX - 4, top + 7);
+        ctx.lineTo(originX + 4, top + 7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Graduations numériques
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let v = AXIS_MIN; v <= AXIS_MAX; v++) {
+          if (v === 0) continue;
+          const px = mathToPxX(v);
+          ctx.fillText(String(v), px, originY + 6);
+        }
+
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let v = AXIS_MIN; v <= AXIS_MAX; v++) {
+          if (v === 0) continue;
+          const py = mathToPxY(v);
+          ctx.fillText(String(v), originX - 7, py);
+        }
+
+        // Labels des axes
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('ε₁ (Individu 1)', right - 2, originY - 8);
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('ε₂ (Individu 2)', originX + 10, top + 2);
+      }
+
+      function drawTheoreticalContour() {
+        if (!state.showContour) return;
+
+        const s1 = state.sigma1;
+        const s2 = state.sigma2;
+        const originX = mathToPxX(0);
+        const originY = mathToPxY(0);
+        const scale = (canvasSize - 2 * PADDING) / (AXIS_MAX - AXIS_MIN);
+
+        ctx.save();
+
+        if (state.dist === 'normal') {
+          const v1 = s1 * s1;
+          const v2 = s2 * s2;
+          const cov = state.rho * s1 * s2;
+
+          // Valeurs propres et angle de rotation de la matrice 2x2
+          const trace = v1 + v2;
+          const diff = v1 - v2;
+          const disc = Math.sqrt(diff * diff + 4 * cov * cov);
+          const lambda1 = (trace + disc) / 2;
+          const lambda2 = Math.max(0, (trace - disc) / 2);
+
+          const angleMath = 0.5 * Math.atan2(2 * cov, diff);
+          const r1 = Math.sqrt(CHI2_95 * lambda1) * scale;
+          const r2 = Math.sqrt(CHI2_95 * lambda2) * scale;
+
+          ctx.translate(originX, originY);
+          // En canvas, l'axe Y est inversé => rotation -angleMath
+          ctx.rotate(-angleMath);
+
+          // Axes principaux de l'ellipse
+          ctx.strokeStyle = 'rgba(15, 118, 110, 0.45)';
+          ctx.lineWidth = 1.25;
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.moveTo(-r1, 0);
+          ctx.lineTo(r1, 0);
+          ctx.moveTo(0, -r2);
+          ctx.lineTo(0, r2);
+          ctx.stroke();
+
+          // Ellipse de confiance à 95 %
+          ctx.setLineDash([]);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2;
+          ctx.fillStyle = 'rgba(220, 38, 38, 0.04)';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r1, r2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          // Rectangle exact du support [-√3·σ₁, √3·σ₁] × [-√3·σ₂, √3·σ₂]
+          const halfW = SQRT3 * s1 * scale;
+          const halfH = SQRT3 * s2 * scale;
+
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 2;
+          ctx.fillStyle = 'rgba(220, 38, 38, 0.04)';
+          ctx.beginPath();
+          ctx.rect(originX - halfW, originY - halfH, halfW * 2, halfH * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawPoints() {
+        ctx.fillStyle = 'rgba(37, 99, 235, 0.58)';
+        for (let i = 0; i < points.length; i++) {
+          if (i === state.hoveredIndex) continue;
+          const p = points[i];
+          const px = mathToPxX(p.x);
+          const py = mathToPxY(p.y);
+          ctx.beginPath();
+          ctx.arc(px, py, 3.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Point survolé mis en évidence
+        if (state.hoveredIndex >= 0 && state.hoveredIndex < points.length) {
+          const p = points[state.hoveredIndex];
+          const px = mathToPxX(p.x);
+          const py = mathToPxY(p.y);
+
+          ctx.beginPath();
+          ctx.arc(px, py, 6.5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(220, 38, 38, 0.2)';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(px, py, 4.2, 0, Math.PI * 2);
+          ctx.fillStyle = '#dc2626';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+
+      // =========================================================================
+      // Boucle d'animation fluide à 60 fps
+      // =========================================================================
+      function animate() {
+        // Interpolation douce vers les positions cibles
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
+          p.x += (p.tx - p.x) * LERP_FACTOR;
+          p.y += (p.ty - p.y) * LERP_FACTOR;
+        }
+
+        // Effacement et dessin
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+        drawGridAndAxes();
+        drawTheoreticalContour();
+        drawPoints();
+
+        requestAnimationFrame(animate);
+      }
+
+      // =========================================================================
+      // Interactions utilisateur
+      // =========================================================================
+      function setDistribution(dist) {
+        state.dist = dist;
+        btnNormal.classList.toggle('active', dist === 'normal');
+        btnNormal.setAttribute('aria-selected', String(dist === 'normal'));
+        btnUniform.classList.toggle('active', dist === 'uniform');
+        btnUniform.setAttribute('aria-selected', String(dist === 'uniform'));
+
+        if (dist === 'uniform') {
+          state.rho = 0.0;
+          sliderRho.value = '0';
+        }
+        updateTargets(false);
+        updateUI();
+      }
+
+      btnNormal.addEventListener('click', () => setDistribution('normal'));
+      btnUniform.addEventListener('click', () => setDistribution('uniform'));
+
+      sliderSigma.addEventListener('input', (e) => {
+        state.sigma2 = parseFloat(e.target.value);
+        updateTargets(false);
+        updateUI();
+      });
+
+      sliderRho.addEventListener('input', (e) => {
+        state.rho = parseFloat(e.target.value);
+        updateTargets(false);
+        updateUI();
+      });
+
+      toggleContour.addEventListener('change', (e) => {
+        state.showContour = e.target.checked;
+      });
+
+      btnRedraw.addEventListener('click', () => {
+        generateBasePoints(false);
+      });
+
+      // Préréglages rapides
+      document.getElementById('presetSphere').addEventListener('click', () => {
+        state.sigma2 = 1.0;
+        state.rho = 0.0;
+        sliderSigma.value = '1.0';
+        sliderRho.value = '0.0';
+        setDistribution('normal');
+      });
+
+      document.getElementById('presetHetero').addEventListener('click', () => {
+        state.sigma2 = 2.0;
+        state.rho = 0.0;
+        sliderSigma.value = '2.0';
+        sliderRho.value = '0.0';
+        setDistribution('normal');
+      });
+
+      document.getElementById('presetCorr').addEventListener('click', () => {
+        state.sigma2 = 1.0;
+        state.rho = 0.8;
+        sliderSigma.value = '1.0';
+        sliderRho.value = '0.8';
+        setDistribution('normal');
+      });
+
+      document.getElementById('presetUniform').addEventListener('click', () => {
+        state.sigma2 = 1.0;
+        state.rho = 0.0;
+        sliderSigma.value = '1.0';
+        sliderRho.value = '0.0';
+        setDistribution('uniform');
+      });
+
+      // Survol des points et infobulle
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+
+        let closestIdx = -1;
+        let minDistSq = 12 * 12; // Rayon de détection de 12 px
+
+        for (let i = 0; i < points.length; i++) {
+          const px = mathToPxX(points[i].x);
+          const py = mathToPxY(points[i].y);
+          const dx = px - mx;
+          const dy = py - my;
+          const dSq = dx * dx + dy * dy;
+          if (dSq < minDistSq) {
+            minDistSq = dSq;
+            closestIdx = i;
+          }
+        }
+
+        state.hoveredIndex = closestIdx;
+
+        if (closestIdx !== -1) {
+          const p = points[closestIdx];
+          const px = mathToPxX(p.x);
+          const py = mathToPxY(p.y);
+          tooltip.textContent = `ε₁ = ${p.x.toFixed(2)},  ε₂ = ${p.y.toFixed(2)}`;
+          tooltip.style.left = `${px}px`;
+          tooltip.style.top = `${py}px`;
+          tooltip.classList.add('visible');
+        } else {
+          tooltip.classList.remove('visible');
+        }
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        state.hoveredIndex = -1;
+        tooltip.classList.remove('visible');
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+
+      // =========================================================================
+      // Initialisation
+      // =========================================================================
+      window.onload = function () {
+        resizeCanvas();
+        generateBasePoints(true);
+        updateUI();
+        animate();
+      };
+    })();
+  </script>
+</body>
+</html>
