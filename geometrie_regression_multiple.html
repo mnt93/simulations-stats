@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Régression multiple (4 plants) — Projection orthogonale dans 1⊥ ⊂ ℝ⁴</title>
+  <!-- Police Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+  <!-- Three.js r128 via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="w-full px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Icône projection orthogonale multiple -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17l7-5 11 4-7 5z" />
+            <path d="M12 4v11" />
+            <path d="M12 12h3v3" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Régression multiple — Projection orthogonale dans <b>1</b><sup>⊥</sup> (dim 3)</h1>
+          <p class="text-xs sm:text-sm text-slate-500">
+            4 plants dans <span class="font-semibold text-slate-700">ℝ⁴</span> projetés sur l'espace centré <span class="font-semibold text-purple-700">1<sup>⊥</sup> ≅ ℝ³</span> :
+            <span class="font-medium text-slate-700">x₁ = <span id="header-x1">(4 ; 0 ; 4 ; 0)</span></span>,
+            <span class="font-medium text-slate-700">x₂ = <span id="header-x2">(6 ; 4 ; 2 ; 0)</span></span>,
+            <span class="font-medium text-slate-700">y = <span id="header-y">(7,0 ; 2,0 ; 3,0 ; 2,0)</span></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Légende synthétique -->
+      <div class="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[11px] font-medium text-slate-600">
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500/40 border border-emerald-600 inline-block"></span>Plan Vect(<b>x̃₁</b>, <b>x̃₂</b>)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#9a3412] inline-block"></span><b>x̃₁</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#1e3a8a] inline-block"></span><b>x̃₂</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-orange-500 inline-block"></span>b₁<b>x̃₁</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-sky-600 inline-block"></span>b₂<b>x̃₂</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-emerald-700 inline-block"></span><b>ŷ̃</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-slate-800 inline-block"></span><b>ỹ</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-rose-600 inline-block"></span><b>e</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#be123c] inline-block"></span><b>e</b> (origine)</span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-amber-500 inline-block"></span>Proj. sur <b>x̃₁</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-indigo-500 inline-block"></span>Proj. sur <b>x̃₂</b></span>
+        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-0.5 bg-violet-600 inline-block"></span>Axes plants 1–4 (proj.)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal : 2 colonnes (60 % scène 3D à gauche, 40 % contrôles & diagnostics à droite) -->
+  <main class="w-full px-3 sm:px-5 lg:px-6 py-4 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-10 gap-5 items-start">
+
+      <!-- Colonne Gauche (6/10 = 60 %) : Scène 3D dans 1⊥ & Visibilité -->
+      <div class="lg:col-span-6 space-y-5">
+
+        <!-- Carte Scène 3D -->
+        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3 sm:p-4 flex flex-col w-full">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Espace centré 1<sup>⊥</sup> ⊂ ℝ⁴ (base orthonormée u₁, u₂, u₃)</span>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="cam-std" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Vue 3D
+              </button>
+              <button id="cam-ortho" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Vue rasante (⊥)
+              </button>
+              <button id="cam-top" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Vue de dessus
+              </button>
+              <button id="cam-center" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Recentrer la vue sur l'origine">
+                Recentrer
+              </button>
+            </div>
+          </div>
+
+          <!-- Conteneur Canvas 3D + Étiquettes projetées -->
+          <div id="scene-wrapper" class="relative w-full h-[620px] sm:h-[680px] lg:h-[760px] rounded-xl bg-gradient-to-b from-slate-50 to-slate-100/70 border border-slate-200/80 overflow-hidden select-none">
+            <canvas id="threeCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+            <!-- Couche d'étiquettes 2D projetées depuis la 3D -->
+            <div id="labels-layer" class="pointer-events-none absolute inset-0 overflow-hidden"></div>
+
+            <!-- Badge d'orthogonalité en haut à gauche -->
+            <div class="pointer-events-none absolute top-3 left-3 flex flex-col gap-1.5">
+              <span id="ortho-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50/95 text-emerald-700 border border-emerald-200 shadow-sm backdrop-blur-sm">
+                <span id="ortho-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span id="ortho-text">Projection orthogonale (MCO)</span>
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/90 text-purple-700 border border-purple-200/80 shadow-sm backdrop-blur-sm">
+                Isométrie exacte : ‖ṽ‖² = ∑(vᵢ − v̄)²
+              </span>
+            </div>
+
+            <!-- Encart SCR / R² en haut à droite -->
+            <div class="pointer-events-none absolute top-3 right-3 bg-white/92 backdrop-blur-sm border border-slate-200 rounded-xl px-3 py-2 shadow-sm text-xs tabular-nums">
+              <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Somme des carrés des résidus</div>
+              <div class="flex items-baseline gap-2 mt-0.5">
+                <span class="font-bold text-rose-600 text-sm">‖e‖² = <span id="overlay-scr">4,00</span></span>
+                <span class="text-[11px] text-slate-500">(min MCO : <span id="overlay-scr-min">4,00</span>)</span>
+              </div>
+              <div class="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                R² = <span id="overlay-r2">0,765</span> · cos(<b>x̃₁</b>, <b>x̃₂</b>) = <span id="overlay-rx1x2">0,45</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="mt-2 text-xs text-slate-500 text-center">
+            Clic gauche : rotation · Clic droit ou Maj + glisser (2 doigts sur tactile) : translation · Molette : zoom.
+          </p>
+        </section>
+
+        <!-- Carte Visibilité individuelle des éléments (3 colonnes) -->
+        <section class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Éléments affichés dans 1<sup>⊥</sup></h2>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-vis-all" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+                Tout
+              </button>
+              <button id="btn-vis-none" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 transition-colors">
+                Aucun
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <!-- Colonne 1 : Vecteurs centrés du modèle multiple -->
+            <div class="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3 space-y-1">
+              <h3 class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Vecteurs centrés (1<sup>⊥</sup>)</h3>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="vecX1" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#9a3412] cursor-pointer" />
+                <span class="text-slate-700">Vecteur <b>x̃₁</b> = x₁ − x̄₁<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="vecX2" checked class="vis-chk w-3.5 h-3.5 rounded accent-[#1e3a8a] cursor-pointer" />
+                <span class="text-slate-700">Vecteur <b>x̃₂</b> = x₂ − x̄₂<b>1</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="b1" checked class="vis-chk w-3.5 h-3.5 rounded accent-orange-500 cursor-pointer" />
+                <span class="text-slate-700">Composante b₁<b>x̃₁</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="b2" checked class="vis-chk w-3.5 h-3.5 rounded accent-sky-600 cursor-pointer" />
+                <span class="text-slate-700">Composante b₂<b>x̃₂</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="yhat" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-700 cursor-pointer" />
+                <span class="text-slate-700"><b>ŷ̃</b> prédit centré</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="y" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-800 cursor-pointer" />
+                <span class="text-slate-700"><b>ỹ</b> observé centré</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="e" checked class="vis-chk w-3.5 h-3.5 rounded accent-rose-600 cursor-pointer" />
+                <span class="text-slate-700">Résidu <b>e</b> = ỹ − ŷ̃</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="eOrigin" class="vis-chk w-3.5 h-3.5 rounded accent-[#be123c] cursor-pointer" />
+                <span class="text-slate-700">Résidu <b>e</b> (origine)</span>
+              </label>
+            </div>
+
+            <!-- Colonne 2 : Régressions simples (projections orthogonales marginales) -->
+            <div class="bg-purple-50/40 border border-purple-200/60 rounded-xl p-3 space-y-1">
+              <h3 class="text-[11px] font-semibold text-purple-700 uppercase tracking-wider mb-2">Projections simples</h3>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="projX1" class="vis-chk w-3.5 h-3.5 rounded accent-amber-500 cursor-pointer" />
+                <span class="text-slate-700">Proj. simple sur <b>x̃₁</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="projX2" class="vis-chk w-3.5 h-3.5 rounded accent-indigo-500 cursor-pointer" />
+                <span class="text-slate-700">Proj. simple sur <b>x̃₂</b></span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="projSimpleDash" checked class="vis-chk w-3.5 h-3.5 rounded accent-purple-600 cursor-pointer" />
+                <span class="text-slate-700">Pointillés proj. simples</span>
+              </label>
+              <p class="pt-2 text-[11px] leading-snug text-slate-500">
+                Activez ces projections pour comparer les coefficients de régression <b>simple</b> (projection orthogonale sur chaque axe) aux coefficients <b>multiples</b> b₁ et b₂ (décomposition oblique dans le plan quand r ≠ 0).
+              </p>
+            </div>
+
+            <!-- Colonne 3 : Autres éléments -->
+            <div class="bg-emerald-50/40 border border-emerald-200/60 rounded-xl p-3 space-y-1">
+              <h3 class="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider mb-2">Autres éléments</h3>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="plane" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-600 cursor-pointer" />
+                <span class="text-slate-700">Plan du modèle (losange)</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="para" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-600 cursor-pointer" />
+                <span class="text-slate-700">Pointillés parallélogramme</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="mco" checked class="vis-chk w-3.5 h-3.5 rounded accent-emerald-600 cursor-pointer" />
+                <span class="text-slate-700">Référence <b>ŷ̃</b><sub>MCO</sub> &amp; Pythagore</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="rightAngle" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-700 cursor-pointer" />
+                <span class="text-slate-700">Angles droits</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="labels" checked class="vis-chk w-3.5 h-3.5 rounded accent-slate-700 cursor-pointer" />
+                <span class="text-slate-700">Étiquettes 3D</span>
+              </label>
+              <label class="flex items-center gap-2 p-1 rounded-lg hover:bg-white cursor-pointer select-none">
+                <input type="checkbox" data-vis="plantAxes" checked class="vis-chk w-3.5 h-3.5 rounded accent-violet-600 cursor-pointer" />
+                <span class="text-slate-700">Axes plants 1–4 (proj.)</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Colonne Droite (4/10 = 40 %) : Contrôles, Graphique 2D & Diagnostics -->
+      <aside class="lg:col-span-4 space-y-4">
+
+        <!-- Carte 1 : Curseurs b1 et b2 (+ choix corrélation X1, X2) -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-3.5">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Coefficients du modèle</h2>
+            <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">
+              b₀ = <span id="val-b0" class="font-bold text-slate-800">1,00</span>
+            </span>
+          </div>
+
+          <!-- Curseur b1 -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs gap-1">
+              <label for="slider-b1" class="font-medium text-slate-700 flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full bg-orange-500 inline-block shrink-0"></span>
+                Effet de X₁ (<span class="italic font-serif">b₁</span>)
+              </label>
+              <span id="val-b1" class="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-md tabular-nums shrink-0">0,50</span>
+            </div>
+            <input id="slider-b1" type="range" min="-2" max="2" step="0.05" value="0.5" class="w-full accent-orange-500 cursor-pointer" />
+            <div class="flex justify-between text-[10px] text-slate-400 tabular-nums">
+              <span>−2,0</span>
+              <span class="text-emerald-600 font-semibold">MCO : <span id="hint-b1-mco">0,50</span></span>
+              <span>2,0</span>
+            </div>
+          </div>
+
+          <!-- Curseur b2 -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs gap-1">
+              <label for="slider-b2" class="font-medium text-slate-700 flex items-center gap-1.5 truncate">
+                <span class="w-2 h-2 rounded-full bg-sky-600 inline-block shrink-0"></span>
+                Effet de X₂ (<span class="italic font-serif">b₂</span>)
+              </label>
+              <span id="val-b2" class="font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md tabular-nums shrink-0">0,50</span>
+            </div>
+            <input id="slider-b2" type="range" min="-2" max="2" step="0.05" value="0.5" class="w-full accent-sky-600 cursor-pointer" />
+            <div class="flex justify-between text-[10px] text-slate-400 tabular-nums">
+              <span>−2,0</span>
+              <span class="text-emerald-600 font-semibold">MCO : <span id="hint-b2-mco">0,50</span></span>
+              <span>2,0</span>
+            </div>
+          </div>
+
+          <!-- Boutons de sélection de modèle (recalcul automatique si y varie) -->
+          <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+            <button id="btn-mco" type="button" aria-pressed="true" class="py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5">
+              <span class="mode-dot w-2 h-2 rounded-full bg-white shrink-0"></span>
+              <span>Modèle complet</span>
+            </button>
+            <button id="btn-mean-only" type="button" aria-pressed="false" class="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5">
+              <span class="mode-dot w-2 h-2 rounded-full bg-slate-400 shrink-0"></span>
+              <span>Modèle constant</span>
+            </button>
+            <button id="btn-only-x1" type="button" aria-pressed="false" class="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200/80 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5">
+              <span class="mode-dot w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
+              <span>Modèle simple X₁</span>
+            </button>
+            <button id="btn-only-x2" type="button" aria-pressed="false" class="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/80 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5">
+              <span class="mode-dot w-2 h-2 rounded-full bg-sky-400 shrink-0"></span>
+              <span>Modèle simple X₂</span>
+            </button>
+          </div>
+
+          <!-- Géométrie des prédicteurs X1 et X2 -->
+          <div class="pt-2 border-t border-slate-100 space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-semibold text-slate-500 uppercase tracking-wider">Structure de (X₁, X₂)</span>
+              <span id="angle-x1x2" class="font-semibold text-slate-700 tabular-nums">angle = 63,4° (r = 0,45)</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button id="btn-x-corr" type="button" class="py-1 px-1.5 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition-colors">
+                Corrélées (r=0,45)
+              </button>
+              <button id="btn-x-ortho" type="button" class="py-1 px-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-transparent transition-colors">
+                Orthogonales (r=0)
+              </button>
+              <button id="btn-x-colin" type="button" class="py-1 px-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-transparent transition-colors">
+                Forte colin. (r=0,89)
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-snug">
+              Dans <b>1</b><sup>⊥</sup>, l'ordonnée b₀ = ȳ − b₁x̄₁ − b₂x̄₂ est fixée de sorte que ē = 0 (<b>e</b> ∈ <b>1</b><sup>⊥</sup>).
+            </p>
+          </div>
+        </div>
+
+        <!-- Carte 1b : Curseurs des valeurs observées y = (y1, y2, y3, y4) -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-2.5">
+          <div class="flex items-center justify-between gap-1">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Valeurs observées (<b>y</b>)</h2>
+            <button id="btn-reset-y" type="button" class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors shrink-0">
+              Réinitialiser
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+            <!-- y1 -->
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-y0" class="font-medium text-slate-700">Plant 1 (<span class="italic font-serif">y₁</span>)</label>
+                <span id="val-y0" class="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] tabular-nums">7,00</span>
+              </div>
+              <input id="slider-y0" type="range" min="-2" max="9" step="0.2" value="7" class="w-full accent-slate-800 cursor-pointer" />
+            </div>
+
+            <!-- y2 -->
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-y1" class="font-medium text-slate-700">Plant 2 (<span class="italic font-serif">y₂</span>)</label>
+                <span id="val-y1" class="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] tabular-nums">2,00</span>
+              </div>
+              <input id="slider-y1" type="range" min="-2" max="9" step="0.2" value="2" class="w-full accent-slate-800 cursor-pointer" />
+            </div>
+
+            <!-- y3 -->
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-y2" class="font-medium text-slate-700">Plant 3 (<span class="italic font-serif">y₃</span>)</label>
+                <span id="val-y2" class="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] tabular-nums">3,00</span>
+              </div>
+              <input id="slider-y2" type="range" min="-2" max="9" step="0.2" value="3" class="w-full accent-slate-800 cursor-pointer" />
+            </div>
+
+            <!-- y4 -->
+            <div class="space-y-0.5">
+              <div class="flex items-center justify-between text-xs">
+                <label for="slider-y3" class="font-medium text-slate-700">Plant 4 (<span class="italic font-serif">y₄</span>)</label>
+                <span id="val-y3" class="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] tabular-nums">2,00</span>
+              </div>
+              <input id="slider-y3" type="range" min="-2" max="9" step="0.2" value="2" class="w-full accent-slate-800 cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Carte 2 : Plan de régression 3D dans l'espace (X1, X2, Y) -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-1.5">
+            <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Plan de régression 3D (X₁, X₂, Y)</h2>
+            <button id="btn-reg-reset" type="button" class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 transition-colors shrink-0">
+              Vue init.
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] font-medium text-slate-600">
+            <span class="inline-flex items-center gap-1">
+              <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500/35 border border-emerald-600 inline-block"></span>
+              <span>ŷ = b₀ + b₁x₁ + b₂x₂</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <span class="w-2.5 h-0.5 bg-rose-600 inline-block"></span>
+              <span>Résidus eᵢ</span>
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <span class="w-3 h-0.5 border-t-2 border-dashed border-orange-500 inline-block"></span>
+              <span>Plan y = ȳ</span>
+            </span>
+          </div>
+          <div id="scatter-wrapper" class="relative w-full h-[260px] rounded-xl bg-gradient-to-b from-slate-50 to-slate-100/60 border border-slate-200/80 overflow-hidden select-none">
+            <canvas id="scatterCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+            <span class="pointer-events-none absolute bottom-1.5 right-2 text-[10px] text-slate-400 bg-white/80 px-1.5 py-0.5 rounded">
+              Glisser pour pivoter
+            </span>
+          </div>
+        </div>
+
+        <!-- Carte 3 : Diagnostics géométriques & Décomposition de la variance -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3.5 sm:p-4 space-y-2.5">
+          <h2 class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Géométrie du résidu dans 1<sup>⊥</sup></h2>
+
+          <div class="grid grid-cols-2 gap-2 text-[11px] tabular-nums">
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Norme ‖<b>e</b>‖</p>
+              <p id="stat-norm-e" class="font-bold text-rose-600 mt-0.5 leading-tight">2,00 (‖e‖² = 4,00)</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Angle(<b>e</b>, plan)</p>
+              <p id="stat-angle" class="font-bold text-emerald-700 mt-0.5">90,0°</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Surcoût ‖ŷ̃ − ŷ̃<sub>MCO</sub>‖²</p>
+              <p id="stat-excess" class="font-bold text-slate-800 mt-0.5">+0,00</p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-2">
+              <p class="text-[10px] text-slate-500">Produits scalaires</p>
+              <p class="font-semibold text-slate-700 mt-0.5 leading-snug">
+                ⟨e,x̃₁⟩=<span id="stat-dot1">0,00</span><br />⟨e,x̃₂⟩=<span id="stat-dot2">0,00</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-emerald-50/70 border border-emerald-200/70 rounded-xl p-2 text-[10px] text-slate-700 tabular-nums space-y-1">
+            <div>
+              <p class="font-semibold text-emerald-800">Pythagore (MCO) : ‖e<sub>MCO</sub>‖² + ‖ŷ̃ − ŷ̃<sub>MCO</sub>‖² = ‖e‖²</p>
+              <p id="pythagore-eq" class="font-mono text-emerald-900">4,00 + 0,00 = 4,00</p>
+            </div>
+            <div class="pt-1 border-t border-emerald-200/60">
+              <p class="font-semibold text-emerald-800">ANOVA (si MCO) : SCT = SCM + SCR</p>
+              <p id="anova-eq" class="font-mono text-emerald-900">17,00 = 13,00 + 4,00 (R² = 0,765)</p>
+            </div>
+          </div>
+
+          <div class="text-[11px] space-y-1 text-slate-600 tabular-nums pt-1 border-t border-slate-100">
+            <div class="flex justify-between gap-1">
+              <span><b>ŷ̃</b> dans (u₁,u₂,u₃)</span>
+              <span id="coord-yhat-u" class="font-semibold text-emerald-700">(3,00 ; 2,00 ; 0,00)</span>
+            </div>
+            <div class="flex justify-between gap-1">
+              <span><b>e</b> dans (u₁,u₂,u₃)</span>
+              <span id="coord-e-u" class="font-semibold text-rose-600">(0,00 ; 0,00 ; 2,00)</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+    <!-- Carte Tableau de données dynamique (pleine largeur en bas de la fenêtre) -->
+    <section class="mt-5 bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Tableau de données (4 plants)</h2>
+        <span class="text-xs text-slate-500">Modèle : ŷ<sub>i</sub> = b₀ + b₁x<sub>1i</sub> + b₂x<sub>2i</sub> · Variables centrées : ṽ<sub>i</sub> = v<sub>i</sub> − v̄</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm text-right tabular-nums border-collapse">
+          <thead>
+            <tr class="border-b-2 border-slate-200 text-slate-500 text-xs uppercase">
+              <th class="py-2 pr-2 text-left font-semibold">Individu</th>
+              <th class="py-2 px-2 font-semibold">x₁</th>
+              <th class="py-2 px-2 font-semibold">x₂</th>
+              <th class="py-2 px-2 font-semibold">y</th>
+              <th class="py-2 px-2 font-semibold text-[#9a3412]">x̃₁</th>
+              <th class="py-2 px-2 font-semibold text-[#1e3a8a]">x̃₂</th>
+              <th class="py-2 px-2 font-semibold text-slate-700">ỹ</th>
+              <th class="py-2 px-2 font-semibold text-emerald-700">ŷ</th>
+              <th class="py-2 px-2 font-semibold text-rose-600">e = y − ŷ</th>
+              <th class="py-2 pl-2 font-semibold">e²</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 1</td>
+              <td id="tbl-x1-0" class="py-2 px-2 text-slate-700">4,0</td>
+              <td id="tbl-x2-0" class="py-2 px-2 text-slate-700">6,0</td>
+              <td id="tbl-y-0" class="py-2 px-2 text-slate-900 font-medium">7,00</td>
+              <td id="tbl-xc1-0" class="py-2 px-2 text-[#9a3412]">2,00</td>
+              <td id="tbl-xc2-0" class="py-2 px-2 text-[#1e3a8a]">3,00</td>
+              <td id="tbl-yc-0" class="py-2 px-2 text-slate-700">3,50</td>
+              <td id="tbl-yhat-0" class="py-2 px-2 font-semibold text-emerald-700">6,00</td>
+              <td id="tbl-e-0" class="py-2 px-2 font-semibold text-rose-600">1,00</td>
+              <td id="tbl-e2-0" class="py-2 pl-2 text-slate-700">1,00</td>
+            </tr>
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 2</td>
+              <td id="tbl-x1-1" class="py-2 px-2 text-slate-700">0,0</td>
+              <td id="tbl-x2-1" class="py-2 px-2 text-slate-700">4,0</td>
+              <td id="tbl-y-1" class="py-2 px-2 text-slate-900 font-medium">2,00</td>
+              <td id="tbl-xc1-1" class="py-2 px-2 text-[#9a3412]">−2,00</td>
+              <td id="tbl-xc2-1" class="py-2 px-2 text-[#1e3a8a]">1,00</td>
+              <td id="tbl-yc-1" class="py-2 px-2 text-slate-700">−1,50</td>
+              <td id="tbl-yhat-1" class="py-2 px-2 font-semibold text-emerald-700">3,00</td>
+              <td id="tbl-e-1" class="py-2 px-2 font-semibold text-rose-600">−1,00</td>
+              <td id="tbl-e2-1" class="py-2 pl-2 text-slate-700">1,00</td>
+            </tr>
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 3</td>
+              <td id="tbl-x1-2" class="py-2 px-2 text-slate-700">4,0</td>
+              <td id="tbl-x2-2" class="py-2 px-2 text-slate-700">2,0</td>
+              <td id="tbl-y-2" class="py-2 px-2 text-slate-900 font-medium">3,00</td>
+              <td id="tbl-xc1-2" class="py-2 px-2 text-[#9a3412]">2,00</td>
+              <td id="tbl-xc2-2" class="py-2 px-2 text-[#1e3a8a]">−1,00</td>
+              <td id="tbl-yc-2" class="py-2 px-2 text-slate-700">−0,50</td>
+              <td id="tbl-yhat-2" class="py-2 px-2 font-semibold text-emerald-700">4,00</td>
+              <td id="tbl-e-2" class="py-2 px-2 font-semibold text-rose-600">−1,00</td>
+              <td id="tbl-e2-2" class="py-2 pl-2 text-slate-700">1,00</td>
+            </tr>
+            <tr>
+              <td class="py-2 pr-2 text-left font-semibold text-slate-700">Plant 4</td>
+              <td id="tbl-x1-3" class="py-2 px-2 text-slate-700">0,0</td>
+              <td id="tbl-x2-3" class="py-2 px-2 text-slate-700">0,0</td>
+              <td id="tbl-y-3" class="py-2 px-2 text-slate-900 font-medium">2,00</td>
+              <td id="tbl-xc1-3" class="py-2 px-2 text-[#9a3412]">−2,00</td>
+              <td id="tbl-xc2-3" class="py-2 px-2 text-[#1e3a8a]">−3,00</td>
+              <td id="tbl-yc-3" class="py-2 px-2 text-slate-700">−1,50</td>
+              <td id="tbl-yhat-3" class="py-2 px-2 font-semibold text-emerald-700">1,00</td>
+              <td id="tbl-e-3" class="py-2 px-2 font-semibold text-rose-600">1,00</td>
+              <td id="tbl-e2-3" class="py-2 pl-2 text-slate-700">1,00</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="border-t-2 border-slate-200 bg-slate-50/80 font-semibold">
+              <td class="py-2 pr-2 text-left text-slate-700">Moyenne / Somme</td>
+              <td id="tbl-mean-x1" class="py-2 px-2 text-slate-600">x̄₁ = 2,0</td>
+              <td id="tbl-mean-x2" class="py-2 px-2 text-slate-600">x̄₂ = 3,0</td>
+              <td id="tbl-mean-y" class="py-2 px-2 text-slate-800">ȳ = 3,50</td>
+              <td class="py-2 px-2 text-slate-400">∑ = 0</td>
+              <td class="py-2 px-2 text-slate-400">∑ = 0</td>
+              <td class="py-2 px-2 text-slate-400">∑ = 0</td>
+              <td id="tbl-mean-yhat" class="py-2 px-2 text-emerald-700">ŷ̄ = 3,50</td>
+              <td id="tbl-sum-e" class="py-2 px-2 text-emerald-700">∑ = 0,00</td>
+              <td id="tbl-sum-e2" class="py-2 pl-2 text-rose-600">4,00</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Barre de contrôle de la perspective et de la rotation automatique en bas de la page -->
+    <section class="mt-4 bg-white border border-slate-200 rounded-2xl shadow-sm px-4 sm:px-5 py-3.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <label for="slider-fov" class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Effet de perspective (fuite)</label>
+          <span id="val-fov" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md tabular-nums">20° (Faible)</span>
+        </div>
+
+        <div class="flex-1 flex items-center gap-3 max-w-2xl">
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">Quasi-ortho (5°)</span>
+          <input id="slider-fov" type="range" min="5" max="60" step="1" value="20" class="w-full accent-emerald-600 cursor-pointer" />
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">Forte fuite (60°)</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-fov-ortho" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Quasi-ortho
+          </button>
+          <button id="btn-fov-std" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Douce (20°)
+          </button>
+        </div>
+      </div>
+
+      <!-- Contrôle de la vitesse de rotation automatique constante -->
+      <div class="mt-3 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <label for="slider-rot-speed" class="text-xs font-semibold text-slate-900 uppercase tracking-wider">Rotation automatique</label>
+          <span id="val-rot-speed" class="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums">0°/s (Arrêt)</span>
+        </div>
+
+        <div class="flex-1 flex items-center gap-3 max-w-2xl">
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">−90°/s</span>
+          <input id="slider-rot-speed" type="range" min="-90" max="90" step="5" value="0" class="w-full accent-emerald-600 cursor-pointer" />
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">+90°/s</span>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-rot-stop" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 transition-colors">
+            Arrêt
+          </button>
+          <button id="btn-rot-slow" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Lente (15°/s)
+          </button>
+          <button id="btn-rot-med" type="button" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 transition-colors">
+            Normale (35°/s)
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. OUTILS MATHÉMATIQUES DANS ℝ⁴ & ISOMÉTRIE SUR 1⊥ ≅ ℝ³
+      // =========================================================================
+      // Base orthonormée de 1⊥ (de dimension 3) dans ℝ⁴ (matrice de Hadamard) :
+      //   u1 = 1/2 * ( 1, -1,  1, -1)
+      //   u2 = 1/2 * ( 1,  1, -1, -1)
+      //   u3 = 1/2 * ( 1, -1, -1,  1)
+      // Cette transformation conserve exactement toutes les normes, angles et produits scalaires.
+
+      const X_PRESETS = {
+        corr: {
+          x1: [4, 0, 4, 0],
+          x2: [6, 4, 2, 0] // x̃1 -> (4,0,0), x̃2 -> (2,4,0), r = 1/sqrt(5) ≈ 0,447
+        },
+        ortho: {
+          x1: [4, 0, 4, 0],
+          x2: [4, 4, 0, 0] // x̃1 -> (4,0,0), x̃2 -> (0,4,0), r = 0
+        },
+        colin: {
+          x1: [4, 0, 4, 0],
+          x2: [6, 2, 4, 0] // x̃1 -> (4,0,0), x̃2 -> (3,2,0)? Wait: mean=3, xc2=(3,-1,1,-3) -> u1=4, u2=2, u3=0 -> r = 4/sqrt(20) = 0,894
+        }
+      };
+
+      const DEFAULT_Y = [7, 2, 3, 2];
+
+      function mean4(v) {
+        return (v[0] + v[1] + v[2] + v[3]) / 4;
+      }
+
+      function center4(v) {
+        const m = mean4(v);
+        return [v[0] - m, v[1] - m, v[2] - m, v[3] - m];
+      }
+
+      function dot4(a, b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+      }
+
+      function normSq4(a) {
+        return dot4(a, a);
+      }
+
+      /** Projette un vecteur centré de ℝ⁴ dans la base orthonormée (u1, u2, u3) de 1⊥. */
+      function toBasisU(vc) {
+        const u1 = 0.5 * (vc[0] - vc[1] + vc[2] - vc[3]);
+        const u2 = 0.5 * (vc[0] + vc[1] - vc[2] - vc[3]);
+        const u3 = 0.5 * (vc[0] - vc[1] - vc[2] + vc[3]);
+        return [u1, u2, u3];
+      }
+
+      /** Convertit des coordonnées (u1, u2, u3) en Vector3 Three.js (X=u1, Y=u3 vertical, Z=u2). */
+      function uToThree(u) {
+        return new THREE.Vector3(u[0], u[2], u[1]);
+      }
+
+      /** Convertit directement un vecteur centré de ℝ⁴ en Vector3 Three.js dans 1⊥. */
+      function centered4ToThree(vc) {
+        return uToThree(toBasisU(vc));
+      }
+
+      function fmt(val, dec) {
+        const clean = Math.abs(val) < 1e-9 ? 0 : val;
+        const s = clean.toFixed(dec).replace('.', ',');
+        return clean < 0 ? '−' + s.slice(1) : s;
+      }
+
+      function fmtVec3(u) {
+        return '(' + fmt(u[0], 2) + ' ; ' + fmt(u[1], 2) + ' ; ' + fmt(u[2], 2) + ')';
+      }
+
+      function fmtVec4(v, dec) {
+        return '(' + fmt(v[0], dec) + ' ; ' + fmt(v[1], dec) + ' ; ' + fmt(v[2], dec) + ' ; ' + fmt(v[3], dec) + ')';
+      }
+
+      /** Résout les équations normales MCO (2x2) dans 1⊥ pour y, x1, x2. */
+      function computeOlsMultiple(x1, x2, y) {
+        const x1Bar = mean4(x1);
+        const x2Bar = mean4(x2);
+        const yBar = mean4(y);
+        const xc1 = center4(x1);
+        const xc2 = center4(x2);
+        const yc = center4(y);
+
+        const s11 = normSq4(xc1);
+        const s22 = normSq4(xc2);
+        const s12 = dot4(xc1, xc2);
+        const s1y = dot4(xc1, yc);
+        const s2y = dot4(xc2, yc);
+        const det = s11 * s22 - s12 * s12;
+
+        const b1Mco = (s22 * s1y - s12 * s2y) / det;
+        const b2Mco = (s11 * s2y - s12 * s1y) / det;
+        const b0Mco = yBar - b1Mco * x1Bar - b2Mco * x2Bar;
+
+        const yhatcMco = [
+          b1Mco * xc1[0] + b2Mco * xc2[0],
+          b1Mco * xc1[1] + b2Mco * xc2[1],
+          b1Mco * xc1[2] + b2Mco * xc2[2],
+          b1Mco * xc1[3] + b2Mco * xc2[3]
+        ];
+        const eMco = [
+          yc[0] - yhatcMco[0],
+          yc[1] - yhatcMco[1],
+          yc[2] - yhatcMco[2],
+          yc[3] - yhatcMco[3]
+        ];
+
+        // Coefficients de régression simple (projections orthogonales marginales sur x̃1 et x̃2)
+        const b1Simple = s1y / s11;
+        const b2Simple = s2y / s22;
+        const projX1 = [b1Simple * xc1[0], b1Simple * xc1[1], b1Simple * xc1[2], b1Simple * xc1[3]];
+        const projX2 = [b2Simple * xc2[0], b2Simple * xc2[1], b2Simple * xc2[2], b2Simple * xc2[3]];
+
+        const rX1X2 = s12 / Math.sqrt(s11 * s22);
+
+        return {
+          x1Bar: x1Bar,
+          x2Bar: x2Bar,
+          yBar: yBar,
+          xc1: xc1,
+          xc2: xc2,
+          yc: yc,
+          b0Mco: b0Mco,
+          b1Mco: b1Mco,
+          b2Mco: b2Mco,
+          yhatcMco: yhatcMco,
+          eMco: eMco,
+          scrMco: normSq4(eMco),
+          sct: normSq4(yc),
+          b1Simple: b1Simple,
+          b2Simple: b2Simple,
+          projX1: projX1,
+          projX2: projX2,
+          rX1X2: rX1X2
+        };
+      }
+
+      // =========================================================================
+      // 2. ÉTAT GLOBAL & RÉFÉRENCES DOM
+      // =========================================================================
+      const origin3 = new THREE.Vector3(0, 0, 0);
+      const BASE_FOV = 42;
+      const BASE_TAN_HALF_FOV = Math.tan((BASE_FOV * Math.PI) / 360);
+
+      const state = {
+        xPreset: 'corr',
+        x1: X_PRESETS.corr.x1.slice(),
+        x2: X_PRESETS.corr.x2.slice(),
+        y: DEFAULT_Y.slice(),
+        b1: 0.5,
+        b2: 0.5,
+        modelMode: 'full', // 'full' | 'constant' | 'x1' | 'x2' | 'manual'
+        visibility: {
+          plane: true,
+          para: true,
+          vecX1: true,
+          vecX2: true,
+          b1: true,
+          b2: true,
+          yhat: true,
+          y: true,
+          e: true,
+          eOrigin: false,
+          mco: true,
+          rightAngle: true,
+          labels: true,
+          plantAxes: true,
+          projX1: false,
+          projX2: false,
+          projSimpleDash: true
+        },
+        camTheta: 0.92,
+        camPhi: 1.18,
+        camRadius: 15.0,
+        targetTheta: 0.92,
+        targetPhi: 1.18,
+        targetRadius: 15.0,
+        camFov: 20,
+        targetFov: 20,
+        rotSpeedDeg: 0,
+        lastAnimTime: 0,
+        camTarget: new THREE.Vector3(0, 0, 0),
+        targetCamTarget: new THREE.Vector3(0, 0, 0),
+        isDragging: false,
+        dragMode: null,
+        lastPointerX: 0,
+        lastPointerY: 0,
+        lastPinchDist: 0,
+        lastPinchCenterX: 0,
+        lastPinchCenterY: 0,
+        // Angles de vue de la fenêtre 3D du plan de régression (X1, X2, Y)
+        regTheta: 0.72,
+        regPhi: 1.16,
+        regDragging: false,
+        regLastX: 0,
+        regLastY: 0
+      };
+
+      const sceneWrapper = document.getElementById('scene-wrapper');
+      const threeCanvas = document.getElementById('threeCanvas');
+      const labelsLayer = document.getElementById('labels-layer');
+      const scatterWrapper = document.getElementById('scatter-wrapper');
+      const scatterCanvas = document.getElementById('scatterCanvas');
+      const scatterCtx = scatterCanvas.getContext('2d');
+      const btnRegReset = document.getElementById('btn-reg-reset');
+
+      const headerX1 = document.getElementById('header-x1');
+      const headerX2 = document.getElementById('header-x2');
+      const headerY = document.getElementById('header-y');
+
+      const sliderB1 = document.getElementById('slider-b1');
+      const sliderB2 = document.getElementById('slider-b2');
+      const valB0 = document.getElementById('val-b0');
+      const valB1 = document.getElementById('val-b1');
+      const valB2 = document.getElementById('val-b2');
+      const hintB1Mco = document.getElementById('hint-b1-mco');
+      const hintB2Mco = document.getElementById('hint-b2-mco');
+      const btnMco = document.getElementById('btn-mco');
+      const btnMeanOnly = document.getElementById('btn-mean-only');
+      const btnOnlyX1 = document.getElementById('btn-only-x1');
+      const btnOnlyX2 = document.getElementById('btn-only-x2');
+
+      const btnXCorr = document.getElementById('btn-x-corr');
+      const btnXOrtho = document.getElementById('btn-x-ortho');
+      const btnXColin = document.getElementById('btn-x-colin');
+      const angleX1X2 = document.getElementById('angle-x1x2');
+
+      const sliderY = [
+        document.getElementById('slider-y0'),
+        document.getElementById('slider-y1'),
+        document.getElementById('slider-y2'),
+        document.getElementById('slider-y3')
+      ];
+      const valY = [
+        document.getElementById('val-y0'),
+        document.getElementById('val-y1'),
+        document.getElementById('val-y2'),
+        document.getElementById('val-y3')
+      ];
+      const btnResetY = document.getElementById('btn-reset-y');
+
+      const camStdBtn = document.getElementById('cam-std');
+      const camOrthoBtn = document.getElementById('cam-ortho');
+      const camTopBtn = document.getElementById('cam-top');
+      const camCenterBtn = document.getElementById('cam-center');
+      const orthoBadge = document.getElementById('ortho-badge');
+      const orthoDot = document.getElementById('ortho-dot');
+      const orthoText = document.getElementById('ortho-text');
+      const overlayScr = document.getElementById('overlay-scr');
+      const overlayScrMin = document.getElementById('overlay-scr-min');
+      const overlayR2 = document.getElementById('overlay-r2');
+      const overlayRx1x2 = document.getElementById('overlay-rx1x2');
+
+      const statNormE = document.getElementById('stat-norm-e');
+      const statAngle = document.getElementById('stat-angle');
+      const statExcess = document.getElementById('stat-excess');
+      const statDot1 = document.getElementById('stat-dot1');
+      const statDot2 = document.getElementById('stat-dot2');
+      const pythagoreEq = document.getElementById('pythagore-eq');
+      const anovaEq = document.getElementById('anova-eq');
+      const coordYhatU = document.getElementById('coord-yhat-u');
+      const coordEU = document.getElementById('coord-e-u');
+
+      const tblX1 = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-x1-' + i); });
+      const tblX2 = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-x2-' + i); });
+      const tblY = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-y-' + i); });
+      const tblXc1 = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-xc1-' + i); });
+      const tblXc2 = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-xc2-' + i); });
+      const tblYc = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-yc-' + i); });
+      const tblYhat = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-yhat-' + i); });
+      const tblE = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-e-' + i); });
+      const tblE2 = [0, 1, 2, 3].map(function (i) { return document.getElementById('tbl-e2-' + i); });
+
+      const tblMeanX1 = document.getElementById('tbl-mean-x1');
+      const tblMeanX2 = document.getElementById('tbl-mean-x2');
+      const tblMeanY = document.getElementById('tbl-mean-y');
+      const tblMeanYhat = document.getElementById('tbl-mean-yhat');
+      const tblSumE = document.getElementById('tbl-sum-e');
+      const tblSumE2 = document.getElementById('tbl-sum-e2');
+
+      const visCheckboxes = document.querySelectorAll('.vis-chk');
+      const btnVisAll = document.getElementById('btn-vis-all');
+      const btnVisNone = document.getElementById('btn-vis-none');
+
+      const sliderFov = document.getElementById('slider-fov');
+      const valFov = document.getElementById('val-fov');
+      const btnFovOrtho = document.getElementById('btn-fov-ortho');
+      const btnFovStd = document.getElementById('btn-fov-std');
+      const sliderRotSpeed = document.getElementById('slider-rot-speed');
+      const valRotSpeed = document.getElementById('val-rot-speed');
+      const btnRotStop = document.getElementById('btn-rot-stop');
+      const btnRotSlow = document.getElementById('btn-rot-slow');
+      const btnRotMed = document.getElementById('btn-rot-med');
+
+      // =========================================================================
+      // 3. INITIALISATION DE LA SCÈNE THREE.JS
+      // =========================================================================
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(20, 1, 0.2, 600);
+      const renderer = new THREE.WebGLRenderer({
+        canvas: threeCanvas,
+        antialias: true,
+        alpha: true
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.78);
+      scene.add(ambientLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.45);
+      dirLight.position.set(8, 14, 10);
+      scene.add(dirLight);
+
+      // =========================================================================
+      // 4. OUTILS DE CONSTRUCTION 3D
+      // =========================================================================
+
+      /** Construit le repère orthonormé (u1, u2, u3) de 1⊥ et une grille sur le plan (u1, u2). */
+      function buildAxesAndGrid() {
+        const group = new THREE.Group();
+        const axisMat = new THREE.LineBasicMaterial({ color: 0x64748b });
+        const tickMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
+        const gridMat = new THREE.LineBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.85 });
+
+        const specs = [
+          { from: uToThree([-3.5, 0, 0]), to: uToThree([5.2, 0, 0]), dir: uToThree([1, 0, 0]), ticks: [-3, -2, -1, 1, 2, 3, 4] },
+          { from: uToThree([0, -3.5, 0]), to: uToThree([0, 5.2, 0]), dir: uToThree([0, 1, 0]), ticks: [-3, -2, -1, 1, 2, 3, 4] },
+          { from: uToThree([0, 0, -3.0]), to: uToThree([0, 0, 4.6]), dir: uToThree([0, 0, 1]), ticks: [-2, -1, 1, 2, 3, 4] }
+        ];
+
+        const coneGeo = new THREE.ConeGeometry(0.065, 0.22, 12);
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0x64748b });
+
+        specs.forEach(function (sp) {
+          const lineGeo = new THREE.BufferGeometry().setFromPoints([sp.from, sp.to]);
+          group.add(new THREE.Line(lineGeo, axisMat));
+
+          const cone = new THREE.Mesh(coneGeo, coneMat);
+          cone.position.copy(sp.to);
+          cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), sp.dir.clone().normalize());
+          group.add(cone);
+
+          sp.ticks.forEach(function (t) {
+            const p = sp.dir.clone().multiplyScalar(t);
+            const perp = Math.abs(sp.dir.y) > 0.5 ? new THREE.Vector3(0.07, 0, 0) : new THREE.Vector3(0, 0.07, 0);
+            const tGeo = new THREE.BufferGeometry().setFromPoints([
+              p.clone().sub(perp),
+              p.clone().add(perp)
+            ]);
+            group.add(new THREE.Line(tGeo, tickMat));
+          });
+        });
+
+        // Grille légère sur le plan (u1, u2) contenant x̃1 et x̃2
+        for (let i = -3; i <= 4; i++) {
+          const g1 = new THREE.BufferGeometry().setFromPoints([uToThree([i, -3, 0]), uToThree([i, 4, 0])]);
+          const g2 = new THREE.BufferGeometry().setFromPoints([uToThree([-3, i, 0]), uToThree([4, i, 0])]);
+          group.add(new THREE.Line(g1, gridMat));
+          group.add(new THREE.Line(g2, gridMat));
+        }
+
+        const origMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(0.06, 14, 14),
+          new THREE.MeshBasicMaterial({ color: 0x475569 })
+        );
+        group.add(origMesh);
+
+        scene.add(group);
+      }
+
+      /** Construit la projection orthogonale des 4 axes canoniques des plants (e1..e4) dans 1⊥. */
+      const plantAxisUnitVecs = [];
+      const plantAxesGroup = new THREE.Group();
+      function buildProjectedPlantAxes() {
+        const posMat = new THREE.LineBasicMaterial({ color: 0x7c3aed });
+        const negMat = new THREE.LineBasicMaterial({ color: 0xc4b5fd, transparent: true, opacity: 0.75 });
+        const tickMat = new THREE.LineBasicMaterial({ color: 0x8b5cf6 });
+        const coneGeo = new THREE.ConeGeometry(0.06, 0.21, 12);
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0x7c3aed });
+
+        const canonicalAxes = [
+          [1, 0, 0, 0],
+          [0, 1, 0, 0],
+          [0, 0, 1, 0],
+          [0, 0, 0, 1]
+        ];
+
+        canonicalAxes.forEach(function (eVec) {
+          // Projection orthogonale de e_i sur 1⊥ : e_i - (1/4)1, de norme sqrt(3)/2
+          const projUnit = centered4ToThree(center4(eVec));
+          plantAxisUnitVecs.push(projUnit.clone());
+
+          const dir = projUnit.clone().normalize();
+          const pNeg = projUnit.clone().multiplyScalar(-1.5);
+          const pPos = projUnit.clone().multiplyScalar(4.6);
+
+          // Demi-axe négatif (atténué) et demi-axe positif (violet)
+          plantAxesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pNeg, origin3]), negMat));
+          plantAxesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([origin3, pPos]), posMat));
+
+          // Pointe de flèche côté positif
+          const cone = new THREE.Mesh(coneGeo, coneMat);
+          cone.position.copy(pPos);
+          cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+          plantAxesGroup.add(cone);
+
+          // Graduations correspondant aux valeurs entières t = 1, 2, 3, 4 sur l'axe du plant
+          const refVec = Math.abs(dir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+          const perp = new THREE.Vector3().crossVectors(dir, refVec).normalize().multiplyScalar(0.075);
+          [1, 2, 3, 4].forEach(function (t) {
+            const pt = projUnit.clone().multiplyScalar(t);
+            const tGeo = new THREE.BufferGeometry().setFromPoints([
+              pt.clone().sub(perp),
+              pt.clone().add(perp)
+            ]);
+            plantAxesGroup.add(new THREE.Line(tGeo, tickMat));
+          });
+        });
+
+        scene.add(plantAxesGroup);
+      }
+
+      /** Crée une flèche 3D cylindrique + cône redimensionnable dynamiquement. */
+      function createArrow(colorHex, baseRadius) {
+        const group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({
+          color: colorHex,
+          roughness: 0.35,
+          metalness: 0.08
+        });
+        const shaftGeo = new THREE.CylinderGeometry(1, 1, 1, 14);
+        const headGeo = new THREE.ConeGeometry(1, 1, 16);
+        const shaft = new THREE.Mesh(shaftGeo, mat);
+        const head = new THREE.Mesh(headGeo, mat);
+        group.add(shaft);
+        group.add(head);
+        scene.add(group);
+
+        const upVec = new THREE.Vector3(0, 1, 0);
+
+        return {
+          group: group,
+          setEndpoints: function (start, end, radiusOverride) {
+            const diff = new THREE.Vector3().subVectors(end, start);
+            const len = diff.length();
+            if (len < 1e-4) {
+              group.visible = false;
+              return;
+            }
+            const r = radiusOverride || baseRadius;
+            const headLen = Math.min(len * 0.32, Math.max(0.18, r * 5.2));
+            const headRad = r * 2.5;
+            const shaftLen = Math.max(1e-4, len - headLen);
+            const dir = diff.clone().divideScalar(len);
+
+            group.position.copy(start);
+            group.quaternion.setFromUnitVectors(upVec, dir);
+
+            shaft.scale.set(r, shaftLen, r);
+            shaft.position.set(0, shaftLen * 0.5, 0);
+
+            head.scale.set(headRad, headLen, headRad);
+            head.position.set(0, shaftLen + headLen * 0.5, 0);
+          }
+        };
+      }
+
+      /** Crée un segment en pointillés dynamique. */
+      function createDashedSegment(colorHex, dashSize, gapSize) {
+        const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 1, 0)]);
+        const mat = new THREE.LineDashedMaterial({
+          color: colorHex,
+          dashSize: dashSize || 0.14,
+          gapSize: gapSize || 0.09
+        });
+        const line = new THREE.Line(geo, mat);
+        line.frustumCulled = false;
+        scene.add(line);
+        return {
+          line: line,
+          setEndpoints: function (a, b) {
+            const pos = line.geometry.attributes.position;
+            pos.setXYZ(0, a.x, a.y, a.z);
+            pos.setXYZ(1, b.x, b.y, b.z);
+            pos.needsUpdate = true;
+            line.computeLineDistances();
+            line.geometry.computeBoundingSphere();
+          }
+        };
+      }
+
+      /** Crée un symbole d'angle droit dynamique (3 sommets). */
+      function createRightAngleMark(colorHex) {
+        const geo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(),
+          new THREE.Vector3(),
+          new THREE.Vector3()
+        ]);
+        const mat = new THREE.LineBasicMaterial({ color: colorHex });
+        const line = new THREE.Line(geo, mat);
+        line.frustumCulled = false;
+        scene.add(line);
+        return {
+          line: line,
+          setCorner: function (vertex, dirA, dirB, size) {
+            const u = dirA.clone().normalize().multiplyScalar(size);
+            const v = dirB.clone().normalize().multiplyScalar(size);
+            const p1 = vertex.clone().add(u);
+            const p2 = vertex.clone().add(u).add(v);
+            const p3 = vertex.clone().add(v);
+            const pos = line.geometry.attributes.position;
+            pos.setXYZ(0, p1.x, p1.y, p1.z);
+            pos.setXYZ(1, p2.x, p2.y, p2.z);
+            pos.setXYZ(2, p3.x, p3.y, p3.z);
+            pos.needsUpdate = true;
+            line.geometry.computeBoundingSphere();
+          }
+        };
+      }
+
+      // =========================================================================
+      // 5. OBJETS 3D DE LA SCÈNE
+      // =========================================================================
+      buildAxesAndGrid();
+      buildProjectedPlantAxes();
+
+      // Plan du modèle limité au parallélogramme (losange) de sommets 0, b1*x̃1, ŷ̃, b2*x̃2
+      const modelPlaneGroup = new THREE.Group();
+      const modelPlaneGeo = new THREE.BufferGeometry();
+      modelPlaneGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));
+      modelPlaneGeo.setIndex([0, 1, 2, 0, 2, 3]);
+      const modelPlaneMat = new THREE.MeshBasicMaterial({
+        color: 0x10b981,
+        transparent: true,
+        opacity: 0.34,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const modelPlaneMesh = new THREE.Mesh(modelPlaneGeo, modelPlaneMat);
+      modelPlaneMesh.frustumCulled = false;
+      modelPlaneGroup.add(modelPlaneMesh);
+
+      const SUBDIV = 4;
+      const modelGridGeo = new THREE.BufferGeometry();
+      modelGridGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array((SUBDIV + 1) * 2 * 2 * 3), 3));
+      const modelGridMat = new THREE.LineBasicMaterial({
+        color: 0x059669,
+        transparent: true,
+        opacity: 0.55
+      });
+      const modelGridLines = new THREE.LineSegments(modelGridGeo, modelGridMat);
+      modelGridLines.frustumCulled = false;
+      modelPlaneGroup.add(modelGridLines);
+      scene.add(modelPlaneGroup);
+
+      function updateSubspacePlane(pB1, pB2, pYhat) {
+        const areaCheck = new THREE.Vector3().crossVectors(pB1, pB2).length();
+        const show = state.visibility.plane && areaCheck > 1e-4;
+        modelPlaneGroup.visible = show;
+        if (!show) return;
+
+        const pos = modelPlaneGeo.attributes.position;
+        pos.setXYZ(0, 0, 0, 0);
+        pos.setXYZ(1, pB1.x, pB1.y, pB1.z);
+        pos.setXYZ(2, pYhat.x, pYhat.y, pYhat.z);
+        pos.setXYZ(3, pB2.x, pB2.y, pB2.z);
+        pos.needsUpdate = true;
+        modelPlaneGeo.computeVertexNormals();
+        modelPlaneGeo.computeBoundingSphere();
+
+        const gPos = modelGridGeo.attributes.position;
+        let idx = 0;
+        for (let i = 0; i <= SUBDIV; i++) {
+          const t = i / SUBDIV;
+          const a1 = pB1.clone().multiplyScalar(t);
+          const b1 = a1.clone().add(pB2);
+          gPos.setXYZ(idx++, a1.x, a1.y, a1.z);
+          gPos.setXYZ(idx++, b1.x, b1.y, b1.z);
+
+          const a2 = pB2.clone().multiplyScalar(t);
+          const b2 = a2.clone().add(pB1);
+          gPos.setXYZ(idx++, a2.x, a2.y, a2.z);
+          gPos.setXYZ(idx++, b2.x, b2.y, b2.z);
+        }
+        gPos.needsUpdate = true;
+        modelGridGeo.computeBoundingSphere();
+      }
+
+      // Flèches principales dans 1⊥
+      const arrowVecX1 = createArrow(0x9a3412, 0.036);       // x̃1 (orange foncé)
+      const arrowVecX2 = createArrow(0x1e3a8a, 0.036);       // x̃2 (bleu foncé)
+      const arrowB1 = createArrow(0xea580c, 0.032);          // b1 * x̃1 (orange)
+      const arrowB2 = createArrow(0x0284c7, 0.032);          // b2 * x̃2 (bleu ciel)
+      const arrowYhat = createArrow(0x047857, 0.038);        // ŷ̃ (émeraude)
+      const arrowY = createArrow(0x0f172a, 0.038);           // ỹ (ardoise foncé)
+      const arrowE = createArrow(0xe11d48, 0.038);           // e = ỹ - ŷ̃ (rose)
+      const arrowEOrigin = createArrow(0xbe123c, 0.034);     // e depuis l'origine
+
+      // Projections simples (marginales) sur x̃1 et x̃2
+      const arrowProjX1 = createArrow(0xf59e0b, 0.032);      // proj. simple sur x̃1 (ambre)
+      const arrowProjX2 = createArrow(0x6366f1, 0.032);      // proj. simple sur x̃2 (indigo)
+
+      // Segments en pointillés
+      const dashPara1 = createDashedSegment(0x065f46, 0.14, 0.09);     // b1*x̃1 -> ŷ̃
+      const dashPara2 = createDashedSegment(0x065f46, 0.14, 0.09);     // b2*x̃2 -> ŷ̃
+      const dashMcoE = createDashedSegment(0x10b981, 0.12, 0.09);      // ŷ̃_mco -> ỹ
+      const dashMcoDiff = createDashedSegment(0x059669, 0.12, 0.09);   // ŷ̃_mco -> ŷ̃
+      const dashProjX1 = createDashedSegment(0xd97706, 0.12, 0.08);    // ŷ̃_mco -> proj(ỹ sur x̃1)
+      const dashProjX2 = createDashedSegment(0x4f46e5, 0.12, 0.08);    // ŷ̃_mco -> proj(ỹ sur x̃2)
+
+      // Marques d'angles droits
+      const rightAngleMco = createRightAngleMark(0x0f172a);
+      const rightAngleProjX1 = createRightAngleMark(0xd97706);
+      const rightAngleProjX2 = createRightAngleMark(0x4f46e5);
+
+      // =========================================================================
+      // 6. ÉTIQUETTES 3D PROJETÉES EN 2D
+      // =========================================================================
+      function createLabelDef(html, colorClass) {
+        const el = document.createElement('div');
+        el.className = 'absolute px-2 py-1 rounded bg-white/85 backdrop-blur-[1px] text-sm font-bold leading-none shadow-sm border border-slate-200/70 whitespace-nowrap ' + colorClass;
+        el.style.transform = 'translate(-50%, -50%)';
+        el.innerHTML = html;
+        labelsLayer.appendChild(el);
+        return { el: el, pos: new THREE.Vector3(), visible: true };
+      }
+
+      const labels = {
+        axis1: createLabelDef('u₁', 'text-slate-500 font-semibold'),
+        axis2: createLabelDef('u₂', 'text-slate-500 font-semibold'),
+        axis3: createLabelDef('u₃', 'text-slate-500 font-semibold'),
+        plantAxis1: createLabelDef('plant 1 (proj.)', 'text-violet-700 border-violet-200/80 !text-xs font-semibold'),
+        plantAxis2: createLabelDef('plant 2 (proj.)', 'text-violet-700 border-violet-200/80 !text-xs font-semibold'),
+        plantAxis3: createLabelDef('plant 3 (proj.)', 'text-violet-700 border-violet-200/80 !text-xs font-semibold'),
+        plantAxis4: createLabelDef('plant 4 (proj.)', 'text-violet-700 border-violet-200/80 !text-xs font-semibold'),
+        vecX1: createLabelDef('x̃₁', 'text-[#9a3412]'),
+        vecX2: createLabelDef('x̃₂', 'text-[#1e3a8a]'),
+        b1: createLabelDef('b₁x̃₁', 'text-orange-600'),
+        b2: createLabelDef('b₂x̃₂', 'text-sky-700'),
+        yhat: createLabelDef('ŷ̃', 'text-emerald-700'),
+        y: createLabelDef('ỹ', 'text-slate-900'),
+        e: createLabelDef('e', 'text-rose-600'),
+        eOrigin: createLabelDef('e (origine)', 'text-[#be123c]'),
+        mco: createLabelDef('ŷ̃<sub>MCO</sub>', 'text-emerald-600'),
+        projX1: createLabelDef('Proj<sub>x̃₁</sub>(ỹ)', 'text-amber-600'),
+        projX2: createLabelDef('Proj<sub>x̃₂</sub>(ỹ)', 'text-indigo-600')
+      };
+
+      labels.axis1.pos.copy(uToThree([5.45, 0, 0]));
+      labels.axis2.pos.copy(uToThree([0, 5.45, 0]));
+      labels.axis3.pos.copy(uToThree([0, 0, 4.85]));
+      labels.plantAxis1.pos.copy(plantAxisUnitVecs[0].clone().multiplyScalar(5.05));
+      labels.plantAxis2.pos.copy(plantAxisUnitVecs[1].clone().multiplyScalar(5.05));
+      labels.plantAxis3.pos.copy(plantAxisUnitVecs[2].clone().multiplyScalar(5.05));
+      labels.plantAxis4.pos.copy(plantAxisUnitVecs[3].clone().multiplyScalar(5.05));
+
+      const projVec = new THREE.Vector3();
+
+      function updateLabels2D() {
+        const w = sceneWrapper.clientWidth;
+        const h = sceneWrapper.clientHeight;
+        const showAny = state.visibility.labels;
+
+        Object.keys(labels).forEach(function (key) {
+          const item = labels[key];
+          const isAlwaysAllowed = key.indexOf('axis') === 0 || key.indexOf('plantAxis') === 0;
+          if (!item.visible || (!isAlwaysAllowed && !showAny)) {
+            item.el.style.display = 'none';
+            return;
+          }
+          projVec.copy(item.pos).project(camera);
+          if (projVec.z < -1 || projVec.z > 1) {
+            item.el.style.display = 'none';
+            return;
+          }
+          const sx = (projVec.x * 0.5 + 0.5) * w;
+          const sy = (-projVec.y * 0.5 + 0.5) * h;
+          if (sx < -30 || sx > w + 30 || sy < -20 || sy > h + 20) {
+            item.el.style.display = 'none';
+            return;
+          }
+          item.el.style.display = 'block';
+          item.el.style.left = sx.toFixed(1) + 'px';
+          item.el.style.top = sy.toFixed(1) + 'px';
+        });
+      }
+
+      // =========================================================================
+      // 7. MISE À JOUR DU MODÈLE, DU TABLEAU ET DU GRAPHIQUE 2D
+      // =========================================================================
+      function updateModel() {
+        const vis = state.visibility;
+        const x1 = state.x1;
+        const x2 = state.x2;
+        const yVec = state.y;
+        const ols = computeOlsMultiple(x1, x2, yVec);
+
+        const b1 = state.b1;
+        const b2 = state.b2;
+        // b0 fixé par centrage : ŷ̄ = ȳ => ē = 0 (e ∈ 1⊥)
+        const b0 = ols.yBar - b1 * ols.x1Bar - b2 * ols.x2Bar;
+
+        const vB1 = [b1 * ols.xc1[0], b1 * ols.xc1[1], b1 * ols.xc1[2], b1 * ols.xc1[3]];
+        const vB2 = [b2 * ols.xc2[0], b2 * ols.xc2[1], b2 * ols.xc2[2], b2 * ols.xc2[3]];
+        const vYhatc = [vB1[0] + vB2[0], vB1[1] + vB2[1], vB1[2] + vB2[2], vB1[3] + vB2[3]];
+        const vYhat = [
+          b0 + b1 * x1[0] + b2 * x2[0],
+          b0 + b1 * x1[1] + b2 * x2[1],
+          b0 + b1 * x1[2] + b2 * x2[2],
+          b0 + b1 * x1[3] + b2 * x2[3]
+        ];
+        const vE = [
+          ols.yc[0] - vYhatc[0],
+          ols.yc[1] - vYhatc[1],
+          ols.yc[2] - vYhatc[2],
+          ols.yc[3] - vYhatc[3]
+        ];
+
+        // Conversion en Three.js dans 1⊥
+        const pX1 = centered4ToThree(ols.xc1);
+        const pX2 = centered4ToThree(ols.xc2);
+        const pB1 = centered4ToThree(vB1);
+        const pB2 = centered4ToThree(vB2);
+        const pYhat = centered4ToThree(vYhatc);
+        const pY = centered4ToThree(ols.yc);
+        const pE = centered4ToThree(vE);
+        const pMco = centered4ToThree(ols.yhatcMco);
+        const pProjX1 = centered4ToThree(ols.projX1);
+        const pProjX2 = centered4ToThree(ols.projX2);
+
+        // 1. Plan du modèle (parallélogramme de diagonale ŷ̃)
+        updateSubspacePlane(pB1, pB2, pYhat);
+
+        // 1b. Projection des 4 axes canoniques des plants dans 1⊥
+        plantAxesGroup.visible = vis.plantAxes;
+        labels.plantAxis1.visible = vis.plantAxes;
+        labels.plantAxis2.visible = vis.plantAxes;
+        labels.plantAxis3.visible = vis.plantAxes;
+        labels.plantAxis4.visible = vis.plantAxes;
+
+        // 2. Vecteurs centrés du modèle
+        const rX1 = Math.abs(b1) < 1 ? 0.028 : 0.040;
+        const rB1 = Math.abs(b1) < 1 ? 0.040 : 0.028;
+        const rX2 = Math.abs(b2) < 1 ? 0.028 : 0.040;
+        const rB2 = Math.abs(b2) < 1 ? 0.040 : 0.028;
+
+        arrowVecX1.group.visible = vis.vecX1;
+        if (vis.vecX1) arrowVecX1.setEndpoints(origin3, pX1, rX1);
+
+        arrowVecX2.group.visible = vis.vecX2;
+        if (vis.vecX2) arrowVecX2.setEndpoints(origin3, pX2, rX2);
+
+        arrowB1.group.visible = vis.b1 && Math.abs(b1) > 1e-3;
+        if (arrowB1.group.visible) arrowB1.setEndpoints(origin3, pB1, rB1);
+
+        arrowB2.group.visible = vis.b2 && Math.abs(b2) > 1e-3;
+        if (arrowB2.group.visible) arrowB2.setEndpoints(origin3, pB2, rB2);
+
+        const yhatLen = pYhat.length();
+        arrowYhat.group.visible = vis.yhat && yhatLen > 1e-3;
+        if (arrowYhat.group.visible) arrowYhat.setEndpoints(origin3, pYhat);
+
+        arrowY.group.visible = vis.y && pY.length() > 1e-3;
+        if (arrowY.group.visible) arrowY.setEndpoints(origin3, pY);
+
+        const eLen = Math.sqrt(normSq4(vE));
+        arrowE.group.visible = vis.e && eLen > 1e-3;
+        if (arrowE.group.visible) arrowE.setEndpoints(pYhat, pY);
+
+        arrowEOrigin.group.visible = vis.eOrigin && eLen > 1e-3;
+        if (arrowEOrigin.group.visible) arrowEOrigin.setEndpoints(origin3, pE);
+
+        // 3. Parallélogramme pointillé
+        const showPara = vis.para && Math.abs(b1) > 1e-3 && Math.abs(b2) > 1e-3;
+        dashPara1.line.visible = showPara;
+        dashPara2.line.visible = showPara;
+        if (showPara) {
+          dashPara1.setEndpoints(pB1, pYhat);
+          dashPara2.setEndpoints(pB2, pYhat);
+        }
+
+        // 4. Référence MCO & Pythagore
+        const diffMcoSq = normSq4([
+          vYhatc[0] - ols.yhatcMco[0],
+          vYhatc[1] - ols.yhatcMco[1],
+          vYhatc[2] - ols.yhatcMco[2],
+          vYhatc[3] - ols.yhatcMco[3]
+        ]);
+        const isNearMco = diffMcoSq < 1e-3;
+        dashMcoE.line.visible = vis.mco && !isNearMco && ols.scrMco > 1e-4;
+        if (dashMcoE.line.visible) dashMcoE.setEndpoints(pMco, pY);
+        dashMcoDiff.line.visible = vis.mco && !isNearMco;
+        if (dashMcoDiff.line.visible) dashMcoDiff.setEndpoints(pMco, pYhat);
+
+        // 5. Projections simples (marginales) sur x̃1 et x̃2
+        const px1Len = pProjX1.length();
+        const px2Len = pProjX2.length();
+
+        arrowProjX1.group.visible = vis.projX1 && px1Len > 1e-3;
+        if (arrowProjX1.group.visible) {
+          const shift1 = new THREE.Vector3(0, 0.05, 0);
+          arrowProjX1.setEndpoints(origin3.clone().add(shift1), pProjX1.clone().add(shift1), 0.032);
+        }
+
+        arrowProjX2.group.visible = vis.projX2 && px2Len > 1e-3;
+        if (arrowProjX2.group.visible) {
+          const shift2 = new THREE.Vector3(0, 0.05, 0);
+          arrowProjX2.setEndpoints(origin3.clone().add(shift2), pProjX2.clone().add(shift2), 0.032);
+        }
+
+        dashProjX1.line.visible = vis.projX1 && vis.projSimpleDash && pMco.distanceTo(pProjX1) > 1e-3;
+        if (dashProjX1.line.visible) dashProjX1.setEndpoints(pMco, pProjX1);
+
+        dashProjX2.line.visible = vis.projX2 && vis.projSimpleDash && pMco.distanceTo(pProjX2) > 1e-3;
+        if (dashProjX2.line.visible) dashProjX2.setEndpoints(pMco, pProjX2);
+
+        // 6. Marques d'angles droits
+        const showRightMco = vis.rightAngle && isNearMco && eLen > 0.2 && yhatLen > 0.2;
+        rightAngleMco.line.visible = showRightMco;
+        if (showRightMco) {
+          rightAngleMco.setCorner(pYhat, new THREE.Vector3().subVectors(pY, pYhat), pYhat.clone().negate(), 0.34);
+        }
+
+        const showRightProj1 = vis.rightAngle && vis.projX1 && vis.projSimpleDash && px1Len > 0.2 && pMco.distanceTo(pProjX1) > 0.2;
+        rightAngleProjX1.line.visible = showRightProj1;
+        if (showRightProj1) {
+          rightAngleProjX1.setCorner(pProjX1, new THREE.Vector3().subVectors(pMco, pProjX1), pProjX1.clone().negate(), 0.26);
+        }
+
+        const showRightProj2 = vis.rightAngle && vis.projX2 && vis.projSimpleDash && px2Len > 0.2 && pMco.distanceTo(pProjX2) > 0.2;
+        rightAngleProjX2.line.visible = showRightProj2;
+        if (showRightProj2) {
+          rightAngleProjX2.setCorner(pProjX2, new THREE.Vector3().subVectors(pMco, pProjX2), pProjX2.clone().negate(), 0.26);
+        }
+
+        // 7. Positions des étiquettes 3D
+        labels.vecX1.visible = vis.vecX1;
+        labels.vecX1.pos.copy(pX1).multiplyScalar(0.94).add(new THREE.Vector3(0.18, 0.20, -0.14));
+
+        labels.vecX2.visible = vis.vecX2;
+        labels.vecX2.pos.copy(pX2).multiplyScalar(0.94).add(new THREE.Vector3(-0.18, 0.20, 0.16));
+
+        labels.b1.visible = vis.b1 && Math.abs(b1) > 0.1;
+        labels.b1.pos.copy(pB1).multiplyScalar(0.62).add(new THREE.Vector3(0, -0.22, -0.22));
+
+        labels.b2.visible = vis.b2 && Math.abs(b2) > 0.1;
+        labels.b2.pos.copy(pB2).multiplyScalar(0.62).add(new THREE.Vector3(-0.24, -0.20, 0.12));
+
+        labels.yhat.visible = vis.yhat;
+        labels.yhat.pos.copy(pYhat).add(new THREE.Vector3(0.24, -0.20, 0.16));
+
+        labels.y.visible = vis.y;
+        labels.y.pos.copy(pY).add(new THREE.Vector3(0, 0.28, 0));
+
+        labels.e.visible = vis.e && eLen > 0.15;
+        labels.e.pos.copy(pYhat).lerp(pY, 0.52).add(new THREE.Vector3(0.24, 0.10, 0));
+
+        labels.eOrigin.visible = vis.eOrigin && eLen > 0.15;
+        labels.eOrigin.pos.copy(pE).multiplyScalar(0.84).add(new THREE.Vector3(-0.24, 0.16, 0));
+
+        labels.mco.visible = vis.mco && !isNearMco;
+        labels.mco.pos.copy(pMco).add(new THREE.Vector3(0.24, -0.24, 0.12));
+
+        labels.projX1.visible = vis.projX1 && px1Len > 0.15;
+        labels.projX1.pos.copy(pProjX1).add(new THREE.Vector3(0, 0.30, -0.18));
+
+        labels.projX2.visible = vis.projX2 && px2Len > 0.15;
+        labels.projX2.pos.copy(pProjX2).add(new THREE.Vector3(-0.20, 0.30, 0.16));
+
+        // 8. Affichages numériques & diagnostics
+        const scr = normSq4(vE);
+        const dot1 = dot4(vE, ols.xc1);
+        const dot2 = dot4(vE, ols.xc2);
+
+        // Normale unitaire au plan Vect(x̃1, x̃2) dans 1⊥
+        const planeNormal = new THREE.Vector3().crossVectors(pX1, pX2).normalize();
+        const sinAngle = eLen > 1e-6 ? Math.min(1, Math.abs(pE.dot(planeNormal)) / eLen) : 1;
+        const angleDeg = (Math.asin(sinAngle) * 180) / Math.PI;
+        const r2 = ols.sct > 1e-9 ? Math.max(0, 1 - scr / ols.sct) : 1;
+        const angleXDeg = (Math.acos(Math.max(-1, Math.min(1, ols.rX1X2))) * 180) / Math.PI;
+
+        headerX1.textContent = fmtVec4(x1, 0);
+        headerX2.textContent = fmtVec4(x2, 0);
+        headerY.textContent = fmtVec4(yVec, 1);
+
+        valB0.textContent = fmt(b0, 2);
+        valB1.textContent = fmt(b1, 2);
+        valB2.textContent = fmt(b2, 2);
+        hintB1Mco.textContent = fmt(ols.b1Mco, 2);
+        hintB2Mco.textContent = fmt(ols.b2Mco, 2);
+        angleX1X2.textContent = 'angle = ' + fmt(angleXDeg, 1) + '° (r = ' + fmt(ols.rX1X2, 2) + ')';
+
+        for (let i = 0; i < 4; i++) {
+          valY[i].textContent = fmt(yVec[i], 2);
+        }
+
+        overlayScr.textContent = fmt(scr, 2);
+        overlayScrMin.textContent = fmt(ols.scrMco, 2);
+        overlayR2.textContent = fmt(r2, 3);
+        overlayRx1x2.textContent = fmt(ols.rX1X2, 2);
+
+        statNormE.textContent = fmt(eLen, 2) + ' (‖e‖² = ' + fmt(scr, 2) + ')';
+        statAngle.textContent = fmt(angleDeg, 1) + '°';
+        statExcess.textContent = '+' + fmt(diffMcoSq, 2);
+        statDot1.textContent = fmt(dot1, 2);
+        statDot2.textContent = fmt(dot2, 2);
+        pythagoreEq.textContent = fmt(ols.scrMco, 2) + ' + ' + fmt(diffMcoSq, 2) + ' = ' + fmt(scr, 2);
+
+        const scm = normSq4(vYhatc);
+        anovaEq.textContent = fmt(ols.sct, 2) + (isNearMco ? ' = ' : ' ≈ ') + fmt(scm, 2) + ' + ' + fmt(scr, 2) + ' (R² = ' + fmt(r2, 3) + ')';
+
+        coordYhatU.textContent = fmtVec3(toBasisU(vYhatc));
+        coordEU.textContent = fmtVec3(toBasisU(vE));
+
+        if (isNearMco) {
+          orthoBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50/95 text-emerald-700 border border-emerald-200 shadow-sm backdrop-blur-sm';
+          orthoDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+          orthoText.textContent = 'Projection orthogonale (MCO)';
+          statAngle.className = 'font-bold text-emerald-700 mt-0.5';
+        } else {
+          orthoBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50/95 text-amber-700 border border-amber-200 shadow-sm backdrop-blur-sm';
+          orthoDot.className = 'w-2 h-2 rounded-full bg-amber-500';
+          orthoText.textContent = 'Projection oblique (non optimale)';
+          statAngle.className = 'font-bold text-amber-600 mt-0.5';
+        }
+
+        // Tableau de données (4 plants)
+        let sumE = 0;
+        let sumE2 = 0;
+        for (let i = 0; i < 4; i++) {
+          const e2 = vE[i] * vE[i];
+          tblX1[i].textContent = fmt(x1[i], 1);
+          tblX2[i].textContent = fmt(x2[i], 1);
+          tblY[i].textContent = fmt(yVec[i], 2);
+          tblXc1[i].textContent = fmt(ols.xc1[i], 2);
+          tblXc2[i].textContent = fmt(ols.xc2[i], 2);
+          tblYc[i].textContent = fmt(ols.yc[i], 2);
+          tblYhat[i].textContent = fmt(vYhat[i], 2);
+          tblE[i].textContent = fmt(vE[i], 2);
+          tblE2[i].textContent = fmt(e2, 2);
+          sumE += vE[i];
+          sumE2 += e2;
+        }
+        tblMeanX1.textContent = 'x̄₁ = ' + fmt(ols.x1Bar, 1);
+        tblMeanX2.textContent = 'x̄₂ = ' + fmt(ols.x2Bar, 1);
+        tblMeanY.textContent = 'ȳ = ' + fmt(ols.yBar, 2);
+        tblMeanYhat.textContent = 'ŷ̄ = ' + fmt(mean4(vYhat), 2);
+        tblSumE.textContent = '∑ = ' + fmt(sumE, 2);
+        tblSumE2.textContent = fmt(sumE2, 2);
+
+        drawRegressionPlane3D(b0, b1, b2, ols.yBar, vYhat);
+      }
+
+      /** Dessine le plan de régression 3D ŷ = b0 + b1*x1 + b2*x2 dans l'espace (X1, X2, Y). */
+      function drawRegressionPlane3D(b0, b1, b2, yBar, vYhat) {
+        const w = scatterWrapper.clientWidth || 320;
+        const h = scatterWrapper.clientHeight || 260;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (scatterCanvas.width !== Math.round(w * dpr) || scatterCanvas.height !== Math.round(h * dpr)) {
+          scatterCanvas.width = Math.round(w * dpr);
+          scatterCanvas.height = Math.round(h * dpr);
+        }
+        scatterCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        scatterCtx.clearRect(0, 0, w, h);
+
+        // Normalisation des coordonnées (x1 ∈ [0,4], x2 ∈ [0,6], y ∈ [-2,9]) autour du centre
+        const cx1 = 2.0, sx1 = 0.42;
+        const cx2 = 3.0, sx2 = 0.28;
+        const cy = 3.5, sy = 0.22;
+
+        function toWorld(x1, x2, y) {
+          return {
+            x: (x1 - cx1) * sx1,
+            y: (y - cy) * sy,
+            z: (x2 - cx2) * sx2
+          };
+        }
+
+        const R = 4.9;
+        const sinP = Math.sin(state.regPhi);
+        const cosP = Math.cos(state.regPhi);
+        const sinT = Math.sin(state.regTheta);
+        const cosT = Math.cos(state.regTheta);
+
+        const cam = {
+          x: R * sinP * cosT,
+          y: R * cosP,
+          z: R * sinP * sinT
+        };
+
+        // Base orthonormée de la caméra regardant l'origine (0, 0, 0)
+        const fLen = Math.hypot(cam.x, cam.y, cam.z);
+        const fwd = { x: -cam.x / fLen, y: -cam.y / fLen, z: -cam.z / fLen };
+        // Right = normalize(fwd × (0, 1, 0)) = normalize((-fwd.z, 0, fwd.x))
+        let rx = -fwd.z;
+        let rz = fwd.x;
+        const rLen = Math.hypot(rx, rz) || 1;
+        rx /= rLen;
+        rz /= rLen;
+        const right = { x: rx, y: 0, z: rz };
+        // Up = right × fwd
+        const up = {
+          x: right.y * fwd.z - right.z * fwd.y,
+          y: right.z * fwd.x - right.x * fwd.z,
+          z: right.x * fwd.y - right.y * fwd.x
+        };
+
+        const focal = Math.min(w, h) * 1.48;
+
+        function project(x1, x2, y) {
+          const p = toWorld(x1, x2, y);
+          const dx = p.x - cam.x;
+          const dy = p.y - cam.y;
+          const dz = p.z - cam.z;
+          const cz = dx * fwd.x + dy * fwd.y + dz * fwd.z;
+          const cx = dx * right.x + dy * right.y + dz * right.z;
+          const cyCam = dx * up.x + dy * up.y + dz * up.z;
+          const zSafe = Math.max(0.4, cz);
+          return {
+            x: w * 0.5 + (cx / zSafe) * focal,
+            y: h * 0.53 - (cyCam / zSafe) * focal,
+            depth: cz
+          };
+        }
+
+        const ctx = scatterCtx;
+        ctx.save();
+
+        // 1. Grille au sol (plan y = 0, x1 ∈ [0,4], x2 ∈ [0,6])
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        for (let gx = 0; gx <= 4; gx += 1) {
+          const p0 = project(gx, 0, 0);
+          const p1 = project(gx, 6, 0);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+        for (let gz = 0; gz <= 6; gz += 1) {
+          const p0 = project(0, gz, 0);
+          const p1 = project(4, gz, 0);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+
+        // 2. Axes X1, X2 et Y
+        const pOrig = project(0, 0, 0);
+        const pAx1 = project(4.5, 0, 0);
+        const pAx2 = project(0, 6.6, 0);
+        const pAxYMin = project(0, 0, -1.2);
+        const pAxYMax = project(0, 0, 8.6);
+
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(pOrig.x, pOrig.y);
+        ctx.lineTo(pAx1.x, pAx1.y);
+        ctx.moveTo(pOrig.x, pOrig.y);
+        ctx.lineTo(pAx2.x, pAx2.y);
+        ctx.moveTo(pAxYMin.x, pAxYMin.y);
+        ctx.lineTo(pAxYMax.x, pAxYMax.y);
+        ctx.stroke();
+
+        // Graduations discrètes sur les axes
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        [2, 4].forEach(function (v) {
+          const pt = project(v, -0.35, 0);
+          ctx.fillText(String(v), pt.x, pt.y);
+        });
+        [2, 4, 6].forEach(function (v) {
+          const pt = project(-0.35, v, 0);
+          ctx.fillText(String(v), pt.x, pt.y);
+        });
+        [2, 4, 6, 8].forEach(function (v) {
+          const pt = project(-0.32, -0.32, v);
+          ctx.fillText(String(v), pt.x, pt.y);
+        });
+
+        // 3. Plan constant y = ȳ (contour en pointillés orange)
+        const c0 = project(0, 0, yBar);
+        const c1 = project(4, 0, yBar);
+        const c2 = project(4, 6, yBar);
+        const c3 = project(0, 6, yBar);
+        ctx.strokeStyle = 'rgba(234, 88, 12, 0.72)';
+        ctx.lineWidth = 1.3;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(c0.x, c0.y);
+        ctx.lineTo(c1.x, c1.y);
+        ctx.lineTo(c2.x, c2.y);
+        ctx.lineTo(c3.x, c3.y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Calcul du côté de la caméra par rapport au plan de régression pour le tri avant/arrière
+        const camDataX1 = cam.x / sx1 + cx1;
+        const camDataX2 = cam.z / sx2 + cx2;
+        const camDataY = cam.y / sy + cy;
+        const camSide = camDataY - (b0 + b1 * camDataX1 + b2 * camDataX2);
+
+        const plants = [];
+        for (let i = 0; i < 4; i++) {
+          const x1i = state.x1[i];
+          const x2i = state.x2[i];
+          const yi = state.y[i];
+          const yhi = vYhat[i];
+          const ei = yi - yhi;
+          const pObs = project(x1i, x2i, yi);
+          const pPred = project(x1i, x2i, yhi);
+          const pFloor = project(x1i, x2i, 0);
+          plants.push({
+            idx: i,
+            pObs: pObs,
+            pPred: pPred,
+            pFloor: pFloor,
+            inFront: ei * camSide >= 0
+          });
+        }
+
+        // Lignes de rappel verticales discrètes vers le sol (y = 0)
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 3]);
+        plants.forEach(function (pl) {
+          ctx.beginPath();
+          ctx.moveTo(pl.pFloor.x, pl.pFloor.y);
+          ctx.lineTo(pl.pPred.x, pl.pPred.y);
+          ctx.stroke();
+        });
+        ctx.setLineDash([]);
+
+        function drawPlantList(list) {
+          list.sort(function (a, b) { return b.pObs.depth - a.pObs.depth; });
+          list.forEach(function (pl) {
+            // Segment résiduel vertical e_i = y_i - ŷ_i
+            ctx.strokeStyle = '#e11d48';
+            ctx.lineWidth = 2.1;
+            ctx.beginPath();
+            ctx.moveTo(pl.pPred.x, pl.pPred.y);
+            ctx.lineTo(pl.pObs.x, pl.pObs.y);
+            ctx.stroke();
+
+            // Point observé (x1_i, x2_i, y_i)
+            ctx.beginPath();
+            ctx.arc(pl.pObs.x, pl.pObs.y, 4.3, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.4;
+            ctx.stroke();
+          });
+        }
+
+        // 4. Points et résidus situés derrière le plan de régression
+        drawPlantList(plants.filter(function (pl) { return !pl.inFront; }));
+
+        // 5. Plan de régression 3D : ŷ(x1, x2) = b0 + b1*x1 + b2*x2 sur [0,4] × [0,6]
+        const p00 = project(0, 0, b0);
+        const p40 = project(4, 0, b0 + 4 * b1);
+        const p46 = project(4, 6, b0 + 4 * b1 + 6 * b2);
+        const p06 = project(0, 6, b0 + 6 * b2);
+
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.28)';
+        ctx.beginPath();
+        ctx.moveTo(p00.x, p00.y);
+        ctx.lineTo(p40.x, p40.y);
+        ctx.lineTo(p46.x, p46.y);
+        ctx.lineTo(p06.x, p06.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Quadrillage interne du plan de régression
+        ctx.strokeStyle = 'rgba(5, 150, 105, 0.45)';
+        ctx.lineWidth = 0.9;
+        for (let i = 1; i <= 3; i++) {
+          const x1g = (4 * i) / 4;
+          const a = project(x1g, 0, b0 + b1 * x1g);
+          const b = project(x1g, 6, b0 + b1 * x1g + b2 * 6);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+        for (let j = 1; j <= 5; j++) {
+          const x2g = j;
+          const a = project(0, x2g, b0 + b2 * x2g);
+          const b = project(4, x2g, b0 + b1 * 4 + b2 * x2g);
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+
+        // Bordure du plan de régression
+        ctx.strokeStyle = '#047857';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(p00.x, p00.y);
+        ctx.lineTo(p40.x, p40.y);
+        ctx.lineTo(p46.x, p46.y);
+        ctx.lineTo(p06.x, p06.y);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Points prédits sur le plan de régression
+        plants.forEach(function (pl) {
+          ctx.beginPath();
+          ctx.arc(pl.pPred.x, pl.pPred.y, 2.8, 0, Math.PI * 2);
+          ctx.fillStyle = '#047857';
+          ctx.fill();
+        });
+
+        // 6. Points et résidus situés devant le plan de régression
+        drawPlantList(plants.filter(function (pl) { return pl.inFront; }));
+
+        // 7. Étiquettes des axes et des 4 plants (toujours lisibles au premier plan)
+        ctx.font = '700 11px Inter, sans-serif';
+        ctx.fillStyle = '#9a3412';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const lblX1 = project(4.85, 0, 0);
+        ctx.fillText('X₁', lblX1.x, lblX1.y);
+
+        ctx.fillStyle = '#1e3a8a';
+        const lblX2 = project(0, 7.05, 0);
+        ctx.fillText('X₂', lblX2.x, lblX2.y);
+
+        ctx.fillStyle = '#0f172a';
+        const lblY = project(0, 0, 9.25);
+        ctx.fillText('Y', lblY.x, lblY.y);
+
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = '#1e293b';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        plants.forEach(function (pl) {
+          ctx.fillText('P' + (pl.idx + 1), pl.pObs.x + 6, pl.pObs.y - 2);
+        });
+
+        ctx.restore();
+      }
+
+      function resizeScene() {
+        const w = Math.max(240, sceneWrapper.clientWidth);
+        const h = Math.max(320, sceneWrapper.clientHeight);
+        camera.aspect = w / h;
+        camera.setViewOffset(w, h, 0, -Math.round(h * 0.12), w, h);
+        renderer.setSize(w, h, false);
+        updateModel();
+      }
+
+      // =========================================================================
+      // 8. CONTRÔLES CAMÉRA (ORBITALE, TRANSLATION, FOV & ROTATION AUTO)
+      // =========================================================================
+      const panRight = new THREE.Vector3();
+      const panUp = new THREE.Vector3();
+
+      function panCamera(dx, dy) {
+        const h = Math.max(200, sceneWrapper.clientHeight);
+        const panScale = (2 * state.camRadius * BASE_TAN_HALF_FOV) / h;
+        camera.updateMatrixWorld();
+        panRight.setFromMatrixColumn(camera.matrixWorld, 0);
+        panUp.setFromMatrixColumn(camera.matrixWorld, 1);
+        state.targetCamTarget.addScaledVector(panRight, -dx * panScale);
+        state.targetCamTarget.addScaledVector(panUp, dy * panScale);
+      }
+
+      function updateCameraTransform() {
+        const lerp = 0.16;
+        state.camTheta += (state.targetTheta - state.camTheta) * lerp;
+        state.camPhi += (state.targetPhi - state.camPhi) * lerp;
+        state.camRadius += (state.targetRadius - state.camRadius) * lerp;
+        state.camFov += (state.targetFov - state.camFov) * lerp;
+        state.camTarget.lerp(state.targetCamTarget, lerp);
+
+        if (Math.abs(camera.fov - state.camFov) > 1e-4) {
+          camera.fov = state.camFov;
+          camera.updateProjectionMatrix();
+        }
+
+        const tanHalfFov = Math.tan((state.camFov * Math.PI) / 360);
+        const actualDist = state.camRadius * (BASE_TAN_HALF_FOV / tanHalfFov);
+
+        const sinPhi = Math.sin(state.camPhi);
+        const x = state.camTarget.x + actualDist * sinPhi * Math.cos(state.camTheta);
+        const y = state.camTarget.y + actualDist * Math.cos(state.camPhi);
+        const z = state.camTarget.z + actualDist * sinPhi * Math.sin(state.camTheta);
+
+        camera.position.set(x, y, z);
+        camera.lookAt(state.camTarget);
+      }
+
+      threeCanvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+      threeCanvas.addEventListener('mousedown', function (e) {
+        if (e.button === 2 || e.button === 1 || e.shiftKey) {
+          e.preventDefault();
+          state.dragMode = 'pan';
+        } else if (e.button === 0) {
+          state.dragMode = 'rotate';
+        }
+        state.isDragging = state.dragMode !== null;
+        state.lastPointerX = e.clientX;
+        state.lastPointerY = e.clientY;
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!state.isDragging) return;
+        const dx = e.clientX - state.lastPointerX;
+        const dy = e.clientY - state.lastPointerY;
+        state.lastPointerX = e.clientX;
+        state.lastPointerY = e.clientY;
+        if (state.dragMode === 'pan') {
+          panCamera(dx, dy);
+        } else {
+          state.targetTheta += dx * 0.008;
+          state.targetPhi = Math.max(0.001, Math.min(Math.PI - 0.001, state.targetPhi - dy * 0.008));
+        }
+      });
+
+      window.addEventListener('mouseup', function () {
+        state.isDragging = false;
+        state.dragMode = null;
+      });
+
+      threeCanvas.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        state.targetRadius = Math.max(5.5, Math.min(26, state.targetRadius + e.deltaY * 0.01));
+      }, { passive: false });
+
+      threeCanvas.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 1) {
+          state.isDragging = true;
+          state.dragMode = 'rotate';
+          state.lastPointerX = e.touches[0].clientX;
+          state.lastPointerY = e.touches[0].clientY;
+        } else if (e.touches.length === 2) {
+          state.isDragging = false;
+          state.dragMode = 'pan';
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          state.lastPinchDist = Math.hypot(dx, dy);
+          state.lastPinchCenterX = 0.5 * (e.touches[0].clientX + e.touches[1].clientX);
+          state.lastPinchCenterY = 0.5 * (e.touches[0].clientY + e.touches[1].clientY);
+        }
+      }, { passive: true });
+
+      threeCanvas.addEventListener('touchmove', function (e) {
+        if (e.touches.length === 1 && state.isDragging) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - state.lastPointerX;
+          const dy = e.touches[0].clientY - state.lastPointerY;
+          state.lastPointerX = e.touches[0].clientX;
+          state.lastPointerY = e.touches[0].clientY;
+          state.targetTheta += dx * 0.009;
+          state.targetPhi = Math.max(0.001, Math.min(Math.PI - 0.001, state.targetPhi - dy * 0.009));
+        } else if (e.touches.length === 2) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const dist = Math.hypot(dx, dy);
+          const cx = 0.5 * (e.touches[0].clientX + e.touches[1].clientX);
+          const cy = 0.5 * (e.touches[0].clientY + e.touches[1].clientY);
+          if (state.lastPinchDist > 0) {
+            state.targetRadius = Math.max(5.5, Math.min(26, state.targetRadius - (dist - state.lastPinchDist) * 0.03));
+            panCamera(cx - state.lastPinchCenterX, cy - state.lastPinchCenterY);
+          }
+          state.lastPinchDist = dist;
+          state.lastPinchCenterX = cx;
+          state.lastPinchCenterY = cy;
+        }
+      }, { passive: false });
+
+      threeCanvas.addEventListener('touchend', function () {
+        state.isDragging = false;
+        state.dragMode = null;
+        state.lastPinchDist = 0;
+      });
+
+      camStdBtn.addEventListener('click', function () {
+        state.targetTheta = 0.92;
+        state.targetPhi = 1.18;
+        state.targetRadius = 15.0;
+        state.targetCamTarget.copy(origin3);
+      });
+
+      camOrthoBtn.addEventListener('click', function () {
+        state.targetTheta = 0.55;
+        state.targetPhi = 1.52;
+        state.targetRadius = 14.5;
+        state.targetCamTarget.copy(origin3);
+      });
+
+      camTopBtn.addEventListener('click', function () {
+        state.targetTheta = Math.PI / 2;
+        state.targetPhi = 0.001;
+        state.targetRadius = 14.8;
+        state.targetCamTarget.copy(origin3);
+      });
+
+      camCenterBtn.addEventListener('click', function () {
+        state.targetCamTarget.copy(origin3);
+      });
+
+      // Interaction de rotation 3D sur le cadre du plan de régression (X1, X2, Y)
+      scatterCanvas.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
+        state.regDragging = true;
+        state.regLastX = e.clientX;
+        state.regLastY = e.clientY;
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!state.regDragging) return;
+        const dx = e.clientX - state.regLastX;
+        const dy = e.clientY - state.regLastY;
+        state.regLastX = e.clientX;
+        state.regLastY = e.clientY;
+        state.regTheta += dx * 0.012;
+        state.regPhi = Math.max(0.18, Math.min(Math.PI - 0.18, state.regPhi - dy * 0.012));
+        updateModel();
+      });
+
+      window.addEventListener('mouseup', function () {
+        state.regDragging = false;
+      });
+
+      scatterCanvas.addEventListener('touchstart', function (e) {
+        if (e.touches.length === 1) {
+          state.regDragging = true;
+          state.regLastX = e.touches[0].clientX;
+          state.regLastY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      scatterCanvas.addEventListener('touchmove', function (e) {
+        if (e.touches.length === 1 && state.regDragging) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - state.regLastX;
+          const dy = e.touches[0].clientY - state.regLastY;
+          state.regLastX = e.touches[0].clientX;
+          state.regLastY = e.touches[0].clientY;
+          state.regTheta += dx * 0.012;
+          state.regPhi = Math.max(0.18, Math.min(Math.PI - 0.18, state.regPhi - dy * 0.012));
+          updateModel();
+        }
+      }, { passive: false });
+
+      scatterCanvas.addEventListener('touchend', function () {
+        state.regDragging = false;
+      });
+
+      btnRegReset.addEventListener('click', function () {
+        state.regTheta = 0.72;
+        state.regPhi = 1.16;
+        updateModel();
+      });
+
+      // =========================================================================
+      // 9. ÉVÉNEMENTS DES CURSEURS, PRÉRÉGLAGES & VISIBILITÉ
+      // =========================================================================
+      function updateModelButtonsUI() {
+        const mode = state.modelMode;
+        const configs = [
+          {
+            btn: btnMco,
+            active: mode === 'full',
+            activeCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5',
+            idleCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5',
+            idleDot: 'mode-dot w-2 h-2 rounded-full bg-emerald-400 shrink-0'
+          },
+          {
+            btn: btnMeanOnly,
+            active: mode === 'constant',
+            activeCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-slate-700 hover:bg-slate-800 ring-2 ring-slate-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5',
+            idleCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5',
+            idleDot: 'mode-dot w-2 h-2 rounded-full bg-slate-400 shrink-0'
+          },
+          {
+            btn: btnOnlyX1,
+            active: mode === 'x1',
+            activeCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-orange-600 hover:bg-orange-700 ring-2 ring-orange-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5',
+            idleCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200/80 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5',
+            idleDot: 'mode-dot w-2 h-2 rounded-full bg-orange-400 shrink-0'
+          },
+          {
+            btn: btnOnlyX2,
+            active: mode === 'x2',
+            activeCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold text-white bg-sky-600 hover:bg-sky-700 ring-2 ring-sky-200 active:scale-95 transition-all shadow-sm inline-flex items-center justify-center gap-1.5',
+            idleCls: 'py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200/80 active:scale-95 transition-all inline-flex items-center justify-center gap-1.5',
+            idleDot: 'mode-dot w-2 h-2 rounded-full bg-sky-400 shrink-0'
+          }
+        ];
+
+        configs.forEach(function (cfg) {
+          cfg.btn.setAttribute('aria-pressed', cfg.active ? 'true' : 'false');
+          cfg.btn.className = cfg.active ? cfg.activeCls : cfg.idleCls;
+          const dot = cfg.btn.querySelector('.mode-dot');
+          if (dot) {
+            dot.className = cfg.active
+              ? 'mode-dot w-2 h-2 rounded-full bg-white shrink-0'
+              : cfg.idleDot;
+          }
+        });
+      }
+
+      /** Recalcule instantanément b1 et b2 selon le modèle actif (complet, constant, X1 seul ou X2 seul). */
+      function syncCoefficientsToModelMode() {
+        if (state.modelMode === 'manual') return;
+        const ols = computeOlsMultiple(state.x1, state.x2, state.y);
+        if (state.modelMode === 'full') {
+          state.b1 = ols.b1Mco;
+          state.b2 = ols.b2Mco;
+        } else if (state.modelMode === 'constant') {
+          state.b1 = 0;
+          state.b2 = 0;
+        } else if (state.modelMode === 'x1') {
+          state.b1 = ols.b1Simple;
+          state.b2 = 0;
+        } else if (state.modelMode === 'x2') {
+          state.b1 = 0;
+          state.b2 = ols.b2Simple;
+        }
+        sliderB1.value = String(state.b1);
+        sliderB2.value = String(state.b2);
+      }
+
+      function toggleModelMode(mode) {
+        state.modelMode = state.modelMode === mode ? 'manual' : mode;
+        syncCoefficientsToModelMode();
+        updateModelButtonsUI();
+        updateModel();
+      }
+
+      function setXPreset(key) {
+        state.xPreset = key;
+        state.x1 = X_PRESETS[key].x1.slice();
+        state.x2 = X_PRESETS[key].x2.slice();
+
+        const activeCls = 'py-1 px-1.5 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition-colors';
+        const idleCls = 'py-1 px-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-transparent transition-colors';
+        btnXCorr.className = key === 'corr' ? activeCls : idleCls;
+        btnXOrtho.className = key === 'ortho' ? activeCls : idleCls;
+        btnXColin.className = key === 'colin' ? activeCls : idleCls;
+
+        syncCoefficientsToModelMode();
+        updateModel();
+      }
+
+      btnXCorr.addEventListener('click', function () { setXPreset('corr'); });
+      btnXOrtho.addEventListener('click', function () { setXPreset('ortho'); });
+      btnXColin.addEventListener('click', function () { setXPreset('colin'); });
+
+      sliderB1.addEventListener('input', function () {
+        if (state.modelMode !== 'manual') {
+          state.modelMode = 'manual';
+          updateModelButtonsUI();
+        }
+        state.b1 = parseFloat(sliderB1.value);
+        updateModel();
+      });
+
+      sliderB2.addEventListener('input', function () {
+        if (state.modelMode !== 'manual') {
+          state.modelMode = 'manual';
+          updateModelButtonsUI();
+        }
+        state.b2 = parseFloat(sliderB2.value);
+        updateModel();
+      });
+
+      sliderY.forEach(function (sl, idx) {
+        sl.addEventListener('input', function () {
+          state.y[idx] = parseFloat(sl.value);
+          syncCoefficientsToModelMode();
+          updateModel();
+        });
+      });
+
+      btnResetY.addEventListener('click', function () {
+        state.y = DEFAULT_Y.slice();
+        for (let i = 0; i < 4; i++) {
+          sliderY[i].value = String(DEFAULT_Y[i]);
+        }
+        syncCoefficientsToModelMode();
+        updateModel();
+      });
+
+      btnMco.addEventListener('click', function () { toggleModelMode('full'); });
+      btnMeanOnly.addEventListener('click', function () { toggleModelMode('constant'); });
+      btnOnlyX1.addEventListener('click', function () { toggleModelMode('x1'); });
+      btnOnlyX2.addEventListener('click', function () { toggleModelMode('x2'); });
+
+      visCheckboxes.forEach(function (chk) {
+        chk.addEventListener('change', function () {
+          state.visibility[chk.dataset.vis] = chk.checked;
+          updateModel();
+        });
+      });
+
+      btnVisAll.addEventListener('click', function () {
+        Object.keys(state.visibility).forEach(function (k) { state.visibility[k] = true; });
+        visCheckboxes.forEach(function (chk) { chk.checked = true; });
+        updateModel();
+      });
+
+      btnVisNone.addEventListener('click', function () {
+        Object.keys(state.visibility).forEach(function (k) { state.visibility[k] = false; });
+        visCheckboxes.forEach(function (chk) { chk.checked = false; });
+        updateModel();
+      });
+
+      function updateFovLabel(fov) {
+        const desc = fov <= 10 ? 'Quasi-ortho' : (fov <= 24 ? 'Faible' : (fov <= 40 ? 'Modérée' : 'Forte'));
+        valFov.textContent = Math.round(fov) + '° (' + desc + ')';
+      }
+
+      sliderFov.addEventListener('input', function () {
+        state.targetFov = parseFloat(sliderFov.value);
+        updateFovLabel(state.targetFov);
+      });
+      btnFovOrtho.addEventListener('click', function () {
+        state.targetFov = 5;
+        sliderFov.value = '5';
+        updateFovLabel(5);
+      });
+      btnFovStd.addEventListener('click', function () {
+        state.targetFov = 20;
+        sliderFov.value = '20';
+        updateFovLabel(20);
+      });
+
+      function updateRotSpeedLabel(deg) {
+        const rounded = Math.round(deg);
+        if (rounded === 0) {
+          valRotSpeed.textContent = '0°/s (Arrêt)';
+          valRotSpeed.className = 'text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums';
+        } else {
+          const sign = rounded > 0 ? '+' : '−';
+          valRotSpeed.textContent = sign + Math.abs(rounded) + '°/s';
+          valRotSpeed.className = 'text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md tabular-nums';
+        }
+      }
+
+      sliderRotSpeed.addEventListener('input', function () {
+        state.rotSpeedDeg = parseFloat(sliderRotSpeed.value);
+        updateRotSpeedLabel(state.rotSpeedDeg);
+      });
+      btnRotStop.addEventListener('click', function () {
+        state.rotSpeedDeg = 0;
+        sliderRotSpeed.value = '0';
+        updateRotSpeedLabel(0);
+      });
+      btnRotSlow.addEventListener('click', function () {
+        state.rotSpeedDeg = 15;
+        sliderRotSpeed.value = '15';
+        updateRotSpeedLabel(15);
+      });
+      btnRotMed.addEventListener('click', function () {
+        state.rotSpeedDeg = 35;
+        sliderRotSpeed.value = '35';
+        updateRotSpeedLabel(35);
+      });
+
+      window.addEventListener('resize', resizeScene);
+
+      // =========================================================================
+      // 10. BOUCLE D'ANIMATION PRINCIPALE
+      // =========================================================================
+      function animate(timestamp) {
+        try {
+          const now = timestamp || performance.now();
+          if (!state.lastAnimTime) state.lastAnimTime = now;
+          const dt = Math.min(0.05, Math.max(0, (now - state.lastAnimTime) / 1000));
+          state.lastAnimTime = now;
+
+          if (state.rotSpeedDeg !== 0 && !state.isDragging) {
+            state.targetTheta += ((state.rotSpeedDeg * Math.PI) / 180) * dt;
+          }
+
+          updateCameraTransform();
+          renderer.render(scene, camera);
+          updateLabels2D();
+        } catch (err) {
+          console.error('Erreur dans la boucle 3D :', err);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      function init() {
+        updateModelButtonsUI();
+        updateFovLabel(state.targetFov);
+        updateRotSpeedLabel(state.rotSpeedDeg);
+        syncCoefficientsToModelMode();
+        updateModel();
+        resizeScene();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+    })();
+  </script>
+</body>
+</html>
