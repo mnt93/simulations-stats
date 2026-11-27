@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loi log-normale : concentration d'une hormone (machine de Kapteyn)</title>
+  <!-- Police Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête principal -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Icône éventail multiplicatif -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="5" r="1.3" fill="currentColor" />
+            <circle cx="6" cy="10" r="1.3" fill="currentColor" />
+            <circle cx="11.5" cy="10" r="1.3" fill="currentColor" />
+            <circle cx="4.5" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="9" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="17" cy="15" r="1.3" fill="currentColor" />
+            <path d="M3 20h18" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Concentration d'une hormone : machine de Kapteyn ↔ planche de Galton</h1>
+          <p class="text-xs sm:text-sm text-slate-500">
+            Effets multiplicatifs <span class="font-medium text-slate-700">X<sub>t+1</sub> = X<sub>t</sub> × d ou × u</span> (en ng/mL) (<span class="font-medium text-slate-700">d &lt; 1</span> décroissance, <span class="font-medium text-slate-700">d = 1</span> stagnation, <span class="font-medium text-slate-700">d &gt; 1</span> croissance) : de la <span class="font-medium text-amber-600">loi log-normale</span> à la <span class="font-medium text-emerald-600">loi normale</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Légende rapide -->
+      <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-sm bg-indigo-500 inline-block"></span>
+          Densité observée
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-4 h-0.5 bg-emerald-500 rounded-full inline-block"></span>
+          <span id="legend-curve">Loi log-normale</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-3 h-0.5 bg-rose-500 inline-block"></span>
+          Moy. arithm. x̄
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-3 h-0.5 bg-amber-500 inline-block"></span>
+          Moy. géom. G
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal : 2 colonnes responsives -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Colonne Gauche (8 cols) : Sélecteur Kapteyn ↔ Galton + Canvas -->
+      <section class="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-3 sm:p-4 flex flex-col gap-3">
+
+        <!-- Barre de bascule animée Kapteyn (X) ↔ Galton (ln X) -->
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="inline-flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
+            <button id="btn-mode-kapteyn" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm">
+              Kapteyn · Échelle X
+            </button>
+            <button id="btn-mode-galton" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-indigo-700">
+              Galton · Échelle ln(X)
+            </button>
+          </div>
+
+          <!-- Curseur de morphing continu pour démonstration en classe -->
+          <div class="flex-1 flex items-center gap-2.5 min-w-[200px]">
+            <span class="text-[11px] font-semibold text-slate-500 whitespace-nowrap">ln(X)</span>
+            <input id="slider-morph" type="range" min="0" max="100" step="1" value="100" aria-label="Transition entre Galton et Kapteyn" class="w-full accent-indigo-600 cursor-pointer" />
+            <span class="text-[11px] font-semibold text-indigo-700 whitespace-nowrap">X</span>
+            <span id="val-morph" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums min-w-[44px] text-center">100 %</span>
+          </div>
+        </div>
+
+        <!-- Conteneur Canvas -->
+        <div id="canvas-wrapper" class="relative w-full h-[540px] sm:h-[600px] lg:h-[660px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden select-none">
+          <canvas id="kapteynCanvas" class="block w-full h-full cursor-crosshair"></canvas>
+
+          <!-- Info-bulle interactive au survol d'une colonne -->
+          <div id="tooltip" class="pointer-events-none hidden absolute z-10 bg-slate-900/95 text-white text-xs rounded-xl px-3.5 py-2.5 shadow-lg border border-slate-700/80 backdrop-blur-sm min-w-[215px]">
+            <div class="font-semibold text-indigo-300 border-b border-slate-700 pb-1 mb-1.5 flex items-center justify-between gap-2">
+              <span id="tt-bin">État k = 0</span>
+              <span id="tt-xval" class="text-[11px] font-bold text-amber-300 tabular-nums">X = 1,00</span>
+            </div>
+            <div class="space-y-1">
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-400">Logarithme ln(X) :</span>
+                <span id="tt-lnx" class="font-medium text-slate-200 tabular-nums">0,00</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-300">Effectif observé :</span>
+                <span id="tt-count" class="font-semibold tabular-nums">0</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-300">Fréquence observée :</span>
+                <span id="tt-freq" class="font-semibold tabular-nums">—</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-emerald-300">Proba. théorique :</span>
+                <span id="tt-prob" class="font-semibold text-emerald-300 tabular-nums">0 %</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge d'état en haut à gauche -->
+          <div class="absolute top-3 left-3 flex flex-wrap items-center gap-2 pointer-events-none">
+            <span id="status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 text-slate-600 border border-slate-200 shadow-sm">
+              <span id="status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span id="status-text">En pause</span>
+            </span>
+          </div>
+
+          <!-- Badge de mode en haut à droite -->
+          <div class="absolute top-3 right-3 pointer-events-none">
+            <span id="mode-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50/95 text-indigo-700 border border-indigo-200 shadow-sm">
+              Machine de Kapteyn (aire = fréquence)
+            </span>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-500 text-center">
+          Chaque bille est une personne. Sa concentration d'hormone part de <b>X₀ = e ≈ 2,72 ng/mL</b> et passe par <i>n</i> étapes de régulation : à chacune, elle est multipliée par <b>u</b> (droite, proba. <i>p</i>) ou par <b>d</b> (proba. 1−<i>p</i> : gauche si <b>d &lt; 1</b>, tout droit si <b>d = 1</b>, droite si <b>d &gt; 1</b>). Réglages par défaut (<i>n</i> = 16, <i>u</i> = 1,133, <i>d</i> = 1/<i>u</i> ≈ 0,883, <i>p</i> = 0,5) : ln X suit à peu près 𝒩(1 ; 0,5²), comme dans l'exercice 7.5 du cours. La surface de chaque barre est proportionnelle à son effectif.
+        </p>
+      </section>
+
+      <!-- Colonne Droite (4 cols) : Commandes, Paramètres & Statistiques -->
+      <aside class="lg:col-span-4 space-y-5">
+
+        <!-- Carte 1 : Commandes & Audio -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Commandes</h2>
+            <button id="btn-reset" type="button" class="text-xs font-medium text-slate-500 hover:text-rose-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-rose-50">
+              Réinitialiser
+            </button>
+          </div>
+
+          <button id="btn-toggle" type="button" class="w-full py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2">
+            <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+            </svg>
+            <span id="btn-toggle-label">Lancer le flux continu</span>
+          </button>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button id="btn-add-1" type="button" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition-colors active:scale-95">
+              +1 bille
+            </button>
+            <button id="btn-add-50" type="button" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition-colors active:scale-95">
+              +50 billes
+            </button>
+            <button id="btn-add-500" type="button" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors active:scale-95">
+              +500 billes
+            </button>
+          </div>
+
+          <!-- Son des billes -->
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input id="chk-sound" type="checkbox" checked class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                  <svg id="icon-sound-on" class="w-4 h-4 text-indigo-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  </svg>
+                  <svg id="icon-sound-off" class="w-4 h-4 text-slate-400 shrink-0 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                  Son des billes
+                </span>
+              </label>
+              <span id="val-volume" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">65 %</span>
+            </div>
+            <input id="slider-volume" type="range" min="0" max="100" step="5" value="65" aria-label="Volume sonore" class="w-full accent-indigo-600 cursor-pointer" />
+          </div>
+        </div>
+
+        <!-- Carte 2 : Paramètres du processus multiplicatif -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+          <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Paramètres</h2>
+
+          <!-- Nombre de rangées n -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-n" class="font-medium text-slate-700">Nombre d'étapes (<span class="italic font-serif">n</span>)</label>
+              <span id="val-n" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">16</span>
+            </div>
+            <input id="slider-n" type="range" min="2" max="20" step="1" value="16" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>2</span>
+              <span>10</span>
+              <span>20</span>
+            </div>
+          </div>
+
+          <!-- Facteur multiplicatif u (branche haute / croissance forte) -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-sm gap-1">
+              <label for="slider-u" class="font-medium text-slate-700">Branche haute (<span class="italic font-serif">u</span>)</label>
+              <span id="val-u" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums text-xs">×1,133 (+13 %)</span>
+            </div>
+            <input id="slider-u" type="range" min="1.06" max="1.44" step="0.001" value="1.133" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>×1,06 (+6 %)</span>
+              <span>×1,25</span>
+              <span>×1,44 (+44 %)</span>
+            </div>
+          </div>
+
+          <!-- Facteur multiplicatif d (décroissance < 1, stagnation = 1, croissance > 1) -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm gap-1">
+              <label for="slider-d" class="font-medium text-slate-700">Branche basse (<span class="italic font-serif">d</span>)</label>
+              <span id="val-d" class="font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md tabular-nums text-xs">×0,883 (−12 % · décroiss.)</span>
+            </div>
+            <input id="slider-d" type="range" min="0.70" max="1.18" step="0.001" value="0.883" class="w-full accent-emerald-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>×0,70 (décroiss.)</span>
+              <span>×1,00 (stagn.)</span>
+              <span>×1,18 (croiss.)</span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 pt-0.5">
+              <button id="btn-d-dec" type="button" class="text-[11px] font-medium px-1.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/70 transition-colors">
+                Décroiss. (1/u)
+              </button>
+              <button id="btn-d-stag" type="button" class="text-[11px] font-medium px-1.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors">
+                Stagnation (1)
+              </button>
+              <button id="btn-d-grow" type="button" class="text-[11px] font-medium px-1.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/70 transition-colors">
+                Croiss. (+8 %)
+              </button>
+            </div>
+          </div>
+
+          <!-- Probabilité droite p -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-p" class="font-medium text-slate-700">Proba. hausse (<span class="italic font-serif">p</span>)</label>
+              <div class="flex items-center gap-1.5">
+                <button id="btn-sym" type="button" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                  0,50
+                </button>
+                <span id="val-p" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">0,50</span>
+              </div>
+            </div>
+            <input id="slider-p" type="range" min="0.15" max="0.85" step="0.01" value="0.50" class="w-full accent-indigo-600 cursor-pointer" />
+          </div>
+
+          <!-- Vitesse -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-speed" class="font-medium text-slate-700">Vitesse de simulation</label>
+              <span id="val-speed" class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">Normale</span>
+            </div>
+            <input id="slider-speed" type="range" min="1" max="10" step="1" value="5" class="w-full accent-indigo-600 cursor-pointer" />
+          </div>
+
+          <!-- Options d'affichage -->
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Affichage</p>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1 -mx-1 rounded-lg hover:bg-slate-50">
+              <input id="chk-curve" type="checkbox" checked class="w-4 h-4 rounded accent-emerald-600 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Densité théorique <span class="text-emerald-600 font-semibold">(Log-𝒩 ↔ 𝒩)</span></span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1 -mx-1 rounded-lg hover:bg-slate-50">
+              <input id="chk-markers" type="checkbox" checked class="w-4 h-4 rounded accent-rose-500 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Repères Moyenne x̄ &amp; Géométrique G</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Carte 3 : Statistiques en temps réel -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Statistiques en direct (ng/mL)</h2>
+            <span class="text-xs font-medium text-slate-500">N = <strong id="stat-n" class="text-slate-900 tabular-nums">0</strong></span>
+          </div>
+
+          <!-- Comparaison Moyenne arithmétique vs Moyenne géométrique vs Médiane -->
+          <div class="grid grid-cols-3 gap-2 text-center tabular-nums">
+            <div class="bg-rose-50/70 border border-rose-200/70 rounded-xl p-2">
+              <p class="text-[10px] font-semibold uppercase text-rose-700">Moy. x̄</p>
+              <p id="stat-mean-x" class="text-base font-bold text-slate-900 mt-0.5">—</p>
+              <p class="text-[10px] text-slate-500">th. <span id="stat-mean-x-th">3,09</span></p>
+            </div>
+            <div class="bg-amber-50/70 border border-amber-200/70 rounded-xl p-2">
+              <p class="text-[10px] font-semibold uppercase text-amber-700">Moy. géom. G</p>
+              <p id="stat-geom-x" class="text-base font-bold text-slate-900 mt-0.5">—</p>
+              <p class="text-[10px] text-slate-500">th. <span id="stat-geom-x-th">2,72</span></p>
+            </div>
+            <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2">
+              <p class="text-[10px] font-semibold uppercase text-slate-600">Médiane</p>
+              <p id="stat-med-x" class="text-base font-bold text-slate-900 mt-0.5">—</p>
+              <p class="text-[10px] text-slate-500">th. <span id="stat-med-x-th">2,72</span></p>
+            </div>
+          </div>
+
+          <!-- Asymétrie comparée X vs ln(X) -->
+          <div class="grid grid-cols-2 gap-2.5 text-xs tabular-nums">
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-2.5">
+              <p class="text-[10px] font-semibold uppercase text-indigo-700">Asymétrie de X</p>
+              <p id="stat-skew-x" class="text-base font-bold text-slate-900 mt-0.5">—</p>
+              <p class="text-[10px] text-slate-500">Log-normale : &gt; 0</p>
+            </div>
+            <div class="bg-emerald-50/60 border border-emerald-100 rounded-xl p-2.5">
+              <p class="text-[10px] font-semibold uppercase text-emerald-700">Asymétrie de ln(X)</p>
+              <p id="stat-skew-lnx" class="text-base font-bold text-slate-900 mt-0.5">—</p>
+              <p class="text-[10px] text-slate-500">Normale : ≈ 0</p>
+            </div>
+          </div>
+
+          <!-- Encart pédagogique -->
+          <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3 text-[11px] leading-relaxed text-slate-600 space-y-1">
+            <p class="font-semibold text-slate-800">À observer en cours :</p>
+            <ul class="list-disc pl-4 space-y-0.5">
+              <li>Avec les réglages par défaut : <b>x̄ ≈ 3,1 &gt; G ≈ médiane ≈ 2,72 ng/mL</b>, comme dans l'exercice 7.5 (3,08 et 2,72).</li>
+              <li>Modifiez <b>d</b> : une étape peut faire <b>baisser</b> la concentration (<i>d &lt; 1</i>), la laisser <b>inchangée</b> (<i>d = 1</i>) ou l'augmenter un peu (<i>d &gt; 1</i>).</li>
+              <li>Dans tous les cas, la distribution de <b>X</b> reste log-normale (asymétrique à droite) avec <b>x̄ &gt; G ≈ Médiane</b>.</li>
+              <li>Faites glisser le curseur <b>ln(X) ↔ X</b> : les mêmes billes forment une loi normale en échelle log et une loi log-normale en échelle linéaire.</li>
+            </ul>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. RÉFÉRENCES DOM & ÉTAT GLOBAL
+      // =========================================================================
+      const canvas = document.getElementById('kapteynCanvas');
+      const ctx = canvas.getContext('2d');
+      const wrapper = document.getElementById('canvas-wrapper');
+      const tooltip = document.getElementById('tooltip');
+
+      const btnModeKapteyn = document.getElementById('btn-mode-kapteyn');
+      const btnModeGalton = document.getElementById('btn-mode-galton');
+      const sliderMorph = document.getElementById('slider-morph');
+      const valMorph = document.getElementById('val-morph');
+      const modeBadge = document.getElementById('mode-badge');
+      const legendCurve = document.getElementById('legend-curve');
+
+      const btnToggle = document.getElementById('btn-toggle');
+      const btnToggleLabel = document.getElementById('btn-toggle-label');
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const btnAdd1 = document.getElementById('btn-add-1');
+      const btnAdd50 = document.getElementById('btn-add-50');
+      const btnAdd500 = document.getElementById('btn-add-500');
+      const btnReset = document.getElementById('btn-reset');
+      const btnSym = document.getElementById('btn-sym');
+
+      const chkSound = document.getElementById('chk-sound');
+      const iconSoundOn = document.getElementById('icon-sound-on');
+      const iconSoundOff = document.getElementById('icon-sound-off');
+      const sliderVolume = document.getElementById('slider-volume');
+      const valVolume = document.getElementById('val-volume');
+
+      const sliderN = document.getElementById('slider-n');
+      const sliderU = document.getElementById('slider-u');
+      const sliderD = document.getElementById('slider-d');
+      const btnDDec = document.getElementById('btn-d-dec');
+      const btnDStag = document.getElementById('btn-d-stag');
+      const btnDGrow = document.getElementById('btn-d-grow');
+      const sliderP = document.getElementById('slider-p');
+      const sliderSpeed = document.getElementById('slider-speed');
+      const chkCurve = document.getElementById('chk-curve');
+      const chkMarkers = document.getElementById('chk-markers');
+
+      const valN = document.getElementById('val-n');
+      const valU = document.getElementById('val-u');
+      const valD = document.getElementById('val-d');
+      const valP = document.getElementById('val-p');
+      const valSpeed = document.getElementById('val-speed');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+
+      const statN = document.getElementById('stat-n');
+      const statMeanX = document.getElementById('stat-mean-x');
+      const statMeanXTh = document.getElementById('stat-mean-x-th');
+      const statGeomX = document.getElementById('stat-geom-x');
+      const statGeomXTh = document.getElementById('stat-geom-x-th');
+      const statMedX = document.getElementById('stat-med-x');
+      const statMedXTh = document.getElementById('stat-med-x-th');
+      const statSkewX = document.getElementById('stat-skew-x');
+      const statSkewLnX = document.getElementById('stat-skew-lnx');
+
+      const ttBin = document.getElementById('tt-bin');
+      const ttXVal = document.getElementById('tt-xval');
+      const ttLnX = document.getElementById('tt-lnx');
+      const ttCount = document.getElementById('tt-count');
+      const ttFreq = document.getElementById('tt-freq');
+      const ttProb = document.getElementById('tt-prob');
+
+      // Exemple du cours (exercice 7.5) : concentration d'une hormone, ln X ~ N(1 ; 0,5²).
+      // La simulation travaille sur X / X0 ; tout ce qui est affiché est en ng/mL (X) ou en ln X.
+      // Par défaut u = e^0,125, d = 1/u, n = 16, p = 0,5 : écart-type de ln X = 0,5.
+      const X0 = Math.E;        // concentration de départ = médiane par défaut (ng/mL)
+      const LN_X0 = 1;          // ln X0
+
+      const state = {
+        n: 16,                  // Nombre d'étapes (2..20)
+        u: 1.133,               // Facteur de branche haute (> d)
+        d: 0.883,               // Facteur de branche basse (< 1 décroiss., = 1 stagn., > 1 croiss.)
+        p: 0.50,                // Probabilité de branche haute (×u)
+        speed: 5,               // Vitesse (1..10)
+        morph: 1.0,             // 0 = Galton (échelle ln X), 1 = Kapteyn (échelle X)
+        targetMorph: 1.0,       // Cible lissée du morphing
+        soundEnabled: true,
+        volume: 0.65,
+        showCurve: true,
+        showMarkers: true,
+        running: false,
+        queuedBalls: 0,
+        spawnTimer: 0,
+        balls: [],
+        bins: [],               // Effectifs par état k = 0..n
+        totalBalls: 0,
+        binomProbs: [],
+        displayMaxDensity: 0.01, // Échelle verticale en probabilité / pixel
+        hoveredBin: -1,
+        lastTimestamp: 0,
+      };
+
+      const geom = {
+        width: 640,
+        height: 600,
+        dpr: 1,
+        boardLeft: 32,
+        boardRight: 608,
+        boardWidth: 576,
+        funnelTopY: 16,
+        funnelMouthY: 48,
+        pegStartY: 78,
+        dy: 26,
+        binTopY: 360,
+        binBottomY: 560,
+        binAreaHeight: 200,
+        pegRadius: 3.6,
+        ballRadius: 4.2,
+        // Bornes des deux échelles
+        zMin: -0.2,
+        zMax: 2.4,
+        xMaxKapteyn: 6.0,
+      };
+
+      // =========================================================================
+      // 2. SYNTHÉTISEUR AUDIO AUTONOME (WEB AUDIO API)
+      // =========================================================================
+      const audio = {
+        ctx: null,
+        masterGain: null,
+        compressor: null,
+        noiseBuffer: null,
+        lastPegSoundMs: 0,
+        lastLandSoundMs: 0,
+      };
+
+      function ensureAudioReady() {
+        if (!state.soundEnabled || state.volume <= 0) return false;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return false;
+          if (!audio.ctx) {
+            audio.ctx = new AudioCtx();
+            audio.compressor = audio.ctx.createDynamicsCompressor();
+            audio.compressor.threshold.setValueAtTime(-16, audio.ctx.currentTime);
+            audio.compressor.knee.setValueAtTime(18, audio.ctx.currentTime);
+            audio.compressor.ratio.setValueAtTime(8, audio.ctx.currentTime);
+            audio.compressor.attack.setValueAtTime(0.002, audio.ctx.currentTime);
+            audio.compressor.release.setValueAtTime(0.08, audio.ctx.currentTime);
+
+            audio.masterGain = audio.ctx.createGain();
+            audio.masterGain.gain.setValueAtTime(state.volume * 0.55, audio.ctx.currentTime);
+            audio.compressor.connect(audio.masterGain);
+            audio.masterGain.connect(audio.ctx.destination);
+
+            const sr = audio.ctx.sampleRate;
+            const len = Math.floor(sr * 0.04);
+            audio.noiseBuffer = audio.ctx.createBuffer(1, len, sr);
+            const data = audio.noiseBuffer.getChannelData(0);
+            for (let i = 0; i < len; i++) {
+              data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.008));
+            }
+          }
+          if (audio.ctx.state === 'suspended') audio.ctx.resume();
+          return true;
+        } catch (err) {
+          return false;
+        }
+      }
+
+      function syncAudioVolume() {
+        const eff = state.soundEnabled ? state.volume * 0.55 : 0;
+        if (audio.ctx && audio.masterGain) {
+          audio.masterGain.gain.setTargetAtTime(eff, audio.ctx.currentTime, 0.015);
+        }
+        const active = state.soundEnabled && state.volume > 0;
+        iconSoundOn.classList.toggle('hidden', !active);
+        iconSoundOff.classList.toggle('hidden', active);
+        valVolume.textContent = `${Math.round(state.volume * 100)} %`;
+      }
+
+      function connectWithPan(node, screenX) {
+        const normPan = ((screenX - geom.boardLeft) / Math.max(1, geom.boardWidth)) * 2 - 1;
+        if (typeof audio.ctx.createStereoPanner === 'function') {
+          const panner = audio.ctx.createStereoPanner();
+          panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, normPan * 0.85)), audio.ctx.currentTime);
+          node.connect(panner);
+          panner.connect(audio.compressor);
+        } else {
+          node.connect(audio.compressor);
+        }
+      }
+
+      function playPegHit(row, screenX) {
+        if (!state.soundEnabled || state.volume <= 0 || !audio.ctx || audio.ctx.state !== 'running') return;
+        const nowMs = performance.now();
+        const minGap = state.balls.length > 40 ? 28 : (state.balls.length > 12 ? 18 : 10);
+        if (nowMs - audio.lastPegSoundMs < minGap) return;
+        audio.lastPegSoundMs = nowMs;
+
+        try {
+          const t0 = audio.ctx.currentTime;
+          const densityScale = state.balls.length > 30 ? 0.55 : (state.balls.length > 10 ? 0.78 : 1.0);
+          const osc = audio.ctx.createOscillator();
+          const gain = audio.ctx.createGain();
+          const rowRatio = state.n > 1 ? row / (state.n - 1) : 0.5;
+          const baseFreq = 1500 + rowRatio * 650 + (Math.random() - 0.5) * 240;
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(baseFreq, t0);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.52, t0 + 0.024);
+
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.linearRampToValueAtTime(0.14 * densityScale, t0 + 0.002);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.026);
+
+          osc.connect(gain);
+          connectWithPan(gain, screenX);
+          osc.start(t0);
+          osc.stop(t0 + 0.028);
+
+          if (audio.noiseBuffer) {
+            const src = audio.ctx.createBufferSource();
+            src.buffer = audio.noiseBuffer;
+            const filter = audio.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(2800 + Math.random() * 900, t0);
+            filter.Q.setValueAtTime(2.5, t0);
+
+            const nGain = audio.ctx.createGain();
+            nGain.gain.setValueAtTime(0.08 * densityScale, t0);
+            nGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.018);
+
+            src.connect(filter);
+            filter.connect(nGain);
+            connectWithPan(nGain, screenX);
+            src.start(t0);
+            src.stop(t0 + 0.02);
+          }
+        } catch (err) {
+          // Ignore les erreurs audio transitoires
+        }
+      }
+
+      function playBinLand(screenX, prevCount) {
+        if (!state.soundEnabled || state.volume <= 0 || !audio.ctx || audio.ctx.state !== 'running') return;
+        const nowMs = performance.now();
+        const minGap = state.balls.length > 40 ? 32 : 18;
+        if (nowMs - audio.lastLandSoundMs < minGap) return;
+        audio.lastLandSoundMs = nowMs;
+
+        try {
+          const t0 = audio.ctx.currentTime;
+          const densityScale = state.balls.length > 30 ? 0.6 : 1.0;
+
+          const osc = audio.ctx.createOscillator();
+          const gain = audio.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300 + Math.random() * 65, t0);
+          osc.frequency.exponentialRampToValueAtTime(115, t0 + 0.045);
+
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.linearRampToValueAtTime(0.18 * densityScale, t0 + 0.003);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.048);
+
+          osc.connect(gain);
+          connectWithPan(gain, screenX);
+          osc.start(t0);
+          osc.stop(t0 + 0.05);
+
+          if (prevCount > 0) {
+            const clink = audio.ctx.createOscillator();
+            const cGain = audio.ctx.createGain();
+            const cFreq = 2850 + Math.random() * 650;
+            clink.type = 'sine';
+            clink.frequency.setValueAtTime(cFreq, t0);
+            clink.frequency.exponentialRampToValueAtTime(cFreq * 0.85, t0 + 0.024);
+
+            cGain.gain.setValueAtTime(0.0001, t0);
+            cGain.gain.linearRampToValueAtTime(0.07 * densityScale, t0 + 0.0015);
+            cGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.026);
+
+            clink.connect(cGain);
+            connectWithPan(cGain, screenX);
+            clink.start(t0);
+            clink.stop(t0 + 0.028);
+          }
+        } catch (err) {
+          // Ignore les erreurs audio transitoires
+        }
+      }
+
+      // =========================================================================
+      // 3. MATHÉMATIQUES : BINOMIALE, NORMALE, LOG-NORMALE & JACOBIEN DU MORPHING
+      // =========================================================================
+      function comb(n, k) {
+        if (k < 0 || k > n) return 0;
+        if (k === 0 || k === n) return 1;
+        const m = Math.min(k, n - k);
+        let res = 1;
+        for (let i = 1; i <= m; i++) res = (res * (n - m + i)) / i;
+        return res;
+      }
+
+      function binomialPMF(n, k, p) {
+        return comb(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+      }
+
+      function normalPDF(z, mu, sigma) {
+        const t = (z - mu) / sigma;
+        return Math.exp(-0.5 * t * t) / (sigma * Math.sqrt(2 * Math.PI));
+      }
+
+      function updateBinomialDistribution() {
+        state.binomProbs = new Array(state.n + 1);
+        for (let k = 0; k <= state.n; k++) {
+          state.binomProbs[k] = binomialPMF(state.n, k, state.p);
+        }
+      }
+
+      function fmtNum(val, dec) {
+        if (!Number.isFinite(val)) return '—';
+        const clean = Math.abs(val) < 1e-9 ? 0 : val;
+        const s = clean.toFixed(dec).replace('.', ',');
+        return clean < 0 ? '−' + s.slice(1) : s;
+      }
+
+      function getSpeedLabel(v) {
+        if (v <= 2) return 'Lente';
+        if (v <= 4) return 'Modérée';
+        if (v <= 6) return 'Normale';
+        if (v <= 8) return 'Rapide';
+        return 'Très rapide';
+      }
+
+      /** Retourne (lnU, lnD, delta, muL, sigmaL) de ln(X_n) = n*ln(d) + K*(ln(u) - ln(d)). */
+      function getLogParams() {
+        const lnU = Math.log(state.u);
+        const lnD = Math.log(state.d);
+        const delta = Math.max(1e-6, lnU - lnD);
+        const muL = state.n * (state.p * lnU + (1 - state.p) * lnD);
+        const sigmaL = Math.sqrt(state.n * state.p * (1 - state.p)) * delta;
+        return { lnU, lnD, delta, muL, sigmaL };
+      }
+
+      /**
+       * Transforme une coordonnée logarithmique z = ln(x) en coordonnée écran s(z, alpha).
+       * - alpha = 0 (Galton)  : transformation linéaire en z = ln(x).
+       * - alpha = 1 (Kapteyn) : transformation linéaire en x = exp(z).
+       */
+      function zToScreenX(z, alpha) {
+        const a = alpha !== undefined ? alpha : state.morph;
+        const tGalton = (z - geom.zMin) / (geom.zMax - geom.zMin);
+        const sGalton = geom.boardLeft + tGalton * geom.boardWidth;
+
+        const xVal = Math.exp(z);
+        const tKapteyn = xVal / geom.xMaxKapteyn;
+        const sKapteyn = geom.boardLeft + tKapteyn * geom.boardWidth;
+
+        return (1 - a) * sGalton + a * sKapteyn;
+      }
+
+      /** Dérivée exacte ds/dz > 0 pour la conservation d'aire de la densité théorique. */
+      function dScreenX_dz(z, alpha) {
+        const a = alpha !== undefined ? alpha : state.morph;
+        const dsGalton = geom.boardWidth / (geom.zMax - geom.zMin);
+        const dsKapteyn = (geom.boardWidth / geom.xMaxKapteyn) * Math.exp(z);
+        return (1 - a) * dsGalton + a * dsKapteyn;
+      }
+
+      /** Coordonnées (x, y) du picot à la rangée r (0..n-1) et à l'indice c (0..r). */
+      function getPegPos(r, c) {
+        const z = c * Math.log(state.u) + (r - c) * Math.log(state.d);
+        return {
+          x: zToScreenX(z),
+          y: geom.pegStartY + r * geom.dy,
+        };
+      }
+
+      /** Bornes écran [left, right, center] de la colonne k = 0..n. */
+      function getBinBounds(k) {
+        const { lnD, delta } = getLogParams();
+        const zCenter = state.n * lnD + k * delta;
+        const zLeft = zCenter - 0.5 * delta;
+        const zRight = zCenter + 0.5 * delta;
+        const left = zToScreenX(zLeft);
+        const right = zToScreenX(zRight);
+        const center = zToScreenX(zCenter);
+        return { left, right, center, width: Math.max(1.2, right - left), zCenter };
+      }
+
+      /** Densité théorique maximale en coordonnées écran (proba / pixel) pour la mise à l'échelle. */
+      function computeMaxTheoreticalDensity() {
+        const { muL, sigmaL } = getLogParams();
+        if (sigmaL < 1e-6) return 0.02;
+        let maxD = 0;
+        const steps = 120;
+        for (let i = 0; i <= steps; i++) {
+          const z = geom.zMin + (i / steps) * (geom.zMax - geom.zMin);
+          const d = normalPDF(z, muL, sigmaL) / dScreenX_dz(z);
+          if (d > maxD) maxD = d;
+        }
+        return Math.max(1e-5, maxD);
+      }
+
+      // =========================================================================
+      // 4. GÉOMÉTRIE & REDIMENSIONNEMENT RESPONSIVE
+      // =========================================================================
+      function computeGeometry() {
+        const w = geom.width;
+        const h = geom.height;
+        const { lnU, lnD, delta, muL, sigmaL } = getLogParams();
+
+        const padX = Math.max(26, w * 0.05);
+        geom.boardLeft = padX;
+        geom.boardRight = w - padX;
+        geom.boardWidth = Math.max(160, geom.boardRight - geom.boardLeft);
+
+        // Domaine en z = ln(X) pour la planche de Galton (inclut toujours z = 0 et tous les bacs)
+        geom.zMin = Math.min(-0.65 * delta, state.n * lnD - 0.65 * delta);
+        geom.zMax = state.n * lnU + 0.65 * delta;
+
+        // Domaine en X pour la machine de Kapteyn : démarre à 0 et englobe la longue traîne droite
+        const maxPossibleX = Math.exp(state.n * lnU + 0.35 * delta);
+        const quantileX = Math.exp(muL + 2.8 * sigmaL);
+        geom.xMaxKapteyn = Math.min(maxPossibleX, Math.max(2.6, quantileX));
+
+        geom.funnelTopY = 14;
+        geom.funnelMouthY = Math.max(44, h * 0.08);
+        geom.pegStartY = geom.funnelMouthY + Math.max(18, h * 0.04);
+
+        const pegAreaH = h * 0.43;
+        geom.dy = pegAreaH / state.n;
+        geom.binTopY = geom.pegStartY + state.n * geom.dy + Math.max(10, Math.min(20, geom.dy * 0.35));
+        geom.binBottomY = h - 38;
+        geom.binAreaHeight = Math.max(90, geom.binBottomY - geom.binTopY);
+
+        const minDxGalton = geom.boardWidth / (state.n + 1);
+        const minSpacing = Math.min(minDxGalton, geom.dy);
+        geom.pegRadius = Math.max(2.0, Math.min(4.8, minSpacing * 0.14));
+        geom.ballRadius = Math.max(2.6, Math.min(4.6, minSpacing * 0.18));
+      }
+
+      function resizeCanvas() {
+        const rect = wrapper.getBoundingClientRect();
+        geom.width = Math.max(280, rect.width);
+        geom.height = Math.max(380, rect.height);
+        geom.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.round(geom.width * geom.dpr);
+        canvas.height = Math.round(geom.height * geom.dpr);
+        ctx.setTransform(geom.dpr, 0, 0, geom.dpr, 0, 0);
+
+        computeGeometry();
+        state.displayMaxDensity = computeMaxTheoreticalDensity() * 1.2;
+        draw();
+      }
+
+      // =========================================================================
+      // 5. SIMULATION DES BILLES & MISE À JOUR
+      // =========================================================================
+      function spawnBall() {
+        const path = new Array(state.n);
+        let rightCount = 0;
+        for (let r = 0; r < state.n; r++) {
+          const goRight = Math.random() < state.p ? 1 : 0;
+          path[r] = goRight;
+          rightCount += goRight;
+        }
+        const hue = 228 + (Math.random() - 0.5) * 18;
+        const light = 52 + (Math.random() - 0.5) * 8;
+        const startX = zToScreenX(0);
+
+        state.balls.push({
+          phase: 'funnel',
+          step: 0,
+          col: 0,
+          path: path,
+          finalBin: rightCount,
+          t: 0,
+          x: startX,
+          y: geom.funnelTopY,
+          bounceFactor: 0.28 + Math.random() * 0.12,
+          color: `hsl(${hue.toFixed(0)}, 80%, ${light.toFixed(0)}%)`,
+        });
+      }
+
+      function updateBall(ball, dt, speedMult) {
+        const offsetY = geom.pegRadius + geom.ballRadius;
+
+        if (ball.phase === 'funnel') {
+          const duration = 0.15 / speedMult;
+          ball.t += dt / duration;
+          const xTop = zToScreenX(0);
+          const startY = geom.funnelTopY;
+          const endY = geom.pegStartY - offsetY;
+
+          if (ball.t >= 1) {
+            ball.phase = 'pegs';
+            ball.step = 0;
+            ball.col = 0;
+            ball.t = 0;
+            ball.x = xTop;
+            ball.y = endY;
+            playPegHit(0, xTop);
+            return false;
+          }
+          ball.x = xTop;
+          ball.y = startY + (endY - startY) * (ball.t * ball.t);
+          return false;
+        }
+
+        if (ball.phase === 'pegs') {
+          const baseDur = Math.max(0.12, 0.21 - Math.max(0, state.n - 10) * 0.005);
+          const duration = baseDur / speedMult;
+          ball.t += dt / duration;
+
+          const startPeg = getPegPos(ball.step, ball.col);
+          const dir = ball.path[ball.step];
+          const nextCol = ball.col + dir;
+
+          const startX = startPeg.x;
+          const startY = startPeg.y - offsetY;
+
+          let endX, endY;
+          if (ball.step + 1 < state.n) {
+            const nextPeg = getPegPos(ball.step + 1, nextCol);
+            endX = nextPeg.x;
+            endY = nextPeg.y - offsetY;
+          } else {
+            const b = getBinBounds(nextCol);
+            endX = b.center;
+            endY = geom.binTopY;
+          }
+
+          if (ball.t >= 1) {
+            ball.col = nextCol;
+            ball.step += 1;
+            ball.t = 0;
+            ball.x = endX;
+            ball.y = endY;
+            if (ball.step >= state.n) {
+              ball.phase = 'drop';
+            } else {
+              playPegHit(ball.step, endX);
+            }
+            return false;
+          }
+
+          const t = ball.t;
+          const dySeg = endY - startY;
+          const hop = Math.min(geom.dy * ball.bounceFactor, 26);
+          ball.x = startX + (endX - startX) * t;
+          ball.y = startY - hop * t + (dySeg + hop) * (t * t);
+          return false;
+        }
+
+        // Phase 'drop' dans le bac final
+        const b = getBinBounds(ball.finalBin);
+        const count = state.bins[ball.finalBin] || 0;
+        const dens = state.totalBalls > 0 ? (count / state.totalBalls) / b.width : 0;
+        const barH = Math.min(geom.binAreaHeight, (dens / state.displayMaxDensity) * geom.binAreaHeight);
+        const targetY = Math.max(geom.binTopY + 4, geom.binBottomY - barH - geom.ballRadius);
+        const duration = 0.14 / speedMult;
+        ball.t += dt / duration;
+
+        if (ball.t >= 1) return true;
+
+        ball.x = b.center;
+        ball.y = geom.binTopY + (targetY - geom.binTopY) * (ball.t * ball.t);
+        return false;
+      }
+
+      function recordBallArrival(binIndex) {
+        const prev = state.bins[binIndex] || 0;
+        state.bins[binIndex] = prev + 1;
+        state.totalBalls += 1;
+        playBinLand(getBinBounds(binIndex).center, prev);
+      }
+
+      function stepSimulation(dt) {
+        // Animation fluide du morphing Galton (0) ↔ Kapteyn (1)
+        const morphDiff = state.targetMorph - state.morph;
+        if (Math.abs(morphDiff) > 0.0005) {
+          state.morph += morphDiff * Math.min(1, dt * 8.5);
+          sliderMorph.value = String(Math.round(state.morph * 100));
+          updateMorphLabels();
+        } else if (state.morph !== state.targetMorph) {
+          state.morph = state.targetMorph;
+          sliderMorph.value = String(Math.round(state.morph * 100));
+          updateMorphLabels();
+        }
+
+        const speedMult = 0.45 + state.speed * 0.28;
+        const continuousRate = 1.8 + Math.pow(state.speed, 1.55) * 1.1;
+
+        if (state.queuedBalls > 0) {
+          const burstRate = Math.max(continuousRate * 2.2, Math.min(260, state.queuedBalls * 3.5));
+          state.spawnTimer += dt * burstRate;
+          let toSpawn = Math.floor(state.spawnTimer);
+          if (toSpawn > 0) {
+            state.spawnTimer -= toSpawn;
+            toSpawn = Math.min(toSpawn, state.queuedBalls, 25);
+            for (let i = 0; i < toSpawn; i++) {
+              spawnBall();
+              state.queuedBalls -= 1;
+            }
+          }
+        } else if (state.running) {
+          state.spawnTimer += dt * continuousRate;
+          let toSpawn = Math.floor(state.spawnTimer);
+          if (toSpawn > 0) {
+            state.spawnTimer -= toSpawn;
+            toSpawn = Math.min(toSpawn, 10);
+            for (let i = 0; i < toSpawn; i++) spawnBall();
+          }
+        }
+
+        let statsChanged = false;
+        for (let i = state.balls.length - 1; i >= 0; i--) {
+          if (updateBall(state.balls[i], dt, speedMult)) {
+            recordBallArrival(state.balls[i].finalBin);
+            state.balls.splice(i, 1);
+            statsChanged = true;
+          }
+        }
+
+        if (statsChanged) {
+          updateStatsUI();
+          if (state.hoveredBin >= 0) updateTooltipContent(state.hoveredBin);
+        }
+        updateStatusBadge();
+
+        // Mise à l'échelle verticale automatique (conservation de l'aire = 1)
+        const maxTheoD = computeMaxTheoreticalDensity();
+        let maxObsD = 0;
+        if (state.totalBalls > 0) {
+          for (let k = 0; k <= state.n; k++) {
+            const c = state.bins[k];
+            if (c > 0) {
+              const b = getBinBounds(k);
+              const d = (c / state.totalBalls) / b.width;
+              if (b.left >= geom.boardLeft - 2 && b.right <= geom.boardRight + 20 && d > maxObsD) {
+                maxObsD = d;
+              }
+            }
+          }
+        }
+        const obsWeight = Math.min(1, state.totalBalls / 15);
+        const neededMaxD = Math.max(maxTheoD * 1.18, maxObsD * 1.14 * obsWeight + maxTheoD * 1.18 * (1 - obsWeight));
+        state.displayMaxDensity += (neededMaxD - state.displayMaxDensity) * Math.min(1, dt * 8);
+      }
+
+      // =========================================================================
+      // 6. RENDU SUR CANVAS 2D
+      // =========================================================================
+      function drawFunnel() {
+        const cx = zToScreenX(0);
+        const topY = geom.funnelTopY;
+        const mouthY = geom.funnelMouthY;
+        const topHalfW = 24;
+        const mouthHalfW = Math.max(geom.ballRadius + 3, 7);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx - topHalfW, topY);
+        ctx.lineTo(cx - mouthHalfW, mouthY);
+        ctx.lineTo(cx - mouthHalfW, mouthY + 5);
+        ctx.moveTo(cx + topHalfW, topY);
+        ctx.lineTo(cx + mouthHalfW, mouthY);
+        ctx.lineTo(cx + mouthHalfW, mouthY + 5);
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Étiquette X₀ au-dessus de l'entonnoir
+        ctx.fillStyle = '#64748b';
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(state.morph > 0.5 ? 'X₀ = 2,72' : 'ln(X₀) = 1', cx, topY + 11);
+        ctx.restore();
+      }
+
+      function drawPegs() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.boardLeft - 6, 0, geom.boardWidth + 12, geom.height);
+        ctx.clip();
+
+        const rPeg = geom.pegRadius;
+        for (let r = 0; r < state.n; r++) {
+          for (let c = 0; c <= r; c++) {
+            const pos = getPegPos(r, c);
+            if (pos.x < geom.boardLeft - 8 || pos.x > geom.boardRight + 8) continue;
+
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y + 1, rPeg, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.12)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, rPeg, 0, Math.PI * 2);
+            ctx.fillStyle = '#475569';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(pos.x - rPeg * 0.28, pos.y - rPeg * 0.28, rPeg * 0.34, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      function drawHistogram() {
+        const topY = geom.binTopY;
+        const botY = geom.binBottomY;
+        const areaH = geom.binAreaHeight;
+
+        ctx.save();
+
+        // Lignes de grille horizontales discrètes
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        for (let i = 1; i <= 4; i++) {
+          const yLine = botY - (areaH * i) / 4;
+          ctx.beginPath();
+          ctx.moveTo(geom.boardLeft, yLine);
+          ctx.lineTo(geom.boardRight, yLine);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Zone clippée pour les bacs et barres
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.boardLeft, topY - 4, geom.boardWidth, areaH + 6);
+        ctx.clip();
+
+        for (let k = 0; k <= state.n; k++) {
+          const b = getBinBounds(k);
+          if (b.right < geom.boardLeft || b.left > geom.boardRight) continue;
+
+          const count = state.bins[k] || 0;
+          const isHovered = k === state.hoveredBin;
+
+          if (isHovered) {
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.10)';
+            ctx.fillRect(b.left, topY, b.width, areaH);
+          }
+
+          // Cloisons verticales fines entre les bacs
+          ctx.strokeStyle = 'rgba(203, 213, 225, 0.75)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(b.left, topY);
+          ctx.lineTo(b.left, botY);
+          ctx.stroke();
+
+          if (count > 0 && state.totalBalls > 0) {
+            const dens = (count / state.totalBalls) / b.width;
+            const barH = Math.min(areaH, (dens / state.displayMaxDensity) * areaH);
+            const y = botY - barH;
+            const gap = b.width > 8 ? 1.5 : 0.4;
+            const x = b.left + gap * 0.5;
+            const w = Math.max(1.2, b.width - gap);
+            const r = Math.min(4, w * 0.25, barH);
+
+            ctx.beginPath();
+            ctx.moveTo(x, botY);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, botY);
+            ctx.closePath();
+
+            ctx.fillStyle = isHovered ? '#4f46e5' : 'rgba(99, 102, 241, 0.82)';
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        // Ligne de base horizontale
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(geom.boardLeft, botY);
+        ctx.lineTo(geom.boardRight, botY);
+        ctx.stroke();
+
+        // Graduations de l'axe horizontal adaptées au mode courant
+        drawXAxisTicks(botY);
+
+        ctx.restore();
+      }
+
+      function drawXAxisTicks(botY) {
+        ctx.save();
+        ctx.font = '500 10.5px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        if (state.morph >= 0.5) {
+          // Graduations en X (0, 1, 2, ...)
+          const xMaxDisp = geom.xMaxKapteyn * X0;
+          const rawStep = xMaxDisp / 6;
+          const niceSteps = [0.25, 0.5, 1, 2, 5, 10, 20, 50, 100];
+          let step = niceSteps[niceSteps.length - 1];
+          for (let i = 0; i < niceSteps.length; i++) {
+            if (niceSteps[i] >= rawStep) {
+              step = niceSteps[i];
+              break;
+            }
+          }
+
+          ctx.fillStyle = '#64748b';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.2;
+
+          for (let xVal = 0; xVal <= xMaxDisp + 1e-6; xVal += step) {
+            const px = xVal === 0
+              ? geom.boardLeft
+              : zToScreenX(Math.log(xVal / X0));
+            if (px < geom.boardLeft - 2 || px > geom.boardRight + 2) continue;
+
+            ctx.beginPath();
+            ctx.moveTo(px, botY);
+            ctx.lineTo(px, botY + 5);
+            ctx.stroke();
+            ctx.fillText(step < 1 ? fmtNum(xVal, 1) : String(Math.round(xVal)), px, botY + 8);
+          }
+
+          ctx.fillStyle = '#4f46e5';
+          ctx.font = '600 10.5px Inter, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText('Concentration X en ng/mL (échelle linéaire)', geom.boardRight, botY + 22);
+        } else {
+          // Graduations en ln(X)
+          const { lnD, delta } = getLogParams();
+          const labelStep = state.n <= 10 ? 2 : 4;
+          ctx.fillStyle = '#64748b';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.2;
+
+          for (let k = 0; k <= state.n; k++) {
+            if (k % labelStep !== 0 && k !== state.n && k !== Math.round(state.n / 2)) continue;
+            const z = state.n * lnD + k * delta;
+            const px = zToScreenX(z);
+            if (px < geom.boardLeft || px > geom.boardRight) continue;
+
+            ctx.beginPath();
+            ctx.moveTo(px, botY);
+            ctx.lineTo(px, botY + 5);
+            ctx.stroke();
+            ctx.fillText(fmtNum(LN_X0 + z, 2), px, botY + 8);
+          }
+
+          ctx.fillStyle = '#059669';
+          ctx.font = '600 10.5px Inter, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText('ln X (échelle logarithmique)', geom.boardRight, botY + 22);
+        }
+
+        ctx.restore();
+      }
+
+      /** Dessine la courbe théorique exacte (Normale à alpha=0, Log-Normale à alpha=1, jacobien exact entre les deux). */
+      function drawTheoreticalCurve() {
+        if (!state.showCurve) return;
+        const { muL, sigmaL } = getLogParams();
+        if (sigmaL < 1e-6) return;
+
+        const botY = geom.binBottomY;
+        const areaH = geom.binAreaHeight;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.boardLeft, geom.binTopY - 4, geom.boardWidth, areaH + 6);
+        ctx.clip();
+
+        const steps = 220;
+        ctx.beginPath();
+        let started = false;
+        for (let i = 0; i <= steps; i++) {
+          const z = geom.zMin + (i / steps) * (geom.zMax - geom.zMin);
+          const px = zToScreenX(z);
+          if (px < geom.boardLeft - 10 || px > geom.boardRight + 10) continue;
+          const dens = normalPDF(z, muL, sigmaL) / dScreenX_dz(z);
+          const py = botY - Math.min(areaH, (dens / state.displayMaxDensity) * areaH);
+          if (!started) {
+            ctx.moveTo(px, py);
+            started = true;
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.6;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      /** Dessine les repères verticaux de la moyenne arithmétique x̄ et de la moyenne géométrique G. */
+      function drawSummaryMarkers() {
+        if (!state.showMarkers || state.totalBalls === 0) return;
+
+        const stats = computeEmpiricalStats();
+        if (!stats) return;
+
+        const topY = geom.binTopY;
+        const botY = geom.binBottomY;
+
+        const xGeom = zToScreenX(stats.meanLnX);
+        const xMean = zToScreenX(Math.log(Math.max(1e-6, stats.meanX)));
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.boardLeft, topY - 18, geom.boardWidth, geom.binAreaHeight + 22);
+        ctx.clip();
+
+        // Ligne Moyenne géométrique G (ambre)
+        if (xGeom >= geom.boardLeft && xGeom <= geom.boardRight) {
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath();
+          ctx.moveTo(xGeom, topY);
+          ctx.lineTo(xGeom, botY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#d97706';
+          ctx.font = '700 10.5px Inter, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'top';
+          ctx.fillText(`G=${fmtNum(X0 * stats.geomMean, 2)}`, xGeom - 4, topY + 3);
+        }
+
+        // Ligne Moyenne arithmétique x̄ (rose/rouge)
+        if (xMean >= geom.boardLeft && xMean <= geom.boardRight) {
+          ctx.strokeStyle = '#e11d48';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(xMean, topY);
+          ctx.lineTo(xMean, botY);
+          ctx.stroke();
+
+          ctx.fillStyle = '#e11d48';
+          ctx.font = '700 10.5px Inter, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(`x̄=${fmtNum(X0 * stats.meanX, 2)}`, xMean + 4, topY + 3);
+        }
+
+        ctx.restore();
+      }
+
+      function drawBalls() {
+        if (state.balls.length === 0) return;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.boardLeft - 6, 0, geom.boardWidth + 12, geom.height);
+        ctx.clip();
+
+        const r = geom.ballRadius;
+        for (let i = 0; i < state.balls.length; i++) {
+          const b = state.balls[i];
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
+
+          if (r >= 2.8) {
+            ctx.beginPath();
+            ctx.arc(b.x - r * 0.3, b.y - r * 0.3, r * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, geom.width, geom.height);
+        drawFunnel();
+        drawHistogram();
+        drawTheoreticalCurve();
+        drawSummaryMarkers();
+        drawPegs();
+        drawBalls();
+      }
+
+      // =========================================================================
+      // 7. STATISTIQUES EMPIRIQUES & THÉORIQUES
+      // =========================================================================
+      function computeEmpiricalStats() {
+        const N = state.totalBalls;
+        if (N === 0) return null;
+
+        const { lnD, delta } = getLogParams();
+        let sumX = 0;
+        let sumLnX = 0;
+
+        for (let k = 0; k <= state.n; k++) {
+          const c = state.bins[k];
+          if (c === 0) continue;
+          const z = state.n * lnD + k * delta;
+          const x = Math.exp(z);
+          sumX += c * x;
+          sumLnX += c * z;
+        }
+
+        const meanX = sumX / N;
+        const meanLnX = sumLnX / N;
+        const geomMean = Math.exp(meanLnX);
+
+        let m2X = 0, m3X = 0;
+        let m2Z = 0, m3Z = 0;
+        let cum = 0;
+        let medianX = 1;
+        let medFound = false;
+
+        for (let k = 0; k <= state.n; k++) {
+          const c = state.bins[k];
+          if (c === 0) continue;
+          const z = state.n * lnD + k * delta;
+          const x = Math.exp(z);
+          const dx = x - meanX;
+          const dz = z - meanLnX;
+          m2X += c * dx * dx;
+          m3X += c * dx * dx * dx;
+          m2Z += c * dz * dz;
+          m3Z += c * dz * dz * dz;
+
+          cum += c;
+          if (!medFound && cum >= N * 0.5) {
+            medianX = x;
+            medFound = true;
+          }
+        }
+
+        const sdX = Math.sqrt(m2X / N);
+        const sdZ = Math.sqrt(m2Z / N);
+        const skewX = sdX > 1e-9 && N >= 3 ? (m3X / N) / (sdX * sdX * sdX) : 0;
+        const skewLnX = sdZ > 1e-9 && N >= 3 ? (m3Z / N) / (sdZ * sdZ * sdZ) : 0;
+
+        return { meanX, meanLnX, geomMean, medianX, skewX, skewLnX };
+      }
+
+      function updateStatsUI() {
+        const N = state.totalBalls;
+        statN.textContent = N.toLocaleString('fr-FR');
+
+        // Valeurs théoriques exactes du processus multiplicatif (×u ou ×d)
+        const meanTheo = Math.pow(state.p * state.u + (1 - state.p) * state.d, state.n);
+        const geomTheo = Math.pow(state.u, state.n * state.p) * Math.pow(state.d, state.n * (1 - state.p));
+        statMeanXTh.textContent = fmtNum(X0 * meanTheo, 2);
+        statGeomXTh.textContent = fmtNum(X0 * geomTheo, 2);
+        statMedXTh.textContent = fmtNum(X0 * geomTheo, 2);
+
+        const emp = computeEmpiricalStats();
+        if (!emp) {
+          statMeanX.textContent = '—';
+          statGeomX.textContent = '—';
+          statMedX.textContent = '—';
+          statSkewX.textContent = '—';
+          statSkewLnX.textContent = '—';
+          return;
+        }
+
+        statMeanX.textContent = fmtNum(X0 * emp.meanX, 2);
+        statGeomX.textContent = fmtNum(X0 * emp.geomMean, 2);
+        statMedX.textContent = fmtNum(X0 * emp.medianX, 2);
+        statSkewX.textContent = N >= 5 ? fmtNum(emp.skewX, 2) : '—';
+        statSkewLnX.textContent = N >= 5 ? fmtNum(emp.skewLnX, 2) : '—';
+      }
+
+      function updateMorphLabels() {
+        const pct = Math.round(state.morph * 100);
+        valMorph.textContent = `${pct} %`;
+
+        const isKapteyn = state.targetMorph >= 0.5;
+        if (isKapteyn) {
+          btnModeKapteyn.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm';
+          btnModeGalton.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-indigo-700';
+        } else {
+          btnModeKapteyn.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-indigo-700';
+          btnModeGalton.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-emerald-600 text-white shadow-sm';
+        }
+
+        if (pct >= 95) {
+          modeBadge.textContent = 'Machine de Kapteyn (échelle X · Log-normale)';
+          modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50/95 text-indigo-700 border border-indigo-200 shadow-sm';
+          legendCurve.textContent = 'Loi log-normale';
+        } else if (pct <= 5) {
+          modeBadge.textContent = 'Planche de Galton (échelle ln X · Normale)';
+          modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50/95 text-emerald-700 border border-emerald-200 shadow-sm';
+          legendCurve.textContent = 'Loi normale 𝒩';
+        } else {
+          modeBadge.textContent = `Transition Galton ↔ Kapteyn (${pct} %)`;
+          modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50/95 text-amber-700 border border-amber-200 shadow-sm';
+          legendCurve.textContent = 'Densité transformée';
+        }
+      }
+
+      function updateStatusBadge() {
+        if (state.running) {
+          statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+          statusText.textContent = 'Flux continu';
+        } else if (state.queuedBalls > 0 || state.balls.length > 0) {
+          statusDot.className = 'w-2 h-2 rounded-full bg-indigo-500 animate-pulse';
+          statusText.textContent = 'Chute en cours';
+        } else {
+          statusDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+          statusText.textContent = 'En pause';
+        }
+      }
+
+      function updateToggleButton() {
+        if (state.running) {
+          btnToggle.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+          btnToggle.classList.add('bg-amber-500', 'hover:bg-amber-600');
+          btnToggleLabel.textContent = 'Mettre en pause';
+          iconPlay.classList.add('hidden');
+          iconPause.classList.remove('hidden');
+        } else {
+          btnToggle.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+          btnToggle.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+          btnToggleLabel.textContent = 'Lancer le flux continu';
+          iconPlay.classList.remove('hidden');
+          iconPause.classList.add('hidden');
+        }
+        updateStatusBadge();
+      }
+
+      // =========================================================================
+      // 8. INFO-BULLE INTERACTIVE
+      // =========================================================================
+      function updateTooltipContent(k) {
+        const count = state.bins[k] || 0;
+        const prob = state.binomProbs[k] || 0;
+        const { lnD, delta } = getLogParams();
+        const z = state.n * lnD + k * delta;
+        const xVal = Math.exp(z);
+
+        ttBin.textContent = `État k = ${k} / ${state.n}`;
+        ttXVal.textContent = `X = ${fmtNum(X0 * xVal, 2)} ng/mL`;
+        ttLnX.textContent = fmtNum(LN_X0 + z, 2);
+        ttCount.textContent = count.toLocaleString('fr-FR');
+        ttFreq.textContent = state.totalBalls > 0
+          ? `${fmtNum((count / state.totalBalls) * 100, 1)} %`
+          : '—';
+        ttProb.textContent = `${fmtNum(prob * 100, 2)} %`;
+      }
+
+      function positionTooltip(x, y) {
+        const pad = 12;
+        const tw = tooltip.offsetWidth || 215;
+        const th = tooltip.offsetHeight || 115;
+        let left = x + 14;
+        if (left + tw + pad > geom.width) left = x - tw - 14;
+        left = Math.max(pad, Math.min(geom.width - tw - pad, left));
+        let top = y - th - 12;
+        if (top < pad) top = y + 16;
+        top = Math.max(pad, Math.min(geom.height - th - pad, top));
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      }
+
+      function handlePointerMove(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        if (y >= geom.binTopY - 10 && y <= geom.binBottomY + 20 && x >= geom.boardLeft && x <= geom.boardRight) {
+          let found = -1;
+          for (let k = 0; k <= state.n; k++) {
+            const b = getBinBounds(k);
+            if (x >= b.left && x <= b.right) {
+              found = k;
+              break;
+            }
+          }
+          if (found >= 0) {
+            state.hoveredBin = found;
+            updateTooltipContent(found);
+            tooltip.classList.remove('hidden');
+            positionTooltip(x, y);
+            return;
+          }
+        }
+        state.hoveredBin = -1;
+        tooltip.classList.add('hidden');
+      }
+
+      function resetSimulation() {
+        state.balls = [];
+        state.queuedBalls = 0;
+        state.spawnTimer = 0;
+        state.bins = new Array(state.n + 1).fill(0);
+        state.totalBalls = 0;
+
+        updateBinomialDistribution();
+        computeGeometry();
+        state.displayMaxDensity = computeMaxTheoreticalDensity() * 1.2;
+        updateStatsUI();
+        updateStatusBadge();
+        draw();
+      }
+
+      // =========================================================================
+      // 9. ÉVÉNEMENTS UTILISATEUR
+      // =========================================================================
+      btnModeKapteyn.addEventListener('click', () => {
+        state.targetMorph = 1.0;
+        updateMorphLabels();
+      });
+
+      btnModeGalton.addEventListener('click', () => {
+        state.targetMorph = 0.0;
+        updateMorphLabels();
+      });
+
+      sliderMorph.addEventListener('input', () => {
+        const v = parseInt(sliderMorph.value, 10) / 100;
+        state.morph = v;
+        state.targetMorph = v;
+        updateMorphLabels();
+      });
+
+      btnToggle.addEventListener('click', () => {
+        ensureAudioReady();
+        state.running = !state.running;
+        updateToggleButton();
+      });
+
+      btnAdd1.addEventListener('click', () => {
+        ensureAudioReady();
+        spawnBall();
+        updateStatusBadge();
+      });
+
+      btnAdd50.addEventListener('click', () => {
+        ensureAudioReady();
+        state.queuedBalls += 50;
+        updateStatusBadge();
+      });
+
+      btnAdd500.addEventListener('click', () => {
+        ensureAudioReady();
+        state.queuedBalls += 500;
+        updateStatusBadge();
+      });
+
+      btnReset.addEventListener('click', () => {
+        state.running = false;
+        updateToggleButton();
+        resetSimulation();
+      });
+
+      chkSound.addEventListener('change', () => {
+        state.soundEnabled = chkSound.checked;
+        if (state.soundEnabled) ensureAudioReady();
+        syncAudioVolume();
+      });
+
+      sliderVolume.addEventListener('input', () => {
+        state.volume = parseInt(sliderVolume.value, 10) / 100;
+        if (state.volume > 0 && !state.soundEnabled) {
+          state.soundEnabled = true;
+          chkSound.checked = true;
+        }
+        if (state.soundEnabled) ensureAudioReady();
+        syncAudioVolume();
+      });
+
+      sliderN.addEventListener('input', () => {
+        state.n = parseInt(sliderN.value, 10);
+        valN.textContent = String(state.n);
+        resetSimulation();
+      });
+
+      function updateFactorLabels() {
+        const pctU = Math.round((state.u - 1) * 100);
+        const pctD = Math.round((state.d - 1) * 100);
+        valU.textContent = `×${fmtNum(state.u, 3)} (+${pctU} %)`;
+
+        if (state.d < 0.9995) {
+          valD.textContent = `×${fmtNum(state.d, 3)} (${pctD} % · décroiss.)`;
+          valD.className = 'font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md tabular-nums text-xs';
+        } else if (state.d <= 1.0005) {
+          valD.textContent = '×1,00 (stagnation)';
+          valD.className = 'font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md tabular-nums text-xs';
+        } else {
+          valD.textContent = `×${fmtNum(state.d, 3)} (+${pctD} % · croiss.)`;
+          valD.className = 'font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md tabular-nums text-xs';
+        }
+      }
+
+      sliderU.addEventListener('input', () => {
+        state.u = parseFloat(sliderU.value);
+        // Maintient toujours d < u (écart minimal de 0,04)
+        if (state.d > state.u - 0.04) {
+          state.d = Math.max(0.70, Number((state.u - 0.04).toFixed(2)));
+          sliderD.value = state.d.toFixed(3);
+        }
+        updateFactorLabels();
+        resetSimulation();
+      });
+
+      sliderD.addEventListener('input', () => {
+        state.d = parseFloat(sliderD.value);
+        // Maintient toujours u > d (écart minimal de 0,04)
+        if (state.u < state.d + 0.04) {
+          state.u = Math.min(1.44, Number((state.d + 0.04).toFixed(2)));
+          sliderU.value = state.u.toFixed(3);
+        }
+        updateFactorLabels();
+        resetSimulation();
+      });
+
+      btnDDec.addEventListener('click', () => {
+        const invU = Math.max(0.70, Math.min(0.999, Number((1 / state.u).toFixed(3))));
+        state.d = invU;
+        sliderD.value = state.d.toFixed(3);
+        updateFactorLabels();
+        resetSimulation();
+      });
+
+      btnDStag.addEventListener('click', () => {
+        state.d = 1.00;
+        sliderD.value = '1.00';
+        updateFactorLabels();
+        resetSimulation();
+      });
+
+      btnDGrow.addEventListener('click', () => {
+        state.d = Math.min(1.08, Number((state.u - 0.04).toFixed(2)));
+        if (state.d < 1.02) {
+          state.d = 1.08;
+          state.u = 1.12;
+          sliderU.value = state.u.toFixed(3);
+        }
+        sliderD.value = state.d.toFixed(3);
+        updateFactorLabels();
+        resetSimulation();
+      });
+
+      sliderP.addEventListener('input', () => {
+        state.p = parseFloat(sliderP.value);
+        valP.textContent = fmtNum(state.p, 2);
+        resetSimulation();
+      });
+
+      btnSym.addEventListener('click', () => {
+        state.p = 0.50;
+        sliderP.value = '0.50';
+        valP.textContent = '0,50';
+        resetSimulation();
+      });
+
+      sliderSpeed.addEventListener('input', () => {
+        state.speed = parseInt(sliderSpeed.value, 10);
+        valSpeed.textContent = getSpeedLabel(state.speed);
+      });
+
+      chkCurve.addEventListener('change', () => {
+        state.showCurve = chkCurve.checked;
+        draw();
+      });
+
+      chkMarkers.addEventListener('change', () => {
+        state.showMarkers = chkMarkers.checked;
+        draw();
+      });
+
+      canvas.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+      canvas.addEventListener('mouseleave', () => {
+        state.hoveredBin = -1;
+        tooltip.classList.add('hidden');
+      });
+      canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: true });
+      canvas.addEventListener('touchend', () => {
+        setTimeout(() => {
+          state.hoveredBin = -1;
+          tooltip.classList.add('hidden');
+        }, 1800);
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+
+      // =========================================================================
+      // 10. BOUCLE D'ANIMATION PRINCIPALE
+      // =========================================================================
+      function animate(timestamp) {
+        try {
+          if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+          const dt = Math.min(0.05, (timestamp - state.lastTimestamp) / 1000);
+          state.lastTimestamp = timestamp;
+
+          stepSimulation(dt);
+          draw();
+        } catch (err) {
+          console.error('Erreur dans la boucle de simulation :', err);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      function init() {
+        valN.textContent = String(state.n);
+        updateFactorLabels();
+        valP.textContent = fmtNum(state.p, 2);
+        valSpeed.textContent = getSpeedLabel(state.speed);
+        syncAudioVolume();
+        updateMorphLabels();
+        resetSimulation();
+        resizeCanvas();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+    })();
+  </script>
+</body>
+</html>
