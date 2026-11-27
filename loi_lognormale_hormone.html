@@ -43,7 +43,7 @@
         <div>
           <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Concentration d'une hormone : machine de Kapteyn ↔ planche de Galton</h1>
           <p class="text-xs sm:text-sm text-slate-500">
-            Effets multiplicatifs <span class="font-medium text-slate-700">X<sub>t+1</sub> = X<sub>t</sub> × d ou × u</span> (en ng/mL) (<span class="font-medium text-slate-700">d &lt; 1</span> décroissance, <span class="font-medium text-slate-700">d = 1</span> stagnation, <span class="font-medium text-slate-700">d &gt; 1</span> croissance) : de la <span class="font-medium text-amber-600">loi log-normale</span> à la <span class="font-medium text-emerald-600">loi normale</span>
+            Effets multiplicatifs <span class="font-medium text-slate-700">X<sub>t+1</sub> = X<sub>t</sub> × d ou × u</span> (en ng/mL) (<span class="font-medium text-slate-700">d &lt; 1</span> : l'étape diminue le taux, <span class="font-medium text-slate-700">d = 1</span> : sans effet, <span class="font-medium text-slate-700">d &gt; 1</span> : l'augmente un peu) : de la <span class="font-medium text-amber-600">loi log-normale</span> à la <span class="font-medium text-emerald-600">loi normale</span>
           </p>
         </div>
       </div>
@@ -74,32 +74,58 @@
   <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-      <!-- Colonne Gauche (8 cols) : Sélecteur Kapteyn ↔ Galton + Canvas -->
+      <!-- Colonne Gauche (8 cols) : Sélecteur Box-Cox + Zoom horizontal + Canvas -->
       <section class="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-3 sm:p-4 flex flex-col gap-3">
 
-        <!-- Barre de bascule animée Kapteyn (X) ↔ Galton (ln X) -->
-        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="inline-flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
-            <button id="btn-mode-kapteyn" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm">
-              Kapteyn · Échelle X
-            </button>
-            <button id="btn-mode-galton" type="button" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-indigo-700">
-              Galton · Échelle ln(X)
-            </button>
+        <!-- Barre de bascule animée Box-Cox : Kapteyn (λ=1) ↔ √X (λ=0,5) ↔ Galton (λ=0) + Zoom horizontal -->
+        <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:p-3 flex flex-col gap-2.5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="inline-flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
+              <button id="btn-mode-kapteyn" type="button" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm">
+                X (λ=1)
+              </button>
+              <button id="btn-mode-sqrt" type="button" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-amber-700">
+                √X (λ=0,5)
+              </button>
+              <button id="btn-mode-galton" type="button" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-emerald-700">
+                ln X (λ=0)
+              </button>
+            </div>
+
+            <!-- Curseur de transformation Box-Cox continue (λ de 0 à 1) -->
+            <div class="flex-1 flex items-center gap-2.5 min-w-[200px]">
+              <span class="text-[11px] font-semibold text-emerald-700 whitespace-nowrap">λ = 0</span>
+              <input id="slider-morph" type="range" min="0" max="100" step="1" value="100" aria-label="Exposant Box-Cox lambda entre 0 et 1" class="w-full accent-indigo-600 cursor-pointer" />
+              <span class="text-[11px] font-semibold text-indigo-700 whitespace-nowrap">λ = 1</span>
+              <span id="val-morph" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums min-w-[58px] text-center">λ = 1,00</span>
+            </div>
           </div>
 
-          <!-- Curseur de morphing continu pour démonstration en classe -->
-          <div class="flex-1 flex items-center gap-2.5 min-w-[200px]">
-            <span class="text-[11px] font-semibold text-slate-500 whitespace-nowrap">ln(X)</span>
-            <input id="slider-morph" type="range" min="0" max="100" step="1" value="100" aria-label="Transition entre Galton et Kapteyn" class="w-full accent-indigo-600 cursor-pointer" />
-            <span class="text-[11px] font-semibold text-indigo-700 whitespace-nowrap">X</span>
-            <span id="val-morph" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums min-w-[44px] text-center">100 %</span>
+          <!-- Contrôle du zoom / dézoom horizontal -->
+          <div class="pt-2 border-t border-slate-200/70 flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">Zoom horizontal</span>
+            </div>
+
+            <div class="flex-1 flex items-center gap-2 min-w-[210px]">
+              <button id="btn-zoom-out" type="button" title="Dézoomer horizontalement" class="w-7 h-7 rounded-lg bg-white hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 font-bold text-sm flex items-center justify-center shadow-sm active:scale-95 transition-all shrink-0">
+                −
+              </button>
+              <input id="slider-zoom" type="range" min="-200" max="232" step="2" value="0" aria-label="Zoom horizontal" class="w-full accent-indigo-600 cursor-pointer" />
+              <button id="btn-zoom-in" type="button" title="Zoomer horizontalement" class="w-7 h-7 rounded-lg bg-white hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200 font-bold text-sm flex items-center justify-center shadow-sm active:scale-95 transition-all shrink-0">
+                +
+              </button>
+              <span id="val-zoom" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums min-w-[50px] text-center">100 %</span>
+              <button id="btn-zoom-reset" type="button" title="Réinitialiser le zoom et le cadrage horizontal" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition-colors shrink-0">
+                1:1
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Conteneur Canvas -->
         <div id="canvas-wrapper" class="relative w-full h-[540px] sm:h-[600px] lg:h-[660px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden select-none">
-          <canvas id="kapteynCanvas" class="block w-full h-full cursor-crosshair"></canvas>
+          <canvas id="kapteynCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
 
           <!-- Info-bulle interactive au survol d'une colonne -->
           <div id="tooltip" class="pointer-events-none hidden absolute z-10 bg-slate-900/95 text-white text-xs rounded-xl px-3.5 py-2.5 shadow-lg border border-slate-700/80 backdrop-blur-sm min-w-[215px]">
@@ -111,6 +137,10 @@
               <div class="flex justify-between gap-4">
                 <span class="text-slate-400">Logarithme ln(X) :</span>
                 <span id="tt-lnx" class="font-medium text-slate-200 tabular-nums">0,00</span>
+              </div>
+              <div id="tt-boxcox-row" class="hidden flex justify-between gap-4">
+                <span class="text-amber-200">Box-Cox g<sub>λ</sub>(X) :</span>
+                <span id="tt-boxcox" class="font-medium text-amber-200 tabular-nums">0,00</span>
               </div>
               <div class="flex justify-between gap-4">
                 <span class="text-slate-300">Effectif observé :</span>
@@ -144,7 +174,8 @@
         </div>
 
         <p class="text-xs text-slate-500 text-center">
-          Chaque bille est une personne. Sa concentration d'hormone part de <b>X₀ = e ≈ 2,72 ng/mL</b> et passe par <i>n</i> étapes de régulation : à chacune, elle est multipliée par <b>u</b> (droite, proba. <i>p</i>) ou par <b>d</b> (proba. 1−<i>p</i> : gauche si <b>d &lt; 1</b>, tout droit si <b>d = 1</b>, droite si <b>d &gt; 1</b>). Réglages par défaut (<i>n</i> = 16, <i>u</i> = 1,133, <i>d</i> = 1/<i>u</i> ≈ 0,883, <i>p</i> = 0,5) : ln X suit à peu près 𝒩(1 ; 0,5²), comme dans l'exercice 7.5 du cours. La surface de chaque barre est proportionnelle à son effectif.
+          <b>Molette</b> : zoom/dézoom horizontal · <b>Glisser</b> : déplacer l'axe · <b>Double-clic</b> : réinitialiser le zoom.
+          Chaque bille est une <b>personne</b>. Le taux d'une hormone dans le sang résulte d'une chaîne d'étapes : intensité du signal qui déclenche la sécrétion, nombre de cellules sécrétrices, expression du gène, synthèse, libération, puis élimination par le foie et le rein. D'une personne à l'autre, chaque étape est un peu plus ou un peu moins efficace. Elle agit <b>en proportion</b> : elle multiplie la concentration par <b>u</b> (proba. <i>p</i>) ou par <b>d</b> (proba. 1−<i>p</i>), au lieu de lui ajouter une quantité fixe. Les effets se <b>multiplient</b>, donc leurs logarithmes s'<b>additionnent</b> : ln X est une somme de nombreux petits effets, approximativement normale, et X suit une loi log-normale (cours : « théorème central limite multiplicatif »). Chaque bille part de <b>X₀ = e ≈ 2,72 ng/mL</b>. Réglages par défaut (<i>n</i> = 16, <i>u</i> = 1,133, <i>d</i> = 1/<i>u</i> ≈ 0,883, <i>p</i> = 0,5) : ln X suit à peu près 𝒩(1 ; 0,5²), comme dans l'exercice 7.5 du cours.
         </p>
       </section>
 
@@ -211,17 +242,17 @@
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
           <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Paramètres</h2>
 
-          <!-- Nombre de rangées n -->
+          <!-- Nombre de rangées n (jusqu'à 34) -->
           <div class="space-y-1">
             <div class="flex items-center justify-between text-sm">
               <label for="slider-n" class="font-medium text-slate-700">Nombre d'étapes (<span class="italic font-serif">n</span>)</label>
               <span id="val-n" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">16</span>
             </div>
-            <input id="slider-n" type="range" min="2" max="20" step="1" value="16" class="w-full accent-indigo-600 cursor-pointer" />
+            <input id="slider-n" type="range" min="2" max="34" step="1" value="16" class="w-full accent-indigo-600 cursor-pointer" />
             <div class="flex justify-between text-[11px] text-slate-400">
               <span>2</span>
-              <span>10</span>
-              <span>20</span>
+              <span>18</span>
+              <span>34</span>
             </div>
           </div>
 
@@ -346,9 +377,10 @@
             <p class="font-semibold text-slate-800">À observer en cours :</p>
             <ul class="list-disc pl-4 space-y-0.5">
               <li>Avec les réglages par défaut : <b>x̄ ≈ 3,1 &gt; G ≈ médiane ≈ 2,72 ng/mL</b>, comme dans l'exercice 7.5 (3,08 et 2,72).</li>
-              <li>Modifiez <b>d</b> : une étape peut faire <b>baisser</b> la concentration (<i>d &lt; 1</i>), la laisser <b>inchangée</b> (<i>d = 1</i>) ou l'augmenter un peu (<i>d &gt; 1</i>).</li>
-              <li>Dans tous les cas, la distribution de <b>X</b> reste log-normale (asymétrique à droite) avec <b>x̄ &gt; G ≈ Médiane</b>.</li>
-              <li>Faites glisser le curseur <b>ln(X) ↔ X</b> : les mêmes billes forment une loi normale en échelle log et une loi log-normale en échelle linéaire.</li>
+              <li>Les « étapes » ne se succèdent pas dans le temps : ce sont les facteurs qui différencient deux personnes. <i>d</i> = 1 correspond à une étape sans effet chez cette personne.</li>
+              <li>Avec <b>n = 34</b>, même une probabilité extrême (<i>p</i> = 0,15 ou 0,85) vérifie <i>np</i> ≥ 5 et <i>n</i>(1−<i>p</i>) ≥ 5.</li>
+              <li>Utilisez le <b>zoom horizontal</b> (ou la molette) pour explorer la longue traîne droite ou agrandir le pic.</li>
+              <li>Faites glisser <b>λ</b> (Box-Cox <i>g<sub>λ</sub></i>(<i>X</i>) = (<i>X<sup>λ</sup></i>−1)/<i>λ</i>) de <b>1</b> (<i>X</i>) à <b>0,5</b> (√<i>X</i>) puis <b>0</b> (ln <i>X</i>) pour voir l'asymétrie s'annuler (pour <i>p</i> = 0,5). Transformation de Box-Cox : hors programme.</li>
             </ul>
           </div>
         </div>
@@ -370,11 +402,18 @@
       const tooltip = document.getElementById('tooltip');
 
       const btnModeKapteyn = document.getElementById('btn-mode-kapteyn');
+      const btnModeSqrt = document.getElementById('btn-mode-sqrt');
       const btnModeGalton = document.getElementById('btn-mode-galton');
       const sliderMorph = document.getElementById('slider-morph');
       const valMorph = document.getElementById('val-morph');
       const modeBadge = document.getElementById('mode-badge');
       const legendCurve = document.getElementById('legend-curve');
+
+      const btnZoomOut = document.getElementById('btn-zoom-out');
+      const btnZoomIn = document.getElementById('btn-zoom-in');
+      const btnZoomReset = document.getElementById('btn-zoom-reset');
+      const sliderZoom = document.getElementById('slider-zoom');
+      const valZoom = document.getElementById('val-zoom');
 
       const btnToggle = document.getElementById('btn-toggle');
       const btnToggleLabel = document.getElementById('btn-toggle-label');
@@ -424,24 +463,31 @@
       const ttBin = document.getElementById('tt-bin');
       const ttXVal = document.getElementById('tt-xval');
       const ttLnX = document.getElementById('tt-lnx');
+      const ttBoxCoxRow = document.getElementById('tt-boxcox-row');
+      const ttBoxCox = document.getElementById('tt-boxcox');
       const ttCount = document.getElementById('tt-count');
       const ttFreq = document.getElementById('tt-freq');
       const ttProb = document.getElementById('tt-prob');
 
       // Exemple du cours (exercice 7.5) : concentration d'une hormone, ln X ~ N(1 ; 0,5²).
-      // La simulation travaille sur X / X0 ; tout ce qui est affiché est en ng/mL (X) ou en ln X.
-      // Par défaut u = e^0,125, d = 1/u, n = 16, p = 0,5 : écart-type de ln X = 0,5.
       const X0 = Math.E;        // concentration de départ = médiane par défaut (ng/mL)
       const LN_X0 = 1;          // ln X0
+      const MIN_ZOOM_X = 0.25;  // Dézoom 25 %
+      const MAX_ZOOM_X = 5.0;   // Zoom 500 %
 
       const state = {
-        n: 16,                  // Nombre d'étapes (2..20)
+        n: 16,                  // Nombre d'étapes (2..34)
         u: 1.133,               // Facteur de branche haute (> d)
         d: 0.883,               // Facteur de branche basse (< 1 décroiss., = 1 stagn., > 1 croiss.)
         p: 0.50,                // Probabilité de branche haute (×u)
         speed: 5,               // Vitesse (1..10)
-        morph: 1.0,             // 0 = Galton (échelle ln X), 1 = Kapteyn (échelle X)
-        targetMorph: 1.0,       // Cible lissée du morphing
+        lambda: 1.0,            // Paramètre Box-Cox : 0 = ln(X) (Galton), 0.5 = √X, 1 = X (Kapteyn)
+        targetLambda: 1.0,      // Cible lissée de λ
+        zoomX: 1.0,             // Facteur de zoom horizontal (0.25 .. 5.0)
+        panPx: 0.0,             // Translation horizontale en pixels
+        isPanning: false,
+        panStartClientX: 0,
+        panStartOffset: 0,
         soundEnabled: true,
         volume: 0.65,
         showCurve: true,
@@ -474,7 +520,6 @@
         binAreaHeight: 200,
         pegRadius: 3.6,
         ballRadius: 4.2,
-        // Bornes des deux échelles
         zMin: -0.2,
         zMax: 2.4,
         xMaxKapteyn: 6.0,
@@ -649,7 +694,7 @@
       }
 
       // =========================================================================
-      // 3. MATHÉMATIQUES : BINOMIALE, NORMALE, LOG-NORMALE & JACOBIEN DU MORPHING
+      // 3. MATHÉMATIQUES : BINOMIALE, NORMALE, BOX-COX EXACTE & ZOOM HORIZONTAL
       // =========================================================================
       function comb(n, k) {
         if (k < 0 || k > n) return 0;
@@ -691,7 +736,7 @@
         return 'Très rapide';
       }
 
-      /** Retourne (lnU, lnD, delta, muL, sigmaL) de ln(X_n) = n*ln(d) + K*(ln(u) - ln(d)). */
+      /** Retourne (lnU, lnD, delta, muL, sigmaL) de ln(X_n / X0) = n*ln(d) + K*(ln(u) - ln(d)). */
       function getLogParams() {
         const lnU = Math.log(state.u);
         const lnD = Math.log(state.d);
@@ -702,28 +747,98 @@
       }
 
       /**
-       * Transforme une coordonnée logarithmique z = ln(x) en coordonnée écran s(z, alpha).
-       * - alpha = 0 (Galton)  : transformation linéaire en z = ln(x).
-       * - alpha = 1 (Kapteyn) : transformation linéaire en x = exp(z).
+       * Transformation de Box-Cox exacte g_λ(X) appliquée à X = exp(lnX) :
+       * - g_λ(X) = (X^λ - 1) / λ  pour λ > 0
+       * - g_0(X) = ln(X)          pour λ = 0 (prolongement C^∞ par développement limité)
        */
-      function zToScreenX(z, alpha) {
-        const a = alpha !== undefined ? alpha : state.morph;
-        const tGalton = (z - geom.zMin) / (geom.zMax - geom.zMin);
-        const sGalton = geom.boardLeft + tGalton * geom.boardWidth;
-
-        const xVal = Math.exp(z);
-        const tKapteyn = xVal / geom.xMaxKapteyn;
-        const sKapteyn = geom.boardLeft + tKapteyn * geom.boardWidth;
-
-        return (1 - a) * sGalton + a * sKapteyn;
+      function boxCoxFromLnX(lnX, lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        if (Math.abs(l) < 1e-4) {
+          const u = l * lnX;
+          return lnX * (1 + u * 0.5 + (u * u) / 6);
+        }
+        return Math.expm1(l * lnX) / l;
       }
 
-      /** Dérivée exacte ds/dz > 0 pour la conservation d'aire de la densité théorique. */
-      function dScreenX_dz(z, alpha) {
-        const a = alpha !== undefined ? alpha : state.morph;
-        const dsGalton = geom.boardWidth / (geom.zMax - geom.zMin);
-        const dsKapteyn = (geom.boardWidth / geom.xMaxKapteyn) * Math.exp(z);
-        return (1 - a) * dsGalton + a * dsKapteyn;
+      /** Bornes [gMin, gMax] de la fenêtre Box-Cox sur [boardLeft, boardRight] pour un λ donné. */
+      function getBoxCoxWindow(lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        const lnXMin = LN_X0 + geom.zMin;
+        // À λ=0 : gMin = ln(X_min) ; à λ=1 : gMin = (X_min - 1) - X_min = -1 = g_1(0) (démarre à X=0)
+        const gMin = boxCoxFromLnX(lnXMin, l) - l * Math.exp(lnXMin);
+        const zHi = (1 - l) * geom.zMax + l * Math.log(geom.xMaxKapteyn);
+        const gMax = boxCoxFromLnX(LN_X0 + zHi, l);
+        return { gMin, gMax, gSpan: Math.max(1e-6, gMax - gMin) };
+      }
+
+      /** Point d'ancrage du zoom horizontal : centre du cadre en Galton (λ=0), bord gauche (X=0) en Kapteyn (λ=1). */
+      function getZoomAnchor(lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        const boardCenter = geom.boardLeft + geom.boardWidth * 0.5;
+        return (1 - l) * boardCenter + l * geom.boardLeft;
+      }
+
+      /**
+       * Transforme une coordonnée interne z = ln(X / X0) en coordonnée écran s(z, λ)
+       * par la transformation de Box-Cox exacte, avec zoom et translation horizontaux.
+       */
+      function zToScreenX(z, lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        const { gMin, gSpan } = getBoxCoxWindow(l);
+        const gVal = boxCoxFromLnX(LN_X0 + z, l);
+        const sBase = geom.boardLeft + ((gVal - gMin) / gSpan) * geom.boardWidth;
+        const anchor = getZoomAnchor(l);
+        return anchor + (sBase - anchor) * state.zoomX + state.panPx;
+      }
+
+      /** Convertit directement une valeur Box-Cox g = g_λ(X) en coordonnée écran. */
+      function boxCoxValToScreenX(gVal, lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        const { gMin, gSpan } = getBoxCoxWindow(l);
+        const sBase = geom.boardLeft + ((gVal - gMin) / gSpan) * geom.boardWidth;
+        const anchor = getZoomAnchor(l);
+        return anchor + (sBase - anchor) * state.zoomX + state.panPx;
+      }
+
+      /** Convertit une coordonnée écran px en valeur Box-Cox g = g_λ(X). */
+      function screenXToBoxCoxVal(px, lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        const { gMin, gSpan } = getBoxCoxWindow(l);
+        const anchor = getZoomAnchor(l);
+        const sBase = anchor + (px - state.panPx - anchor) / state.zoomX;
+        return gMin + ((sBase - geom.boardLeft) / geom.boardWidth) * gSpan;
+      }
+
+      /**
+       * Dérivée exacte ds/dz > 0 pour la conservation d'aire de la densité théorique :
+       * d/dz [ g_λ(exp(LN_X0 + z)) ] = exp(λ · (LN_X0 + z)) = X^λ.
+       */
+      function dScreenX_dz(z, lam) {
+        const l = lam !== undefined ? lam : state.lambda;
+        const { gSpan } = getBoxCoxWindow(l);
+        return state.zoomX * (geom.boardWidth / gSpan) * Math.exp(l * (LN_X0 + z));
+      }
+
+      /** Met à jour le zoom horizontal (en conservant éventuellement le point sous pivotScreenX). */
+      function setHorizontalZoom(newZoom, pivotScreenX) {
+        const clamped = Math.max(MIN_ZOOM_X, Math.min(MAX_ZOOM_X, newZoom));
+        if (pivotScreenX !== undefined) {
+          const anchor = getZoomAnchor();
+          const ratio = clamped / state.zoomX;
+          state.panPx = pivotScreenX - anchor - (pivotScreenX - anchor - state.panPx) * ratio;
+        }
+        state.zoomX = clamped;
+        sliderZoom.value = String(Math.round(Math.log2(state.zoomX) * 100));
+        valZoom.textContent = `${Math.round(state.zoomX * 100)} %`;
+        draw();
+      }
+
+      function resetHorizontalView() {
+        state.zoomX = 1.0;
+        state.panPx = 0.0;
+        sliderZoom.value = '0';
+        valZoom.textContent = '100 %';
+        draw();
       }
 
       /** Coordonnées (x, y) du picot à la rangée r (0..n-1) et à l'indice c (0..r). */
@@ -744,21 +859,23 @@
         const left = zToScreenX(zLeft);
         const right = zToScreenX(zRight);
         const center = zToScreenX(zCenter);
-        return { left, right, center, width: Math.max(1.2, right - left), zCenter };
+        return { left, right, center, width: Math.max(1.0, right - left), zCenter };
       }
 
       /** Densité théorique maximale en coordonnées écran (proba / pixel) pour la mise à l'échelle. */
       function computeMaxTheoreticalDensity() {
         const { muL, sigmaL } = getLogParams();
         if (sigmaL < 1e-6) return 0.02;
+        const zLo = Math.min(geom.zMin, muL - 4.2 * sigmaL);
+        const zHi = Math.max(geom.zMax, muL + 4.2 * sigmaL);
         let maxD = 0;
-        const steps = 120;
+        const steps = 140;
         for (let i = 0; i <= steps; i++) {
-          const z = geom.zMin + (i / steps) * (geom.zMax - geom.zMin);
+          const z = zLo + (i / steps) * (zHi - zLo);
           const d = normalPDF(z, muL, sigmaL) / dScreenX_dz(z);
           if (d > maxD) maxD = d;
         }
-        return Math.max(1e-5, maxD);
+        return Math.max(1e-6, maxD);
       }
 
       // =========================================================================
@@ -774,29 +891,29 @@
         geom.boardRight = w - padX;
         geom.boardWidth = Math.max(160, geom.boardRight - geom.boardLeft);
 
-        // Domaine en z = ln(X) pour la planche de Galton (inclut toujours z = 0 et tous les bacs)
+        // Domaine en z = ln(X / X0) pour la planche de Galton
         geom.zMin = Math.min(-0.65 * delta, state.n * lnD - 0.65 * delta);
         geom.zMax = state.n * lnU + 0.65 * delta;
 
-        // Domaine en X pour la machine de Kapteyn : démarre à 0 et englobe la longue traîne droite
+        // Domaine en X / X0 pour la machine de Kapteyn : démarre à 0 et englobe la traîne droite
         const maxPossibleX = Math.exp(state.n * lnU + 0.35 * delta);
         const quantileX = Math.exp(muL + 2.8 * sigmaL);
         geom.xMaxKapteyn = Math.min(maxPossibleX, Math.max(2.6, quantileX));
 
         geom.funnelTopY = 14;
         geom.funnelMouthY = Math.max(44, h * 0.08);
-        geom.pegStartY = geom.funnelMouthY + Math.max(18, h * 0.04);
+        geom.pegStartY = geom.funnelMouthY + Math.max(16, h * 0.036);
 
-        const pegAreaH = h * 0.43;
+        const pegAreaH = h * 0.44;
         geom.dy = pegAreaH / state.n;
-        geom.binTopY = geom.pegStartY + state.n * geom.dy + Math.max(10, Math.min(20, geom.dy * 0.35));
+        geom.binTopY = geom.pegStartY + state.n * geom.dy + Math.max(10, Math.min(20, geom.dy * 0.45));
         geom.binBottomY = h - 38;
         geom.binAreaHeight = Math.max(90, geom.binBottomY - geom.binTopY);
 
         const minDxGalton = geom.boardWidth / (state.n + 1);
         const minSpacing = Math.min(minDxGalton, geom.dy);
-        geom.pegRadius = Math.max(2.0, Math.min(4.8, minSpacing * 0.14));
-        geom.ballRadius = Math.max(2.6, Math.min(4.6, minSpacing * 0.18));
+        geom.pegRadius = Math.max(1.5, Math.min(4.8, minSpacing * 0.14));
+        geom.ballRadius = Math.max(2.1, Math.min(4.6, minSpacing * 0.19));
       }
 
       function resizeCanvas() {
@@ -869,7 +986,7 @@
         }
 
         if (ball.phase === 'pegs') {
-          const baseDur = Math.max(0.12, 0.21 - Math.max(0, state.n - 10) * 0.005);
+          const baseDur = Math.max(0.085, 0.21 - Math.max(0, state.n - 10) * 0.005);
           const duration = baseDur / speedMult;
           ball.t += dt / duration;
 
@@ -937,15 +1054,15 @@
       }
 
       function stepSimulation(dt) {
-        // Animation fluide du morphing Galton (0) ↔ Kapteyn (1)
-        const morphDiff = state.targetMorph - state.morph;
-        if (Math.abs(morphDiff) > 0.0005) {
-          state.morph += morphDiff * Math.min(1, dt * 8.5);
-          sliderMorph.value = String(Math.round(state.morph * 100));
+        // Animation fluide de l'exposant Box-Cox λ ∈ [0, 1]
+        const lamDiff = state.targetLambda - state.lambda;
+        if (Math.abs(lamDiff) > 0.0005) {
+          state.lambda += lamDiff * Math.min(1, dt * 8.5);
+          sliderMorph.value = String(Math.round(state.lambda * 100));
           updateMorphLabels();
-        } else if (state.morph !== state.targetMorph) {
-          state.morph = state.targetMorph;
-          sliderMorph.value = String(Math.round(state.morph * 100));
+        } else if (state.lambda !== state.targetLambda) {
+          state.lambda = state.targetLambda;
+          sliderMorph.value = String(Math.round(state.lambda * 100));
           updateMorphLabels();
         }
 
@@ -998,7 +1115,7 @@
             if (c > 0) {
               const b = getBinBounds(k);
               const d = (c / state.totalBalls) / b.width;
-              if (b.left >= geom.boardLeft - 2 && b.right <= geom.boardRight + 20 && d > maxObsD) {
+              if (b.right >= geom.boardLeft && b.left <= geom.boardRight && d > maxObsD) {
                 maxObsD = d;
               }
             }
@@ -1014,12 +1131,18 @@
       // =========================================================================
       function drawFunnel() {
         const cx = zToScreenX(0);
+        if (cx < geom.boardLeft - 30 || cx > geom.boardRight + 30) return;
+
         const topY = geom.funnelTopY;
         const mouthY = geom.funnelMouthY;
         const topHalfW = 24;
         const mouthHalfW = Math.max(geom.ballRadius + 3, 7);
 
         ctx.save();
+        ctx.beginPath();
+        ctx.rect(geom.boardLeft - 10, 0, geom.boardWidth + 20, geom.binTopY);
+        ctx.clip();
+
         ctx.beginPath();
         ctx.moveTo(cx - topHalfW, topY);
         ctx.lineTo(cx - mouthHalfW, mouthY);
@@ -1034,12 +1157,17 @@
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // Étiquette X₀ au-dessus de l'entonnoir
+        // Étiquette au-dessus de l'entonnoir selon l'échelle Box-Cox courante
         ctx.fillStyle = '#64748b';
         ctx.font = '600 10px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(state.morph > 0.5 ? 'X₀ = 2,72' : 'ln(X₀) = 1', cx, topY + 11);
+        const funnelLbl = state.lambda >= 0.995
+          ? 'X₀ = 2,72'
+          : (state.lambda <= 0.005
+            ? 'ln(X₀) = 1'
+            : `g_λ(X₀) = ${fmtNum(boxCoxFromLnX(LN_X0), 2)}`);
+        ctx.fillText(funnelLbl, cx, topY + 11);
         ctx.restore();
       }
 
@@ -1126,7 +1254,7 @@
             const y = botY - barH;
             const gap = b.width > 8 ? 1.5 : 0.4;
             const x = b.left + gap * 0.5;
-            const w = Math.max(1.2, b.width - gap);
+            const w = Math.max(1.0, b.width - gap);
             const r = Math.min(4, w * 0.25, barH);
 
             ctx.beginPath();
@@ -1152,7 +1280,7 @@
         ctx.lineTo(geom.boardRight, botY);
         ctx.stroke();
 
-        // Graduations de l'axe horizontal adaptées au mode courant
+        // Graduations de l'axe horizontal adaptées au mode et au zoom courant
         drawXAxisTicks(botY);
 
         ctx.restore();
@@ -1164,71 +1292,112 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
 
-        if (state.morph >= 0.5) {
-          // Graduations en X (0, 1, 2, ...)
-          const xMaxDisp = geom.xMaxKapteyn * X0;
-          const rawStep = xMaxDisp / 6;
-          const niceSteps = [0.25, 0.5, 1, 2, 5, 10, 20, 50, 100];
-          let step = niceSteps[niceSteps.length - 1];
+        const niceSteps = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+        function pickNiceStep(raw) {
           for (let i = 0; i < niceSteps.length; i++) {
-            if (niceSteps[i] >= rawStep) {
-              step = niceSteps[i];
-              break;
-            }
+            if (niceSteps[i] >= raw) return niceSteps[i];
           }
+          return niceSteps[niceSteps.length - 1];
+        }
 
-          ctx.fillStyle = '#64748b';
-          ctx.strokeStyle = '#94a3b8';
-          ctx.lineWidth = 1.2;
+        ctx.fillStyle = '#64748b';
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.2;
 
-          for (let xVal = 0; xVal <= xMaxDisp + 1e-6; xVal += step) {
-            const px = xVal === 0
-              ? geom.boardLeft
-              : zToScreenX(Math.log(xVal / X0));
+        if (state.lambda >= 0.995) {
+          // Cas λ = 1 : graduations en X (ng/mL)
+          const gVisMin = screenXToBoxCoxVal(geom.boardLeft, 1);
+          const gVisMax = screenXToBoxCoxVal(geom.boardRight, 1);
+          const xVisMin = Math.max(0, gVisMin + 1);
+          const xVisMax = Math.max(xVisMin + 0.1, gVisMax + 1);
+          const step = pickNiceStep((xVisMax - xVisMin) / 7);
+          const startTick = Math.max(0, Math.floor(xVisMin / step) * step);
+          let lastLabelPx = -Infinity;
+
+          for (let xVal = startTick; xVal <= xVisMax + step * 0.5; xVal += step) {
+            const cleanX = Math.abs(xVal) < 1e-9 ? 0 : xVal;
+            const px = boxCoxValToScreenX(cleanX - 1, 1);
             if (px < geom.boardLeft - 2 || px > geom.boardRight + 2) continue;
 
             ctx.beginPath();
             ctx.moveTo(px, botY);
             ctx.lineTo(px, botY + 5);
             ctx.stroke();
-            ctx.fillText(step < 1 ? fmtNum(xVal, 1) : String(Math.round(xVal)), px, botY + 8);
+
+            if (px - lastLabelPx >= 34) {
+              const label = step < 0.1 ? fmtNum(cleanX, 2) : (step < 1 ? fmtNum(cleanX, 1) : String(Math.round(cleanX)));
+              ctx.fillText(label, px, botY + 8);
+              lastLabelPx = px;
+            }
           }
 
           ctx.fillStyle = '#4f46e5';
           ctx.font = '600 10.5px Inter, sans-serif';
           ctx.textAlign = 'right';
-          ctx.fillText('Concentration X en ng/mL (échelle linéaire)', geom.boardRight, botY + 22);
-        } else {
-          // Graduations en ln(X)
-          const { lnD, delta } = getLogParams();
-          const labelStep = state.n <= 10 ? 2 : 4;
-          ctx.fillStyle = '#64748b';
-          ctx.strokeStyle = '#94a3b8';
-          ctx.lineWidth = 1.2;
+          ctx.fillText('Concentration X en ng/mL (Box-Cox λ = 1)', geom.boardRight, botY + 22);
+        } else if (state.lambda <= 0.005) {
+          // Cas λ = 0 : graduations en ln(X)
+          const gVisMin = screenXToBoxCoxVal(geom.boardLeft, 0);
+          const gVisMax = screenXToBoxCoxVal(geom.boardRight, 0);
+          const step = pickNiceStep((gVisMax - gVisMin) / 7);
+          const startTick = Math.floor(gVisMin / step) * step;
+          let lastLabelPx = -Infinity;
 
-          for (let k = 0; k <= state.n; k++) {
-            if (k % labelStep !== 0 && k !== state.n && k !== Math.round(state.n / 2)) continue;
-            const z = state.n * lnD + k * delta;
-            const px = zToScreenX(z);
-            if (px < geom.boardLeft || px > geom.boardRight) continue;
+          for (let gVal = startTick; gVal <= gVisMax + step * 0.5; gVal += step) {
+            const px = boxCoxValToScreenX(gVal, 0);
+            if (px < geom.boardLeft - 2 || px > geom.boardRight + 2) continue;
 
             ctx.beginPath();
             ctx.moveTo(px, botY);
             ctx.lineTo(px, botY + 5);
             ctx.stroke();
-            ctx.fillText(fmtNum(LN_X0 + z, 2), px, botY + 8);
+
+            if (px - lastLabelPx >= 38) {
+              const dec = step < 0.1 ? 2 : (step < 1 ? 1 : 0);
+              ctx.fillText(fmtNum(gVal, dec), px, botY + 8);
+              lastLabelPx = px;
+            }
           }
 
           ctx.fillStyle = '#059669';
           ctx.font = '600 10.5px Inter, sans-serif';
           ctx.textAlign = 'right';
-          ctx.fillText('ln X (échelle logarithmique)', geom.boardRight, botY + 22);
+          ctx.fillText('ln X (Box-Cox λ = 0 · échelle logarithmique)', geom.boardRight, botY + 22);
+        } else {
+          // Cas intermédiaire 0 < λ < 1 : graduations exactes en g_λ(X) = (X^λ - 1) / λ
+          const gVisMin = screenXToBoxCoxVal(geom.boardLeft);
+          const gVisMax = screenXToBoxCoxVal(geom.boardRight);
+          const step = pickNiceStep((gVisMax - gVisMin) / 7);
+          const startTick = Math.floor(gVisMin / step) * step;
+          let lastLabelPx = -Infinity;
+
+          for (let gVal = startTick; gVal <= gVisMax + step * 0.5; gVal += step) {
+            const px = boxCoxValToScreenX(gVal);
+            if (px < geom.boardLeft - 2 || px > geom.boardRight + 2) continue;
+
+            ctx.beginPath();
+            ctx.moveTo(px, botY);
+            ctx.lineTo(px, botY + 5);
+            ctx.stroke();
+
+            if (px - lastLabelPx >= 38) {
+              const dec = step < 0.1 ? 2 : (step < 1 ? 1 : 0);
+              ctx.fillText(fmtNum(gVal, dec), px, botY + 8);
+              lastLabelPx = px;
+            }
+          }
+
+          const sqrtHint = Math.abs(state.lambda - 0.5) < 0.015 ? ' = 2(√X − 1)' : '';
+          ctx.fillStyle = '#b45309';
+          ctx.font = '600 10.5px Inter, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(`Box-Cox g_λ(X) = (X^λ − 1) / λ${sqrtHint}  (λ = ${fmtNum(state.lambda, 2)})`, geom.boardRight, botY + 22);
         }
 
         ctx.restore();
       }
 
-      /** Dessine la courbe théorique exacte (Normale à alpha=0, Log-Normale à alpha=1, jacobien exact entre les deux). */
+      /** Dessine la courbe théorique exacte (Normale à λ=0, Log-Normale à λ=1, Box-Cox exacte entre les deux). */
       function drawTheoreticalCurve() {
         if (!state.showCurve) return;
         const { muL, sigmaL } = getLogParams();
@@ -1242,13 +1411,16 @@
         ctx.rect(geom.boardLeft, geom.binTopY - 4, geom.boardWidth, areaH + 6);
         ctx.clip();
 
-        const steps = 220;
+        const zLo = Math.min(geom.zMin, muL - 4.5 * sigmaL);
+        const zHi = Math.max(geom.zMax, muL + 4.5 * sigmaL);
+        const steps = 260;
+
         ctx.beginPath();
         let started = false;
         for (let i = 0; i <= steps; i++) {
-          const z = geom.zMin + (i / steps) * (geom.zMax - geom.zMin);
+          const z = zLo + (i / steps) * (zHi - zLo);
           const px = zToScreenX(z);
-          if (px < geom.boardLeft - 10 || px > geom.boardRight + 10) continue;
+          if (px < geom.boardLeft - 20 || px > geom.boardRight + 20) continue;
           const dens = normalPDF(z, muL, sigmaL) / dScreenX_dz(z);
           const py = botY - Math.min(areaH, (dens / state.displayMaxDensity) * areaH);
           if (!started) {
@@ -1332,6 +1504,7 @@
         const r = geom.ballRadius;
         for (let i = 0; i < state.balls.length; i++) {
           const b = state.balls[i];
+          if (b.x < geom.boardLeft - 10 || b.x > geom.boardRight + 10) continue;
           ctx.beginPath();
           ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
           ctx.fillStyle = b.color;
@@ -1443,30 +1616,36 @@
       }
 
       function updateMorphLabels() {
-        const pct = Math.round(state.morph * 100);
-        valMorph.textContent = `${pct} %`;
+        const l = state.lambda;
+        valMorph.textContent = `λ = ${fmtNum(l, 2)}`;
 
-        const isKapteyn = state.targetMorph >= 0.5;
-        if (isKapteyn) {
-          btnModeKapteyn.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm';
-          btnModeGalton.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-indigo-700';
-        } else {
-          btnModeKapteyn.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:text-indigo-700';
-          btnModeGalton.className = 'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-emerald-600 text-white shadow-sm';
-        }
+        const idleBtn = 'px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-600 hover:bg-slate-50';
+        btnModeKapteyn.className = state.targetLambda >= 0.995
+          ? 'px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-sm'
+          : idleBtn;
+        btnModeSqrt.className = Math.abs(state.targetLambda - 0.5) < 0.015
+          ? 'px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-amber-500 text-white shadow-sm'
+          : idleBtn;
+        btnModeGalton.className = state.targetLambda <= 0.005
+          ? 'px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-emerald-600 text-white shadow-sm'
+          : idleBtn;
 
-        if (pct >= 95) {
-          modeBadge.textContent = 'Machine de Kapteyn (échelle X · Log-normale)';
+        if (l >= 0.995) {
+          modeBadge.textContent = 'Machine de Kapteyn (Box-Cox λ = 1 · Log-normale)';
           modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-indigo-50/95 text-indigo-700 border border-indigo-200 shadow-sm';
           legendCurve.textContent = 'Loi log-normale';
-        } else if (pct <= 5) {
-          modeBadge.textContent = 'Planche de Galton (échelle ln X · Normale)';
+        } else if (l <= 0.005) {
+          modeBadge.textContent = 'Planche de Galton (Box-Cox λ = 0 · Normale)';
           modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50/95 text-emerald-700 border border-emerald-200 shadow-sm';
           legendCurve.textContent = 'Loi normale 𝒩';
-        } else {
-          modeBadge.textContent = `Transition Galton ↔ Kapteyn (${pct} %)`;
+        } else if (Math.abs(l - 0.5) < 0.015) {
+          modeBadge.textContent = 'Box-Cox λ = 0,50 (échelle √X)';
           modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50/95 text-amber-700 border border-amber-200 shadow-sm';
-          legendCurve.textContent = 'Densité transformée';
+          legendCurve.textContent = 'Densité de 2(√X − 1)';
+        } else {
+          modeBadge.textContent = `Transformation Box-Cox (λ = ${fmtNum(l, 2)})`;
+          modeBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50/95 text-amber-700 border border-amber-200 shadow-sm';
+          legendCurve.textContent = `Densité Box-Cox (λ=${fmtNum(l, 2)})`;
         }
       }
 
@@ -1509,10 +1688,18 @@
         const { lnD, delta } = getLogParams();
         const z = state.n * lnD + k * delta;
         const xVal = Math.exp(z);
+        const lnXAbs = LN_X0 + z;
 
         ttBin.textContent = `État k = ${k} / ${state.n}`;
         ttXVal.textContent = `X = ${fmtNum(X0 * xVal, 2)} ng/mL`;
-        ttLnX.textContent = fmtNum(LN_X0 + z, 2);
+        ttLnX.textContent = fmtNum(lnXAbs, 2);
+
+        const showBC = state.lambda > 0.005 && state.lambda < 0.995;
+        ttBoxCoxRow.classList.toggle('hidden', !showBC);
+        if (showBC) {
+          ttBoxCox.textContent = fmtNum(boxCoxFromLnX(lnXAbs), 2);
+        }
+
         ttCount.textContent = count.toLocaleString('fr-FR');
         ttFreq.textContent = state.totalBalls > 0
           ? `${fmtNum((count / state.totalBalls) * 100, 1)} %`
@@ -1566,6 +1753,7 @@
         state.spawnTimer = 0;
         state.bins = new Array(state.n + 1).fill(0);
         state.totalBalls = 0;
+        state.panPx = 0.0;
 
         updateBinomialDistribution();
         computeGeometry();
@@ -1579,21 +1767,45 @@
       // 9. ÉVÉNEMENTS UTILISATEUR
       // =========================================================================
       btnModeKapteyn.addEventListener('click', () => {
-        state.targetMorph = 1.0;
+        state.targetLambda = 1.0;
+        state.panPx = 0.0;
+        updateMorphLabels();
+      });
+
+      btnModeSqrt.addEventListener('click', () => {
+        state.targetLambda = 0.5;
+        state.panPx = 0.0;
         updateMorphLabels();
       });
 
       btnModeGalton.addEventListener('click', () => {
-        state.targetMorph = 0.0;
+        state.targetLambda = 0.0;
+        state.panPx = 0.0;
         updateMorphLabels();
       });
 
       sliderMorph.addEventListener('input', () => {
         const v = parseInt(sliderMorph.value, 10) / 100;
-        state.morph = v;
-        state.targetMorph = v;
+        state.lambda = v;
+        state.targetLambda = v;
         updateMorphLabels();
       });
+
+      // Zoom / dézoom horizontal (curseur logarithmique, boutons − / +, reset 1:1)
+      sliderZoom.addEventListener('input', () => {
+        const expVal = parseFloat(sliderZoom.value) / 100;
+        setHorizontalZoom(Math.pow(2, expVal));
+      });
+
+      btnZoomIn.addEventListener('click', () => {
+        setHorizontalZoom(state.zoomX * 1.25);
+      });
+
+      btnZoomOut.addEventListener('click', () => {
+        setHorizontalZoom(state.zoomX / 1.25);
+      });
+
+      btnZoomReset.addEventListener('click', resetHorizontalView);
 
       btnToggle.addEventListener('click', () => {
         ensureAudioReady();
@@ -1666,9 +1878,8 @@
 
       sliderU.addEventListener('input', () => {
         state.u = parseFloat(sliderU.value);
-        // Maintient toujours d < u (écart minimal de 0,04)
         if (state.d > state.u - 0.04) {
-          state.d = Math.max(0.70, Number((state.u - 0.04).toFixed(2)));
+          state.d = Math.max(0.70, Number((state.u - 0.04).toFixed(3)));
           sliderD.value = state.d.toFixed(3);
         }
         updateFactorLabels();
@@ -1677,9 +1888,8 @@
 
       sliderD.addEventListener('input', () => {
         state.d = parseFloat(sliderD.value);
-        // Maintient toujours u > d (écart minimal de 0,04)
         if (state.u < state.d + 0.04) {
-          state.u = Math.min(1.44, Number((state.d + 0.04).toFixed(2)));
+          state.u = Math.min(1.44, Number((state.d + 0.04).toFixed(3)));
           sliderU.value = state.u.toFixed(3);
         }
         updateFactorLabels();
@@ -1702,7 +1912,7 @@
       });
 
       btnDGrow.addEventListener('click', () => {
-        state.d = Math.min(1.08, Number((state.u - 0.04).toFixed(2)));
+        state.d = Math.min(1.08, Number((state.u - 0.04).toFixed(3)));
         if (state.d < 1.02) {
           state.d = 1.08;
           state.u = 1.12;
@@ -1741,11 +1951,48 @@
         draw();
       });
 
-      canvas.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
-      canvas.addEventListener('mouseleave', () => {
+      // Interactions souris : molette = zoom horizontal sous le curseur, glisser = translation horizontale
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const factor = e.deltaY < 0 ? 1.14 : 1 / 1.14;
+        setHorizontalZoom(state.zoomX * factor, mouseX);
+      }, { passive: false });
+
+      canvas.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        state.isPanning = true;
+        state.panStartClientX = e.clientX;
+        state.panStartOffset = state.panPx;
         state.hoveredBin = -1;
         tooltip.classList.add('hidden');
       });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!state.isPanning) return;
+        state.panPx = state.panStartOffset + (e.clientX - state.panStartClientX);
+        draw();
+      });
+
+      window.addEventListener('mouseup', () => {
+        state.isPanning = false;
+      });
+
+      canvas.addEventListener('dblclick', resetHorizontalView);
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (state.isPanning) return;
+        handlePointerMove(e.clientX, e.clientY);
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        if (!state.isPanning) {
+          state.hoveredBin = -1;
+          tooltip.classList.add('hidden');
+        }
+      });
+
       canvas.addEventListener('touchstart', (e) => {
         if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
       }, { passive: true });
