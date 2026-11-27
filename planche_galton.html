@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planche de Galton — Simulation Interactive</title>
+  <style>
+*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.left-3{left:.75rem}.right-3{right:.75rem}.top-0{top:0}.top-3{top:.75rem}.z-10{z-index:10}.z-20{z-index:20}.-mx-1\.5{margin-left:-.375rem;margin-right:-.375rem}.mx-auto{margin-left:auto;margin-right:auto}.mb-1\.5{margin-bottom:.375rem}.mt-2\.5{margin-top:.625rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-0\.5{height:.125rem}.h-2{height:.5rem}.h-3{height:.75rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-9{height:2.25rem}.h-\[540px\]{height:540px}.h-full{height:100%}.min-h-screen{min-height:100vh}.w-2{width:.5rem}.w-3{width:.75rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-9{width:2.25rem}.w-full{width:100%}.min-w-\[195px\]{min-width:195px}.max-w-7xl{max-width:80rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite}.cursor-crosshair{cursor:crosshair}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;-moz-user-select:none;user-select:none}.resize{resize:both}.list-disc{list-style-type:disc}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-2\.5{gap:.625rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.space-y-1>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.25rem*var(--tw-space-y-reverse))}.space-y-1\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.375rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.375rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-2\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.625rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.625rem*var(--tw-space-y-reverse))}.space-y-4>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem*var(--tw-space-y-reverse))}.space-y-5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:.5rem}.rounded-md{border-radius:.375rem}.rounded-sm{border-radius:.125rem}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-indigo-100{--tw-border-opacity:1;border-color:rgb(224 231 255/var(--tw-border-opacity,1))}.border-indigo-100\/80{border-color:rgba(224,231,255,.8)}.border-indigo-200\/80{border-color:rgba(199,210,254,.8)}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249/var(--tw-border-opacity,1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240/var(--tw-border-opacity,1))}.border-slate-200\/70{border-color:rgba(226,232,240,.7)}.border-slate-200\/80{border-color:rgba(226,232,240,.8)}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85/var(--tw-border-opacity,1))}.border-slate-700\/80{border-color:rgba(51,65,85,.8)}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255/var(--tw-border-opacity,1))}.bg-amber-500{--tw-bg-opacity:1;background-color:rgb(245 158 11/var(--tw-bg-opacity,1))}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129/var(--tw-bg-opacity,1))}.bg-indigo-50{--tw-bg-opacity:1;background-color:rgb(238 242 255/var(--tw-bg-opacity,1))}.bg-indigo-50\/60{background-color:rgba(238,242,255,.6)}.bg-indigo-500{--tw-bg-opacity:1;background-color:rgb(99 102 241/var(--tw-bg-opacity,1))}.bg-indigo-600{--tw-bg-opacity:1;background-color:rgb(79 70 229/var(--tw-bg-opacity,1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249/var(--tw-bg-opacity,1))}.bg-slate-400{--tw-bg-opacity:1;background-color:rgb(148 163 184/var(--tw-bg-opacity,1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252/var(--tw-bg-opacity,1))}.bg-slate-50\/70{background-color:rgba(248,250,252,.7)}.bg-slate-900\/95{background-color:rgba(15,23,42,.95)}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.bg-white\/90{background-color:hsla(0,0%,100%,.9)}.p-1\.5{padding:.375rem}.p-3{padding:.75rem}.p-4{padding:1rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-2\.5{padding-left:.625rem;padding-right:.625rem}.px-3\.5{padding-left:.875rem;padding-right:.875rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-top:.125rem;padding-bottom:.125rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2\.5{padding-top:.625rem;padding-bottom:.625rem}.py-3\.5{padding-top:.875rem;padding-bottom:.875rem}.py-5{padding-top:1.25rem;padding-bottom:1.25rem}.pb-1{padding-bottom:.25rem}.pl-5{padding-left:1.25rem}.pt-1{padding-top:.25rem}.pt-3{padding-top:.75rem}.text-center{text-align:center}.font-sans{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.font-serif{font-family:ui-serif,Georgia,Cambria,Times New Roman,Times,serif}.text-2xl{font-size:1.5rem;line-height:2rem}.text-\[11px\]{font-size:11px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.tabular-nums{--tw-numeric-spacing:tabular-nums;font-variant-numeric:var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-wide{letter-spacing:.025em}.tracking-wider{letter-spacing:.05em}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77/var(--tw-text-opacity,1))}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11/var(--tw-text-opacity,1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6/var(--tw-text-opacity,1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105/var(--tw-text-opacity,1))}.text-indigo-300{--tw-text-opacity:1;color:rgb(165 180 252/var(--tw-text-opacity,1))}.text-indigo-600{--tw-text-opacity:1;color:rgb(79 70 229/var(--tw-text-opacity,1))}.text-indigo-700{--tw-text-opacity:1;color:rgb(67 56 202/var(--tw-text-opacity,1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240/var(--tw-text-opacity,1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225/var(--tw-text-opacity,1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184/var(--tw-text-opacity,1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139/var(--tw-text-opacity,1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105/var(--tw-text-opacity,1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85/var(--tw-text-opacity,1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59/var(--tw-text-opacity,1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-amber-500{accent-color:#f59e0b}.accent-emerald-600{accent-color:#059669}.accent-indigo-600{accent-color:#4f46e5}.shadow{--tw-shadow:0 1px 3px 0 rgba(0,0,0,.1),0 1px 2px -1px rgba(0,0,0,.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color),0 1px 2px -1px var(--tw-shadow-color)}.shadow,.shadow-lg{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color),0 4px 6px -4px var(--tw-shadow-color)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgba(0,0,0,.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.transition-colors{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(.4,0,.2,1);transition-duration:.15s}.hover\:bg-amber-600:hover{--tw-bg-opacity:1;background-color:rgb(217 119 6/var(--tw-bg-opacity,1))}.hover\:bg-indigo-100:hover{--tw-bg-opacity:1;background-color:rgb(224 231 255/var(--tw-bg-opacity,1))}.hover\:bg-indigo-50:hover{--tw-bg-opacity:1;background-color:rgb(238 242 255/var(--tw-bg-opacity,1))}.hover\:bg-indigo-700:hover{--tw-bg-opacity:1;background-color:rgb(67 56 202/var(--tw-bg-opacity,1))}.hover\:bg-rose-50:hover{--tw-bg-opacity:1;background-color:rgb(255 241 242/var(--tw-bg-opacity,1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240/var(--tw-bg-opacity,1))}.hover\:bg-slate-50:hover{--tw-bg-opacity:1;background-color:rgb(248 250 252/var(--tw-bg-opacity,1))}.hover\:text-indigo-700:hover{--tw-text-opacity:1;color:rgb(67 56 202/var(--tw-text-opacity,1))}.hover\:text-rose-600:hover{--tw-text-opacity:1;color:rgb(225 29 72/var(--tw-text-opacity,1))}.focus\:ring-amber-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(245 158 11/var(--tw-ring-opacity,1))}.focus\:ring-emerald-500:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(16 185 129/var(--tw-ring-opacity,1))}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95}.active\:scale-95:active,.active\:scale-\[0\.99\]:active{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.active\:scale-\[0\.99\]:active{--tw-scale-x:0.99;--tw-scale-y:0.99}@media (min-width:640px){.sm\:h-\[620px\]{height:620px}.sm\:p-4{padding:1rem}.sm\:p-5{padding:1.25rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-sm{font-size:.875rem;line-height:1.25rem}.sm\:text-xl{font-size:1.25rem;line-height:1.75rem}}@media (min-width:1024px){.lg\:col-span-4{grid-column:span 4/span 4}.lg\:col-span-8{grid-column:span 8/span 8}.lg\:h-\[680px\]{height:680px}.lg\:grid-cols-12{grid-template-columns:repeat(12,minmax(0,1fr))}.lg\:px-8{padding-left:2rem;padding-right:2rem}}
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête principal -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Icône géométrique de la planche de Galton -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1.3" fill="currentColor" />
+            <circle cx="9" cy="10" r="1.3" fill="currentColor" />
+            <circle cx="15" cy="10" r="1.3" fill="currentColor" />
+            <circle cx="6" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="12" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="18" cy="15" r="1.3" fill="currentColor" />
+            <path d="M4 20h16" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Planche de Galton</h1>
+          <p class="text-xs sm:text-sm text-slate-500">De la loi binomiale ℬ(n ; p) au théorème de Moivre-Laplace</p>
+        </div>
+      </div>
+
+      <!-- Légende rapide -->
+      <div class="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-600">
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-sm bg-indigo-500 inline-block"></span>
+          Effectifs observés
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-amber-500 border-2 border-white shadow inline-block"></span>
+          Loi binomiale ℬ(n ; p)
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <span class="w-4 h-0.5 bg-emerald-500 rounded-full inline-block"></span>
+          Loi normale 𝒩(np ; np(1−p))
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal : 2 colonnes responsives -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Colonne Gauche : Canvas de la planche de Galton -->
+      <section class="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm p-3 sm:p-4 flex flex-col">
+        <div id="canvas-wrapper" class="relative w-full h-[540px] sm:h-[620px] lg:h-[680px] rounded-xl bg-slate-50/70 border border-slate-100 overflow-hidden select-none">
+          <canvas id="galtonCanvas" class="block w-full h-full cursor-crosshair"></canvas>
+
+          <!-- Info-bulle interactive au survol d'une colonne -->
+          <div id="tooltip" class="pointer-events-none hidden absolute z-10 bg-slate-900/95 text-white text-xs rounded-xl px-3.5 py-2.5 shadow-lg border border-slate-700/80 backdrop-blur-sm min-w-[195px]">
+            <div class="font-semibold text-indigo-300 border-b border-slate-700 pb-1 mb-1.5 flex items-center justify-between gap-2">
+              <span id="tt-bin">Colonne k = 0</span>
+              <span id="tt-ratio" class="text-[11px] font-normal text-slate-400"></span>
+            </div>
+            <div class="space-y-1">
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-300">Effectif observé :</span>
+                <span id="tt-count" class="font-semibold tabular-nums">0</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-300">Fréquence observée :</span>
+                <span id="tt-freq" class="font-semibold tabular-nums">—</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-amber-300">Proba. théorique P(X=k) :</span>
+                <span id="tt-prob" class="font-semibold text-amber-300 tabular-nums">0 %</span>
+              </div>
+              <div class="flex justify-between gap-4">
+                <span class="text-slate-400">Effectif attendu :</span>
+                <span id="tt-expected" class="font-medium text-slate-200 tabular-nums">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge d'état discret en haut à gauche du canvas -->
+          <div class="absolute top-3 left-3 flex items-center gap-2 pointer-events-none">
+            <span id="status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white/90 text-slate-600 border border-slate-200 shadow-sm">
+              <span id="status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span id="status-text">En pause</span>
+            </span>
+          </div>
+
+          <!-- Indication d'échelle automatique en haut à droite -->
+          <div class="absolute top-3 right-3 pointer-events-none">
+            <span id="scale-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/90 text-slate-500 border border-slate-200 shadow-sm tabular-nums">
+              Échelle max : 10
+            </span>
+          </div>
+        </div>
+        <p class="mt-2.5 text-xs text-slate-500 text-center">
+          Survolez ou touchez une colonne de l'histogramme pour comparer l'effectif observé à la probabilité binomiale théorique.
+        </p>
+      </section>
+
+      <!-- Colonne Droite : Contrôles et Statistiques -->
+      <aside class="lg:col-span-4 space-y-5">
+
+        <!-- Carte 1 : Actions de simulation -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Commandes</h2>
+            <button id="btn-reset" type="button" class="text-xs font-medium text-slate-500 hover:text-rose-600 transition-colors px-2.5 py-1.5 rounded-lg hover:bg-rose-50">
+              Réinitialiser
+            </button>
+          </div>
+
+          <!-- Bouton principal Lancer / Pause -->
+          <button id="btn-toggle" type="button" class="w-full py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2">
+            <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 5h4v14H6zm8 0h4v14h-4z" />
+            </svg>
+            <span id="btn-toggle-label">Lancer le flux continu</span>
+          </button>
+
+          <!-- Lâchers ponctuels -->
+          <div class="grid grid-cols-3 gap-2">
+            <button id="btn-add-1" type="button" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition-colors active:scale-95">
+              +1 bille
+            </button>
+            <button id="btn-add-50" type="button" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 border border-slate-200/80 transition-colors active:scale-95">
+              +50 billes
+            </button>
+            <button id="btn-add-500" type="button" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 transition-colors active:scale-95">
+              +500 billes
+            </button>
+          </div>
+
+          <!-- Contrôle du bruit des billes (activation + volume) -->
+          <div class="pt-3 border-t border-slate-100 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input id="chk-sound" type="checkbox" checked class="w-4 h-4 rounded accent-indigo-600 cursor-pointer" />
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-700">
+                  <svg id="icon-sound-on" class="w-4 h-4 text-indigo-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                  </svg>
+                  <svg id="icon-sound-off" class="w-4 h-4 text-slate-400 shrink-0 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                  </svg>
+                  Son des billes
+                </span>
+              </label>
+              <span id="val-volume" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">65 %</span>
+            </div>
+            <input id="slider-volume" type="range" min="0" max="100" step="5" value="65" aria-label="Volume sonore" class="w-full accent-indigo-600 cursor-pointer" />
+          </div>
+        </div>
+
+        <!-- Carte 2 : Paramètres et superpositions -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-5">
+          <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Paramètres</h2>
+
+          <!-- Nombre de rangées n -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-n" class="font-medium text-slate-700">Nombre de rangées (<span class="italic font-serif">n</span>)</label>
+              <span id="val-n" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">10</span>
+            </div>
+            <input id="slider-n" type="range" min="1" max="30" step="1" value="10" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>1 (Bernoulli)</span>
+              <span>15</span>
+              <span>30</span>
+            </div>
+          </div>
+
+          <!-- Probabilité droite p -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-p" class="font-medium text-slate-700">Probabilité droite (<span class="italic font-serif">p</span>)</label>
+              <div class="flex items-center gap-2">
+                <button id="btn-sym" type="button" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
+                  Symétrique (0,5)
+                </button>
+                <span id="val-p" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">0,50</span>
+              </div>
+            </div>
+            <input id="slider-p" type="range" min="0.00" max="1.00" step="0.01" value="0.50" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>0,00 (gauche)</span>
+              <span>0,50</span>
+              <span>1,00 (droite)</span>
+            </div>
+          </div>
+
+          <!-- Vitesse de simulation -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-speed" class="font-medium text-slate-700">Vitesse de simulation</label>
+              <span id="val-speed" class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">Normale</span>
+            </div>
+            <input id="slider-speed" type="range" min="1" max="10" step="1" value="5" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>Lent</span>
+              <span>Normale</span>
+              <span>Très rapide</span>
+            </div>
+          </div>
+
+          <!-- Rayon des billes -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-sm">
+              <label for="slider-radius" class="font-medium text-slate-700">Rayon des billes</label>
+              <span id="val-radius" class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md tabular-nums">4,5 px</span>
+            </div>
+            <input id="slider-radius" type="range" min="2.5" max="10" step="0.5" value="4.5" class="w-full accent-indigo-600 cursor-pointer" />
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>2,5 px</span>
+              <span>6 px</span>
+              <span>10 px</span>
+            </div>
+          </div>
+
+          <!-- Superpositions théoriques -->
+          <div class="pt-3 border-t border-slate-100 space-y-2.5">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Superpositions théoriques</p>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1.5 -mx-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+              <input id="chk-binomial" type="checkbox" checked class="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 accent-amber-500 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Loi binomiale <span class="text-amber-600 font-semibold">ℬ(n ; p)</span></span>
+            </label>
+            <label class="flex items-center gap-2.5 cursor-pointer select-none p-1.5 -mx-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+              <input id="chk-normal" type="checkbox" checked class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer" />
+              <span class="text-sm text-slate-700 font-medium">Approximation normale <span class="text-emerald-600 font-semibold">𝒩(np ; np(1−p))</span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Carte 3 : Statistiques en temps réel -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Statistiques en temps réel</h2>
+            <span class="text-xs font-medium text-slate-500">Billes arrivées</span>
+          </div>
+
+          <!-- Compteur N -->
+          <div class="bg-slate-50 border border-slate-200/70 rounded-xl p-3 flex items-baseline justify-between">
+            <span class="text-sm font-medium text-slate-600">Effectif total (<span class="italic font-serif">N</span>)</span>
+            <span id="stat-n" class="text-2xl font-bold text-slate-900 tabular-nums">0</span>
+          </div>
+
+          <!-- Tableau comparatif Empirique vs Théorique -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Moyenne / Espérance -->
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 space-y-1">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-indigo-700">Moyenne empirique (x̄)</p>
+              <p id="stat-mean-emp" class="text-lg font-bold text-slate-900 tabular-nums">—</p>
+              <div class="pt-1 border-t border-indigo-100/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Théorique (np)</span>
+                <span id="stat-mean-theo" class="font-semibold text-amber-600 tabular-nums">5,00</span>
+              </div>
+            </div>
+
+            <!-- Écart-type -->
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3 space-y-1">
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-indigo-700">Écart-type emp. (s)</p>
+              <p id="stat-sd-emp" class="text-lg font-bold text-slate-900 tabular-nums">—</p>
+              <div class="pt-1 border-t border-indigo-100/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Théorique (σ)</span>
+                <span id="stat-sd-theo" class="font-semibold text-emerald-600 tabular-nums">1,58</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-[11px] leading-relaxed text-slate-500">
+            À chaque rangée, une bille rebondit à droite avec probabilité <span class="font-medium text-slate-700">p</span> ou à gauche avec probabilité <span class="font-medium text-slate-700">1 − p</span>. Sa colonne finale <span class="font-medium text-slate-700">X</span> suit la loi binomiale ℬ(n ; p), qui converge vers une loi normale lorsque <span class="font-medium text-slate-700">n</span> est suffisamment grand.
+          </p>
+        </div>
+
+        <!-- Carte 4 : pistes d'exploration pour le cours -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-2">
+          <h2 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">À essayer</h2>
+          <ul class="list-disc pl-5 space-y-1 text-xs leading-relaxed text-slate-600">
+            <li><span class="font-medium text-slate-700">n = 1, puis 2, puis 30</span> (p = 0,5) : la cloche apparaît dès quelques rangées et s'affine avec n.</li>
+            <li><span class="font-medium text-slate-700">p = 0,1 avec n = 4, puis n = 30</span> : l'asymétrie s'atténue quand n augmente.</li>
+            <li>Lâcher 50, puis 500 billes : x̄ et s se rapprochent de np et de √(np(1−p)).</li>
+          </ul>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. RÉFÉRENCES DOM & ÉTAT GLOBAL DE LA SIMULATION
+      // =========================================================================
+      const canvas = document.getElementById('galtonCanvas');
+      const ctx = canvas.getContext('2d');
+      const wrapper = document.getElementById('canvas-wrapper');
+      const tooltip = document.getElementById('tooltip');
+
+      // Contrôles
+      const btnToggle = document.getElementById('btn-toggle');
+      const btnToggleLabel = document.getElementById('btn-toggle-label');
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const btnAdd1 = document.getElementById('btn-add-1');
+      const btnAdd50 = document.getElementById('btn-add-50');
+      const btnAdd500 = document.getElementById('btn-add-500');
+      const btnReset = document.getElementById('btn-reset');
+      const btnSym = document.getElementById('btn-sym');
+
+      const chkSound = document.getElementById('chk-sound');
+      const iconSoundOn = document.getElementById('icon-sound-on');
+      const iconSoundOff = document.getElementById('icon-sound-off');
+      const sliderVolume = document.getElementById('slider-volume');
+      const valVolume = document.getElementById('val-volume');
+
+      const sliderN = document.getElementById('slider-n');
+      const sliderP = document.getElementById('slider-p');
+      const sliderSpeed = document.getElementById('slider-speed');
+      const sliderRadius = document.getElementById('slider-radius');
+      const chkBinomial = document.getElementById('chk-binomial');
+      const chkNormal = document.getElementById('chk-normal');
+
+      // Affichages numériques
+      const valN = document.getElementById('val-n');
+      const valP = document.getElementById('val-p');
+      const valSpeed = document.getElementById('val-speed');
+      const valRadius = document.getElementById('val-radius');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+      const scaleBadge = document.getElementById('scale-badge');
+
+      const statN = document.getElementById('stat-n');
+      const statMeanEmp = document.getElementById('stat-mean-emp');
+      const statMeanTheo = document.getElementById('stat-mean-theo');
+      const statSdEmp = document.getElementById('stat-sd-emp');
+      const statSdTheo = document.getElementById('stat-sd-theo');
+
+      // Info-bulle
+      const ttBin = document.getElementById('tt-bin');
+      const ttRatio = document.getElementById('tt-ratio');
+      const ttCount = document.getElementById('tt-count');
+      const ttFreq = document.getElementById('tt-freq');
+      const ttProb = document.getElementById('tt-prob');
+      const ttExpected = document.getElementById('tt-expected');
+
+      // État principal de la simulation
+      const state = {
+        n: 10,                   // Nombre de rangées de picots (1 à 30)
+        p: 0.50,                 // Probabilité de rebond à droite (0.00 à 1.00)
+        speed: 5,                // Niveau de vitesse (1 à 10)
+        ballRadius: 4.5,         // Rayon souhaité des billes (2.5 à 10 px)
+        soundEnabled: true,      // Bruitage des billes activé
+        volume: 0.65,            // Volume sonore [0, 1]
+        showBinomial: true,      // Superposition loi binomiale
+        showNormal: true,        // Superposition approximation normale
+        running: false,          // Flux continu actif ou en pause
+        queuedBalls: 0,          // Billes en attente de lâcher (boutons +1/+50/+500)
+        spawnTimer: 0,           // Accumulateur de temps pour le lâcher des billes
+        balls: [],               // Billes actuellement en chute
+        bins: [],                // Effectifs par colonne k = 0..n
+        totalBalls: 0,           // Nombre total de billes arrivées (N)
+        sumX: 0,                 // Somme des k (calcul moyenne)
+        sumX2: 0,                // Somme des k^2 (calcul variance)
+        binomProbs: [],          // Probabilités P(X = k) précalculées
+        maxBinomProb: 0,         // Max des P(X = k) pour la mise à l'échelle
+        displayMaxScale: 10,     // Échelle verticale courante (lissée)
+        hoveredBin: -1,          // Colonne survolée (-1 si aucune)
+        pointerX: 0,             // Position X du pointeur dans le canvas
+        pointerY: 0,             // Position Y du pointeur dans le canvas
+        lastTimestamp: 0,        // Horodatage de la frame précédente
+      };
+
+      // Géométrie dynamique recalculée au redimensionnement ou changement de n / rayon
+      const geom = {
+        width: 600,
+        height: 600,
+        dpr: 1,
+        centerX: 300,
+        dx: 36,
+        dy: 26,
+        funnelTopY: 16,
+        funnelMouthY: 50,
+        pegStartY: 80,
+        binTopY: 360,
+        binBottomY: 568,
+        binAreaHeight: 208,
+        pegRadius: 4,
+        ballRadius: 4.5,
+        leftEdgeX: 100,
+        rightEdgeX: 500,
+      };
+
+      // =========================================================================
+      // 1b. SYNTHÉTISEUR AUDIO AUTONOME (WEB AUDIO API)
+      // =========================================================================
+      const audio = {
+        ctx: null,
+        masterGain: null,
+        compressor: null,
+        noiseBuffer: null,
+        lastPegSoundMs: 0,
+        lastLandSoundMs: 0,
+      };
+
+      /** Initialise ou réveille le contexte Web Audio lors d'une interaction utilisateur. */
+      function ensureAudioReady() {
+        if (!state.soundEnabled || state.volume <= 0) return false;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return false;
+          if (!audio.ctx) {
+            audio.ctx = new AudioCtx();
+            audio.compressor = audio.ctx.createDynamicsCompressor();
+            audio.compressor.threshold.setValueAtTime(-16, audio.ctx.currentTime);
+            audio.compressor.knee.setValueAtTime(18, audio.ctx.currentTime);
+            audio.compressor.ratio.setValueAtTime(8, audio.ctx.currentTime);
+            audio.compressor.attack.setValueAtTime(0.002, audio.ctx.currentTime);
+            audio.compressor.release.setValueAtTime(0.08, audio.ctx.currentTime);
+
+            audio.masterGain = audio.ctx.createGain();
+            audio.masterGain.gain.setValueAtTime(state.volume * 0.55, audio.ctx.currentTime);
+
+            audio.compressor.connect(audio.masterGain);
+            audio.masterGain.connect(audio.ctx.destination);
+
+            // Court bruit blanc pré-généré pour l'attaque percussive des billes
+            const sampleRate = audio.ctx.sampleRate;
+            const len = Math.floor(sampleRate * 0.04);
+            audio.noiseBuffer = audio.ctx.createBuffer(1, len, sampleRate);
+            const data = audio.noiseBuffer.getChannelData(0);
+            for (let i = 0; i < len; i++) {
+              data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sampleRate * 0.008));
+            }
+          }
+          if (audio.ctx.state === 'suspended') {
+            audio.ctx.resume();
+          }
+          return true;
+        } catch (err) {
+          return false;
+        }
+      }
+
+      /** Met à jour le gain principal selon le curseur de volume et la case Son. */
+      function syncAudioVolume() {
+        const effective = state.soundEnabled ? state.volume * 0.55 : 0;
+        if (audio.ctx && audio.masterGain) {
+          audio.masterGain.gain.setTargetAtTime(effective, audio.ctx.currentTime, 0.015);
+        }
+        const active = state.soundEnabled && state.volume > 0;
+        iconSoundOn.classList.toggle('hidden', !active);
+        iconSoundOff.classList.toggle('hidden', active);
+        valVolume.textContent = `${Math.round(state.volume * 100)} %`;
+      }
+
+      /** Connecte un nœud audio vers le compresseur avec panoramique stéréo optionnel. */
+      function connectWithPan(node, panVal) {
+        if (typeof audio.ctx.createStereoPanner === 'function') {
+          const panner = audio.ctx.createStereoPanner();
+          panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, panVal)), audio.ctx.currentTime);
+          node.connect(panner);
+          panner.connect(audio.compressor);
+        } else {
+          node.connect(audio.compressor);
+        }
+      }
+
+      /** Joue un petit "tic" sec lors du rebond d'une bille sur un picot. */
+      function playPegHit(row, col) {
+        if (!state.soundEnabled || state.volume <= 0 || !audio.ctx || audio.ctx.state !== 'running') return;
+        const nowMs = performance.now();
+        // Régulation automatique lors des lâchers massifs (+50 / +500 billes)
+        const minGapMs = state.balls.length > 40 ? 28 : (state.balls.length > 12 ? 18 : 10);
+        if (nowMs - audio.lastPegSoundMs < minGapMs) return;
+        audio.lastPegSoundMs = nowMs;
+
+        try {
+          const t0 = audio.ctx.currentTime;
+          const pan = state.n > 0 ? ((col - row / 2) / Math.max(1, state.n * 0.5)) * 0.8 : 0;
+          const densityScale = state.balls.length > 30 ? 0.55 : (state.balls.length > 10 ? 0.78 : 1.0);
+
+          // 1. Impulsion percussive courte (cliquetis bois/métal)
+          const osc = audio.ctx.createOscillator();
+          const gain = audio.ctx.createGain();
+          const rowRatio = state.n > 1 ? row / (state.n - 1) : 0.5;
+          const baseFreq = 1550 + rowRatio * 650 + (Math.random() - 0.5) * 260;
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(baseFreq, t0);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.52, t0 + 0.024);
+
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.linearRampToValueAtTime(0.14 * densityScale, t0 + 0.002);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.026);
+
+          osc.connect(gain);
+          connectWithPan(gain, pan);
+          osc.start(t0);
+          osc.stop(t0 + 0.028);
+
+          // 2. Micro-attaque de bruit filtré pour le réalisme du contact
+          if (audio.noiseBuffer) {
+            const src = audio.ctx.createBufferSource();
+            src.buffer = audio.noiseBuffer;
+            const filter = audio.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(2800 + Math.random() * 900, t0);
+            filter.Q.setValueAtTime(2.5, t0);
+
+            const nGain = audio.ctx.createGain();
+            nGain.gain.setValueAtTime(0.09 * densityScale, t0);
+            nGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.018);
+
+            src.connect(filter);
+            filter.connect(nGain);
+            connectWithPan(nGain, pan);
+            src.start(t0);
+            src.stop(t0 + 0.02);
+          }
+        } catch (err) {
+          // Ignore les erreurs audio transitoires
+        }
+      }
+
+      /** Joue le bruit d'arrivée de la bille dans son bac (plus grave + léger tintement si déjà rempli). */
+      function playBinLand(binIndex, previousCount) {
+        if (!state.soundEnabled || state.volume <= 0 || !audio.ctx || audio.ctx.state !== 'running') return;
+        const nowMs = performance.now();
+        const minGapMs = state.balls.length > 40 ? 32 : 18;
+        if (nowMs - audio.lastLandSoundMs < minGapMs) return;
+        audio.lastLandSoundMs = nowMs;
+
+        try {
+          const t0 = audio.ctx.currentTime;
+          const pan = state.n > 0 ? ((binIndex - state.n / 2) / Math.max(1, state.n * 0.5)) * 0.85 : 0;
+          const densityScale = state.balls.length > 30 ? 0.6 : 1.0;
+
+          // Impact sourd au fond du bac ou sur la colonne
+          const osc = audio.ctx.createOscillator();
+          const gain = audio.ctx.createGain();
+          const fStart = 310 + Math.random() * 70;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(fStart, t0);
+          osc.frequency.exponentialRampToValueAtTime(115, t0 + 0.045);
+
+          gain.gain.setValueAtTime(0.0001, t0);
+          gain.gain.linearRampToValueAtTime(0.18 * densityScale, t0 + 0.003);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.048);
+
+          osc.connect(gain);
+          connectWithPan(gain, pan);
+          osc.start(t0);
+          osc.stop(t0 + 0.05);
+
+          // Petit tintement bille-contre-bille si le bac contient déjà au moins une bille
+          if (previousCount > 0) {
+            const clink = audio.ctx.createOscillator();
+            const cGain = audio.ctx.createGain();
+            const cFreq = 2900 + Math.random() * 700;
+            clink.type = 'sine';
+            clink.frequency.setValueAtTime(cFreq, t0);
+            clink.frequency.exponentialRampToValueAtTime(cFreq * 0.85, t0 + 0.025);
+
+            cGain.gain.setValueAtTime(0.0001, t0);
+            cGain.gain.linearRampToValueAtTime(0.07 * densityScale, t0 + 0.0015);
+            cGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.028);
+
+            clink.connect(cGain);
+            connectWithPan(cGain, pan);
+            clink.start(t0);
+            clink.stop(t0 + 0.03);
+          }
+        } catch (err) {
+          // Ignore les erreurs audio transitoires
+        }
+      }
+
+      // =========================================================================
+      // 2. OUTILS MATHÉMATIQUES (BINOMIALE, NORMALE, FORMATAGE)
+      // =========================================================================
+
+      /** Calcule le coefficient binomial C(n, k) de manière exacte pour n <= 30. */
+      function comb(n, k) {
+        if (k < 0 || k > n) return 0;
+        if (k === 0 || k === n) return 1;
+        const m = Math.min(k, n - k);
+        let res = 1;
+        for (let i = 1; i <= m; i++) {
+          res = (res * (n - m + i)) / i;
+        }
+        return res;
+      }
+
+      /** Probabilité binomiale P(X = k) pour X ~ B(n, p), gérant proprement p = 0 et p = 1. */
+      function binomialPMF(n, k, p) {
+        if (p <= 0) return k === 0 ? 1 : 0;
+        if (p >= 1) return k === n ? 1 : 0;
+        return comb(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+      }
+
+      /** Densité de la loi normale N(mu, sigma^2). */
+      function normalPDF(x, mu, sigma) {
+        const z = (x - mu) / sigma;
+        return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI));
+      }
+
+      /** Précalcule le vecteur des probabilités binomiales P(X = k) pour k = 0..n. */
+      function updateBinomialDistribution() {
+        state.binomProbs = new Array(state.n + 1);
+        let maxP = 0;
+        for (let k = 0; k <= state.n; k++) {
+          const pk = binomialPMF(state.n, k, state.p);
+          state.binomProbs[k] = pk;
+          if (pk > maxP) maxP = pk;
+        }
+        state.maxBinomProb = maxP;
+      }
+
+      /** Formatage français d'un nombre décimal. */
+      function fmtNum(val, decimals) {
+        return val.toFixed(decimals).replace('.', ',');
+      }
+
+      /** Libellé textuel correspondant au curseur de vitesse. */
+      function getSpeedLabel(v) {
+        if (v <= 2) return 'Lente';
+        if (v <= 4) return 'Modérée';
+        if (v <= 6) return 'Normale';
+        if (v <= 8) return 'Rapide';
+        return 'Très rapide';
+      }
+
+      // =========================================================================
+      // 3. GÉOMÉTRIE & REDIMENSIONNEMENT RESPONSIVE DU CANVAS
+      // =========================================================================
+
+      /** Recalcule toutes les coordonnées de la planche selon la taille du conteneur et n. */
+      function computeGeometry() {
+        const w = geom.width;
+        const h = geom.height;
+        const n = state.n;
+
+        geom.centerX = w / 2;
+        const horizontalPadding = Math.max(24, w * 0.06);
+        const usableWidth = Math.max(120, w - 2 * horizontalPadding);
+
+        // Largeur d'une colonne dx : il y a n + 1 bacs
+        const maxDx = usableWidth / (n + 1);
+        const maxCapDx = n === 1 ? 115 : (n <= 3 ? 85 : 54);
+        geom.dx = Math.min(maxDx, maxCapDx);
+
+        geom.funnelTopY = 16;
+        geom.funnelMouthY = Math.max(46, h * 0.085);
+
+        const pegAreaTop = geom.funnelMouthY + Math.max(20, h * 0.045);
+        const pegAreaHeight = h * 0.44;
+
+        if (n === 1) {
+          // Cas particulier n = 1 (épreuve de Bernoulli) : 1 clou central équilibré entre l'entonnoir et les 2 bacs
+          geom.pegStartY = geom.funnelMouthY + pegAreaHeight * 0.42;
+          geom.dy = pegAreaHeight * 0.52;
+          geom.binTopY = geom.pegStartY + geom.dy;
+        } else {
+          geom.pegStartY = pegAreaTop;
+          geom.dy = pegAreaHeight / n;
+          geom.binTopY = geom.pegStartY + n * geom.dy + Math.max(10, Math.min(24, geom.dy * 0.25));
+        }
+
+        geom.binBottomY = h - 32;
+        geom.binAreaHeight = Math.max(80, geom.binBottomY - geom.binTopY);
+
+        // Rayons : picots proportionnels à l'espacement, billes contrôlées par l'utilisateur
+        const minSpacing = Math.min(geom.dx, geom.dy);
+        geom.pegRadius = Math.max(1.6, Math.min(5.8, minSpacing * 0.14));
+        geom.ballRadius = Math.min(state.ballRadius, Math.max(2.2, geom.dx * 0.44));
+
+        geom.leftEdgeX = geom.centerX - ((n + 1) / 2) * geom.dx;
+        geom.rightEdgeX = geom.centerX + ((n + 1) / 2) * geom.dx;
+      }
+
+      /** Adapte la résolution interne du canvas au devicePixelRatio pour un rendu net. */
+      function resizeCanvas() {
+        const rect = wrapper.getBoundingClientRect();
+        geom.width = Math.max(280, rect.width);
+        geom.height = Math.max(360, rect.height);
+        geom.dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.round(geom.width * geom.dpr);
+        canvas.height = Math.round(geom.height * geom.dpr);
+        ctx.setTransform(geom.dpr, 0, 0, geom.dpr, 0, 0);
+
+        computeGeometry();
+        draw();
+      }
+
+      /** Coordonnées (x, y) du picot à la rangée r (0..n-1) et à l'indice c (0..r). */
+      function getPegPosition(r, c) {
+        const x = geom.centerX + (c - r / 2) * geom.dx;
+        const y = geom.pegStartY + r * geom.dy;
+        return { x, y };
+      }
+
+      /** Coordonnée X du centre de la colonne k (0..n). */
+      function getBinCenterX(k) {
+        return geom.centerX + (k - state.n / 2) * geom.dx;
+      }
+
+      // =========================================================================
+      // 4. LOGIQUE DES BILLES & PHYSIQUE SIMULÉE
+      // =========================================================================
+
+      /** Crée une nouvelle bille au sommet de l'entonnoir avec un chemin binomial pré-tiré. */
+      function spawnBall() {
+        const path = new Array(state.n);
+        let rightCount = 0;
+        for (let r = 0; r < state.n; r++) {
+          const goRight = Math.random() < state.p ? 1 : 0;
+          path[r] = goRight;
+          rightCount += goRight;
+        }
+
+        // Légère variation esthétique de teinte autour de l'indigo
+        const hue = 228 + (Math.random() - 0.5) * 18;
+        const lightness = 52 + (Math.random() - 0.5) * 8;
+
+        state.balls.push({
+          phase: 'funnel',         // 'funnel' -> 'pegs' -> 'drop'
+          step: 0,                 // Rangée courante (0..n-1)
+          col: 0,                  // Nombre de rebonds à droite effectués jusqu'ici
+          path: path,              // Décisions 0 (gauche) / 1 (droite) à chaque rangée
+          finalBin: rightCount,    // Colonne d'arrivée finale (0..n)
+          t: 0,                    // Progression dans le segment courant [0, 1]
+          x: geom.centerX + (Math.random() - 0.5) * 3,
+          y: geom.funnelTopY,
+          bounceFactor: 0.28 + Math.random() * 0.14,
+          color: `hsl(${hue.toFixed(0)}, 80%, ${lightness.toFixed(0)}%)`,
+        });
+      }
+
+      /** Met à jour la position d'une bille sur un pas de temps dt (en secondes). */
+      function updateBall(ball, dt, speedMult) {
+        const offsetY = geom.pegRadius + geom.ballRadius;
+
+        if (ball.phase === 'funnel') {
+          const duration = 0.16 / speedMult;
+          ball.t += dt / duration;
+          const startY = geom.funnelTopY;
+          const endY = geom.pegStartY - offsetY;
+
+          if (ball.t >= 1) {
+            ball.phase = 'pegs';
+            ball.step = 0;
+            ball.col = 0;
+            ball.t = 0;
+            ball.x = geom.centerX;
+            ball.y = endY;
+            playPegHit(0, 0);
+            return false;
+          }
+
+          const t = ball.t;
+          ball.x = geom.centerX;
+          ball.y = startY + (endY - startY) * (t * t);
+          return false;
+        }
+
+        if (ball.phase === 'pegs') {
+          const baseStepDuration = Math.max(0.11, 0.21 - Math.max(0, state.n - 12) * 0.005);
+          const duration = baseStepDuration / speedMult;
+          ball.t += dt / duration;
+
+          const startPeg = getPegPosition(ball.step, ball.col);
+          const dir = ball.path[ball.step];
+          const nextCol = ball.col + dir;
+
+          const startX = startPeg.x;
+          const startY = startPeg.y - offsetY;
+
+          let endX, endY;
+          if (ball.step + 1 < state.n) {
+            const nextPeg = getPegPosition(ball.step + 1, nextCol);
+            endX = nextPeg.x;
+            endY = nextPeg.y - offsetY;
+          } else {
+            endX = getBinCenterX(nextCol);
+            endY = geom.binTopY;
+          }
+
+          if (ball.t >= 1) {
+            ball.col = nextCol;
+            ball.step += 1;
+            ball.t = 0;
+            ball.x = endX;
+            ball.y = endY;
+            if (ball.step >= state.n) {
+              ball.phase = 'drop';
+            } else {
+              playPegHit(ball.step, ball.col);
+            }
+            return false;
+          }
+
+          const t = ball.t;
+          const dySeg = endY - startY;
+          // Plafonne la hauteur du rebond pour garder une parabole naturelle même à n = 1 ou 2
+          const hop = Math.min(geom.dy * ball.bounceFactor, 32);
+
+          // Mouvement horizontal uniforme + parabole verticale avec léger rebond ascendant
+          ball.x = startX + (endX - startX) * t;
+          ball.y = startY - hop * t + (dySeg + hop) * (t * t);
+          return false;
+        }
+
+        // Phase 'drop' : chute verticale dans le bac jusqu'au sommet actuel de la barre
+        const binCount = state.bins[ball.finalBin] || 0;
+        const barH = Math.min(geom.binAreaHeight, (binCount / state.displayMaxScale) * geom.binAreaHeight);
+        const targetY = Math.max(geom.binTopY + 4, geom.binBottomY - barH - geom.ballRadius);
+        const duration = 0.14 / speedMult;
+        ball.t += dt / duration;
+
+        if (ball.t >= 1) {
+          return true; // Bille arrivée dans son bac
+        }
+
+        const t = ball.t;
+        ball.x = getBinCenterX(ball.finalBin);
+        ball.y = geom.binTopY + (targetY - geom.binTopY) * (t * t);
+        return false;
+      }
+
+      /** Enregistre l'arrivée d'une bille dans son bac final. */
+      function recordBallArrival(binIndex) {
+        const previousCount = state.bins[binIndex] || 0;
+        state.bins[binIndex] = previousCount + 1;
+        state.totalBalls += 1;
+        state.sumX += binIndex;
+        state.sumX2 += binIndex * binIndex;
+        playBinLand(binIndex, previousCount);
+      }
+
+      /** Étape de mise à jour globale de la simulation. */
+      function stepSimulation(dt) {
+        // Facteur de vitesse fluide selon le curseur (1..10)
+        const speedMult = 0.45 + state.speed * 0.28;
+        // Débit de base en flux continu (billes par seconde)
+        const continuousRate = 1.8 + Math.pow(state.speed, 1.55) * 1.1;
+
+        // 1. Traitement de la file d'attente (+1, +50, +500 billes)
+        if (state.queuedBalls > 0) {
+          // Accélère automatiquement le débit quand la file est grande pour un ressenti fluide
+          const burstRate = Math.max(continuousRate * 2.2, Math.min(260, state.queuedBalls * 3.5));
+          state.spawnTimer += dt * burstRate;
+          let toSpawn = Math.floor(state.spawnTimer);
+          if (toSpawn > 0) {
+            state.spawnTimer -= toSpawn;
+            toSpawn = Math.min(toSpawn, state.queuedBalls, 25);
+            for (let i = 0; i < toSpawn; i++) {
+              spawnBall();
+              state.queuedBalls -= 1;
+            }
+          }
+        } else if (state.running) {
+          // 2. Flux continu si activé
+          state.spawnTimer += dt * continuousRate;
+          let toSpawn = Math.floor(state.spawnTimer);
+          if (toSpawn > 0) {
+            state.spawnTimer -= toSpawn;
+            toSpawn = Math.min(toSpawn, 10);
+            for (let i = 0; i < toSpawn; i++) {
+              spawnBall();
+            }
+          }
+        }
+
+        // 3. Mise à jour des billes en chute
+        let statsChanged = false;
+        for (let i = state.balls.length - 1; i >= 0; i--) {
+          const arrived = updateBall(state.balls[i], dt, speedMult);
+          if (arrived) {
+            recordBallArrival(state.balls[i].finalBin);
+            state.balls.splice(i, 1);
+            statsChanged = true;
+          }
+        }
+
+        // 4. Mise à jour de l'affichage des statistiques et du badge d'état
+        if (statsChanged) {
+          updateStatsUI();
+          if (state.hoveredBin >= 0) {
+            updateTooltipContent(state.hoveredBin);
+          }
+        }
+        updateStatusBadge();
+
+        // 5. Mise à l'échelle verticale automatique et fluide des colonnes
+        let maxObs = 0;
+        for (let k = 0; k <= state.n; k++) {
+          if (state.bins[k] > maxObs) maxObs = state.bins[k];
+        }
+        const sigmaTheo = Math.sqrt(state.n * state.p * (1 - state.p));
+        const normalPeakProb = (state.showNormal && sigmaTheo >= 0.4)
+          ? 1 / (sigmaTheo * Math.sqrt(2 * Math.PI))
+          : 0;
+        const maxTheoExpected = state.totalBalls * Math.max(state.maxBinomProb, normalPeakProb);
+        const neededMax = Math.max(
+          10,
+          maxObs * 1.14,
+          (state.showBinomial || state.showNormal) ? maxTheoExpected * 1.14 : 0
+        );
+
+        // Interpolation douce de l'échelle verticale
+        const lerpAlpha = Math.min(1, dt * 8);
+        state.displayMaxScale += (neededMax - state.displayMaxScale) * lerpAlpha;
+        scaleBadge.textContent = `Échelle max : ${Math.ceil(state.displayMaxScale)}`;
+      }
+
+      // =========================================================================
+      // 5. RENDU SUR CANVAS 2D
+      // =========================================================================
+
+      /** Dessine l'entonnoir supérieur dont l'ouverture s'adapte au rayon des billes. */
+      function drawFunnel() {
+        const cx = geom.centerX;
+        const topY = geom.funnelTopY;
+        const mouthY = geom.funnelMouthY;
+        const topHalfW = Math.max(24, Math.min(44, geom.dx * 0.9));
+        const mouthHalfW = Math.max(geom.ballRadius + 3, 7);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx - topHalfW, topY);
+        ctx.lineTo(cx - mouthHalfW, mouthY);
+        ctx.lineTo(cx - mouthHalfW, mouthY + 6);
+        ctx.moveTo(cx + topHalfW, topY);
+        ctx.lineTo(cx + mouthHalfW, mouthY);
+        ctx.lineTo(cx + mouthHalfW, mouthY + 6);
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      /** Dessine la pyramide triangulaire des picots. */
+      function drawPegs() {
+        ctx.save();
+        const rPeg = geom.pegRadius;
+
+        for (let r = 0; r < state.n; r++) {
+          for (let c = 0; c <= r; c++) {
+            const pos = getPegPosition(r, c);
+
+            // Ombre portée légère
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y + 1, rPeg, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.12)';
+            ctx.fill();
+
+            // Corps du picot
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, rPeg, 0, Math.PI * 2);
+            ctx.fillStyle = '#475569';
+            ctx.fill();
+
+            // Reflet spéculaire subtil
+            ctx.beginPath();
+            ctx.arc(pos.x - rPeg * 0.28, pos.y - rPeg * 0.28, rPeg * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      /** Dessine la zone des bacs, les repères horizontaux, les barres et les étiquettes k. */
+      function drawHistogram() {
+        const n = state.n;
+        const dx = geom.dx;
+        const topY = geom.binTopY;
+        const botY = geom.binBottomY;
+        const areaH = geom.binAreaHeight;
+
+        ctx.save();
+
+        // Lignes de grille horizontales discrètes (25 %, 50 %, 75 %, 100 %)
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        for (let i = 1; i <= 4; i++) {
+          const yLine = botY - (areaH * i) / 4;
+          ctx.beginPath();
+          ctx.moveTo(geom.leftEdgeX, yLine);
+          ctx.lineTo(geom.rightEdgeX, yLine);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Cloisons verticales des bacs
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1.25;
+        for (let i = 0; i <= n + 1; i++) {
+          const xWall = geom.leftEdgeX + i * dx;
+          ctx.beginPath();
+          ctx.moveTo(xWall, topY);
+          ctx.lineTo(xWall, botY);
+          ctx.stroke();
+        }
+
+        // Ligne de base horizontale
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(geom.leftEdgeX, botY);
+        ctx.lineTo(geom.rightEdgeX, botY);
+        ctx.stroke();
+
+        // Barres de l'histogramme
+        const barGap = Math.max(1, Math.min(6, dx * 0.14));
+        const barW = Math.max(2, dx - barGap);
+        const cornerR = Math.min(5, barW * 0.25);
+        const labelStep = n <= 12 ? 1 : (n <= 22 ? 2 : 5);
+
+        for (let k = 0; k <= n; k++) {
+          const count = state.bins[k] || 0;
+          const cx = getBinCenterX(k);
+          const x = cx - barW / 2;
+          const isHovered = k === state.hoveredBin;
+
+          // Surlignage léger de toute la colonne au survol
+          if (isHovered) {
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.08)';
+            ctx.fillRect(cx - dx / 2, topY, dx, areaH);
+          }
+
+          if (count > 0) {
+            const barH = Math.min(areaH, (count / state.displayMaxScale) * areaH);
+            const y = botY - barH;
+            const r = Math.min(cornerR, barH);
+
+            ctx.beginPath();
+            ctx.moveTo(x, botY);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.lineTo(x + barW - r, y);
+            ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+            ctx.lineTo(x + barW, botY);
+            ctx.closePath();
+
+            ctx.fillStyle = isHovered ? '#4f46e5' : '#6366f1';
+            ctx.fill();
+
+            // Effectif au-dessus de la barre si suffisamment d'espace
+            if (dx >= 26 && barH >= 14) {
+              ctx.fillStyle = isHovered ? '#312e81' : '#475569';
+              ctx.font = '600 10px Inter, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(String(count), cx, Math.max(topY + 11, y - 3));
+            }
+          }
+
+          // Étiquette de colonne k sous la ligne de base
+          const showLabel = k % labelStep === 0 || k === n || isHovered;
+          if (showLabel) {
+            ctx.fillStyle = isHovered ? '#4f46e5' : '#64748b';
+            ctx.font = isHovered ? '700 11px Inter, sans-serif' : '500 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(String(k), cx, botY + 8);
+          }
+        }
+
+        ctx.restore();
+      }
+
+      /** Dessine les courbes théoriques : approximation normale N(np, np(1-p)) et loi binomiale B(n, p). */
+      function drawTheoreticalOverlays() {
+        const N = state.totalBalls;
+        if (N <= 0) return;
+
+        const n = state.n;
+        const p = state.p;
+        const botY = geom.binBottomY;
+        const areaH = geom.binAreaHeight;
+
+        ctx.save();
+
+        // 1. Approximation normale N(np, np(1-p)) — ignorée si σ = 0 (p = 0 ou p = 1)
+        if (state.showNormal) {
+          const mu = n * p;
+          const sigma = Math.sqrt(n * p * (1 - p));
+          if (sigma > 1e-6) {
+            const steps = 160;
+            const xMin = -0.5;
+            const xMax = n + 0.5;
+
+            ctx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+              const xVal = xMin + (i / steps) * (xMax - xMin);
+              const expectedCount = N * normalPDF(xVal, mu, sigma);
+              const px = geom.centerX + (xVal - n / 2) * geom.dx;
+              const py = botY - Math.min(areaH, (expectedCount / state.displayMaxScale) * areaH);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2.6;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+          }
+        }
+
+        // 2. Loi binomiale discrète B(n, p) : ligne brisée discrète + marqueurs ambrés
+        if (state.showBinomial) {
+          ctx.beginPath();
+          for (let k = 0; k <= n; k++) {
+            const expectedCount = N * state.binomProbs[k];
+            const px = getBinCenterX(k);
+            const py = botY - Math.min(areaH, (expectedCount / state.displayMaxScale) * areaH);
+            if (k === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.55)';
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([4, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const markerR = Math.max(2.2, Math.min(5.2, geom.dx * 0.14));
+          for (let k = 0; k <= n; k++) {
+            const expectedCount = N * state.binomProbs[k];
+            const px = getBinCenterX(k);
+            const py = botY - Math.min(areaH, (expectedCount / state.displayMaxScale) * areaH);
+
+            ctx.beginPath();
+            ctx.arc(px, py, markerR, 0, Math.PI * 2);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fill();
+            ctx.lineWidth = 1.8;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+          }
+        }
+
+        ctx.restore();
+      }
+
+      /** Dessine toutes les billes actuellement en chute. */
+      function drawBalls() {
+        if (state.balls.length === 0) return;
+
+        ctx.save();
+        const r = geom.ballRadius;
+        for (let i = 0; i < state.balls.length; i++) {
+          const b = state.balls[i];
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
+
+          // Petit éclat blanc pour le relief
+          if (r >= 3) {
+            ctx.beginPath();
+            ctx.arc(b.x - r * 0.3, b.y - r * 0.3, r * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      /** Rendu complet d'une frame. */
+      function draw() {
+        ctx.clearRect(0, 0, geom.width, geom.height);
+        drawFunnel();
+        drawHistogram();
+        drawTheoreticalOverlays();
+        drawPegs();
+        drawBalls();
+      }
+
+      // =========================================================================
+      // 6. INTERFACE, STATISTIQUES & INFO-BULLE INTERACTIVE
+      // =========================================================================
+
+      /** Met à jour le panneau des statistiques (N, moyennes et écarts-types). */
+      function updateStatsUI() {
+        const N = state.totalBalls;
+        const meanTheo = state.n * state.p;
+        const sdTheo = Math.sqrt(state.n * state.p * (1 - state.p));
+
+        statN.textContent = N.toLocaleString('fr-FR');
+        statMeanTheo.textContent = fmtNum(meanTheo, 2);
+        statSdTheo.textContent = fmtNum(sdTheo, 2);
+
+        if (N === 0) {
+          statMeanEmp.textContent = '—';
+          statSdEmp.textContent = '—';
+        } else {
+          const meanEmp = state.sumX / N;
+          const varianceEmp = Math.max(0, state.sumX2 / N - meanEmp * meanEmp);
+          statMeanEmp.textContent = fmtNum(meanEmp, 2);
+          statSdEmp.textContent = fmtNum(Math.sqrt(varianceEmp), 2);
+        }
+      }
+
+      /** Met à jour le badge visuel d'état (En cours / En pause). */
+      function updateStatusBadge() {
+        const isActive = state.running || state.queuedBalls > 0 || state.balls.length > 0;
+        if (state.running) {
+          statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+          statusText.textContent = 'Flux continu';
+        } else if (state.queuedBalls > 0 || state.balls.length > 0) {
+          statusDot.className = 'w-2 h-2 rounded-full bg-indigo-500 animate-pulse';
+          statusText.textContent = 'Chute en cours';
+        } else {
+          statusDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+          statusText.textContent = isActive ? 'Actif' : 'En pause';
+        }
+      }
+
+      /** Met à jour l'apparence du bouton principal Lancer / Pause. */
+      function updateToggleButton() {
+        if (state.running) {
+          btnToggle.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+          btnToggle.classList.add('bg-amber-500', 'hover:bg-amber-600');
+          btnToggleLabel.textContent = 'Mettre en pause';
+          iconPlay.classList.add('hidden');
+          iconPause.classList.remove('hidden');
+        } else {
+          btnToggle.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+          btnToggle.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+          btnToggleLabel.textContent = 'Lancer le flux continu';
+          iconPlay.classList.remove('hidden');
+          iconPause.classList.add('hidden');
+        }
+        updateStatusBadge();
+      }
+
+      /** Remplit le contenu de l'info-bulle pour la colonne k. */
+      function updateTooltipContent(k) {
+        const count = state.bins[k] || 0;
+        const prob = state.binomProbs[k] || 0;
+        const expected = state.totalBalls * prob;
+
+        ttBin.textContent = `Colonne k = ${k}`;
+        ttRatio.textContent = `sur n = ${state.n}`;
+        ttCount.textContent = count.toLocaleString('fr-FR');
+        ttFreq.textContent = state.totalBalls > 0
+          ? `${fmtNum((count / state.totalBalls) * 100, 1)} %`
+          : '—';
+        ttProb.textContent = `${fmtNum(prob * 100, 2)} %`;
+        ttExpected.textContent = fmtNum(expected, 1);
+      }
+
+      /** Positionne l'info-bulle sans dépasser les bords du conteneur. */
+      function positionTooltip(x, y) {
+        const pad = 12;
+        const tw = tooltip.offsetWidth || 200;
+        const th = tooltip.offsetHeight || 110;
+
+        let left = x + 14;
+        if (left + tw + pad > geom.width) {
+          left = x - tw - 14;
+        }
+        left = Math.max(pad, Math.min(geom.width - tw - pad, left));
+
+        let top = y - th - 12;
+        if (top < pad) {
+          top = y + 16;
+        }
+        top = Math.max(pad, Math.min(geom.height - th - pad, top));
+
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      }
+
+      /** Détecte la colonne survolée par la souris ou touchée sur mobile. */
+      function handlePointerMove(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        state.pointerX = x;
+        state.pointerY = y;
+
+        const inY = y >= geom.binTopY - 12 && y <= geom.binBottomY + 24;
+        const inX = x >= geom.leftEdgeX && x <= geom.rightEdgeX;
+
+        if (inY && inX) {
+          const k = Math.min(state.n, Math.max(0, Math.floor((x - geom.leftEdgeX) / geom.dx)));
+          state.hoveredBin = k;
+          updateTooltipContent(k);
+          tooltip.classList.remove('hidden');
+          positionTooltip(x, y);
+        } else {
+          hideTooltip();
+        }
+      }
+
+      function hideTooltip() {
+        state.hoveredBin = -1;
+        tooltip.classList.add('hidden');
+      }
+
+      /** Réinitialise les compteurs, les billes en vol et l'échelle verticale. */
+      function resetSimulation() {
+        state.balls = [];
+        state.queuedBalls = 0;
+        state.spawnTimer = 0;
+        state.bins = new Array(state.n + 1).fill(0);
+        state.totalBalls = 0;
+        state.sumX = 0;
+        state.sumX2 = 0;
+        state.displayMaxScale = 10;
+
+        updateBinomialDistribution();
+        computeGeometry();
+        updateStatsUI();
+        updateStatusBadge();
+        scaleBadge.textContent = 'Échelle max : 10';
+        if (state.hoveredBin >= 0) {
+          updateTooltipContent(Math.min(state.hoveredBin, state.n));
+        }
+        draw();
+      }
+
+      // =========================================================================
+      // 7. ÉVÉNEMENTS UTILISATEUR (SOURIS, TACTILE & CONTRÔLES)
+      // =========================================================================
+
+      btnToggle.addEventListener('click', () => {
+        ensureAudioReady();
+        state.running = !state.running;
+        updateToggleButton();
+      });
+
+      btnAdd1.addEventListener('click', () => {
+        ensureAudioReady();
+        spawnBall();
+        updateStatusBadge();
+      });
+
+      btnAdd50.addEventListener('click', () => {
+        ensureAudioReady();
+        state.queuedBalls += 50;
+        updateStatusBadge();
+      });
+
+      btnAdd500.addEventListener('click', () => {
+        ensureAudioReady();
+        state.queuedBalls += 500;
+        updateStatusBadge();
+      });
+
+      btnReset.addEventListener('click', () => {
+        state.running = false;
+        updateToggleButton();
+        resetSimulation();
+      });
+
+      chkSound.addEventListener('change', () => {
+        state.soundEnabled = chkSound.checked;
+        if (state.soundEnabled) ensureAudioReady();
+        syncAudioVolume();
+      });
+
+      sliderVolume.addEventListener('input', () => {
+        state.volume = parseInt(sliderVolume.value, 10) / 100;
+        if (state.volume > 0 && !state.soundEnabled) {
+          state.soundEnabled = true;
+          chkSound.checked = true;
+        }
+        if (state.soundEnabled) ensureAudioReady();
+        syncAudioVolume();
+      });
+
+      sliderN.addEventListener('input', () => {
+        state.n = parseInt(sliderN.value, 10);
+        valN.textContent = String(state.n);
+        resetSimulation();
+      });
+
+      sliderP.addEventListener('input', () => {
+        state.p = parseFloat(sliderP.value);
+        valP.textContent = fmtNum(state.p, 2);
+        resetSimulation();
+      });
+
+      btnSym.addEventListener('click', () => {
+        state.p = 0.50;
+        sliderP.value = '0.50';
+        valP.textContent = '0,50';
+        resetSimulation();
+      });
+
+      sliderSpeed.addEventListener('input', () => {
+        state.speed = parseInt(sliderSpeed.value, 10);
+        valSpeed.textContent = getSpeedLabel(state.speed);
+      });
+
+      sliderRadius.addEventListener('input', () => {
+        state.ballRadius = parseFloat(sliderRadius.value);
+        valRadius.textContent = `${fmtNum(state.ballRadius, 1)} px`;
+        // Mise à jour immédiate sans réinitialiser la simulation
+        computeGeometry();
+        draw();
+      });
+
+      chkBinomial.addEventListener('change', () => {
+        state.showBinomial = chkBinomial.checked;
+        draw();
+      });
+
+      chkNormal.addEventListener('change', () => {
+        state.showNormal = chkNormal.checked;
+        draw();
+      });
+
+      // Survol souris sur le canvas
+      canvas.addEventListener('mousemove', (e) => {
+        handlePointerMove(e.clientX, e.clientY);
+      });
+
+      canvas.addEventListener('mouseleave', hideTooltip);
+
+      // Support tactile sur mobile / tablette
+      canvas.addEventListener('touchstart', (e) => {
+        if (e.touches.length > 0) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('touchend', () => {
+        setTimeout(hideTooltip, 1800);
+      });
+
+      window.addEventListener('resize', resizeCanvas);
+
+      // =========================================================================
+      // 8. BOUCLE D'ANIMATION PRINCIPALE
+      // =========================================================================
+      function animate(timestamp) {
+        try {
+          if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+          const dt = Math.min(0.05, (timestamp - state.lastTimestamp) / 1000);
+          state.lastTimestamp = timestamp;
+
+          stepSimulation(dt);
+          draw();
+        } catch (err) {
+          console.error('Erreur dans la boucle de simulation :', err);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      // Initialisation complète au chargement de la fenêtre
+      function initGalton() {
+        valN.textContent = String(state.n);
+        valP.textContent = fmtNum(state.p, 2);
+        valSpeed.textContent = getSpeedLabel(state.speed);
+        valRadius.textContent = `${fmtNum(state.ballRadius, 1)} px`;
+        syncAudioVolume();
+        resetSimulation();
+        resizeCanvas();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'complete') {
+        initGalton();
+      } else {
+        window.addEventListener('load', initGalton);
+      }
+    })();
+  </script>
+</body>
+</html>
