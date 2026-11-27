@@ -707,10 +707,6 @@
                 Nuage résidus (e)
               </label>
               <label class="checkbox-label">
-                <input type="checkbox" id="chkVectors" checked>
-                Vecteurs
-              </label>
-              <label class="checkbox-label">
                 <input type="checkbox" id="chkCoords" checked>
                 Coordonnées
               </label>
@@ -723,6 +719,28 @@
                 Grille (ε₁, ε₂)
               </label>
             </div>
+          </div>
+
+          <!-- Bouton global et cases à cocher par vecteur pour l'affichage individuel -->
+          <div class="parallelepiped-bar" role="group" aria-label="Affichage individuel des vecteurs">
+            <button type="button" class="btn-view active" id="btnToggleVecs" title="Afficher ou masquer tous les vecteurs">
+              Vecteurs
+            </button>
+            <label class="checkbox-label chk-blue">
+              <input type="checkbox" id="chkVecEps" checked>
+              <span class="vec-dot blue"></span>
+              Vecteur <strong>ε</strong>
+            </label>
+            <label class="checkbox-label chk-orange">
+              <input type="checkbox" id="chkVecRes" checked>
+              <span class="vec-dot orange"></span>
+              Vecteur <strong>e</strong>
+            </label>
+            <label class="checkbox-label chk-emerald">
+              <input type="checkbox" id="chkVecProj" checked>
+              <span class="vec-dot emerald"></span>
+              Vecteur <strong>(ȳ − μ)·1</strong>
+            </label>
           </div>
 
           <!-- Bouton global et cases à cocher par vecteur pour les parallélépipèdes de coordonnées -->
@@ -871,7 +889,9 @@
         autoRotate: false,
         showErrors: true,
         showResiduals: true,
-        showVectors: true,
+        showVecEps: true,
+        showVecRes: true,
+        showVecProj: true,
         showCoords: true,
         showPlane: true,
         showGrid12: true,
@@ -932,10 +952,14 @@
       const chkAutoRotate = document.getElementById('chkAutoRotate');
       const chkErrors = document.getElementById('chkErrors');
       const chkResiduals = document.getElementById('chkResiduals');
-      const chkVectors = document.getElementById('chkVectors');
       const chkCoords = document.getElementById('chkCoords');
       const chkPlane = document.getElementById('chkPlane');
       const chkGrid12 = document.getElementById('chkGrid12');
+
+      const btnToggleVecs = document.getElementById('btnToggleVecs');
+      const chkVecEps = document.getElementById('chkVecEps');
+      const chkVecRes = document.getElementById('chkVecRes');
+      const chkVecProj = document.getElementById('chkVecProj');
 
       const btnToggleBoxes = document.getElementById('btnToggleBoxes');
       const chkBoxEps = document.getElementById('chkBoxEps');
@@ -1055,9 +1079,9 @@
 
       function updatePlayAndLimitUI() {
         const atLimit = state.drawCount >= state.maxPoints;
-        btnPlayPause.textContent = state.running ? 'Pause' : 'Lecture';
-        btnPlayPause.classList.toggle('paused', !state.running);
-        limitBadge.classList.toggle('visible', atLimit);
+      function updateVecToggleButtonUI() {
+        const anyOn = state.showVecEps || state.showVecRes || state.showVecProj;
+        btnToggleVecs.classList.toggle('active', anyOn);
       }
 
       function updateBoxToggleButtonUI() {
@@ -1517,85 +1541,97 @@
           drawCoordParallelepiped(last.eps, basis, 'rgba(37, 99, 235, 0.65)', '#2563eb');
         }
 
-        if (state.showVectors) {
-          // Segments de projection orthogonale (parallélogramme de Pythagore)
+        // Segments de projection orthogonale (parallélogramme de Pythagore)
+        if (state.showVecEps && state.showVecRes) {
           drawLine3D(last.eps, last.res, basis, 'rgba(5, 150, 105, 0.55)', 1.5, [4, 4]);
+        }
+        if (state.showVecEps && state.showVecProj) {
           drawLine3D(last.eps, last.proj, basis, 'rgba(234, 88, 12, 0.45)', 1.3, [4, 4]);
+        }
 
-          // Vecteurs (ȳ − μ)·1 (émeraude), résidu e (orange) et erreur ε (bleu)
+        // Affichage individuel de chaque vecteur : (ȳ − μ)·1, e et ε
+        const tips = [];
+        if (state.showVecProj) {
           drawArrow3D(O, last.proj, basis, '#059669', 2.4, 9);
+          tips.push({ pt: last.proj, color: '#059669', r: 4.5 });
+        }
+        if (state.showVecRes) {
           drawArrow3D(O, last.res, basis, '#ea580c', 2.8, 10);
+          tips.push({ pt: last.res, color: '#ea580c', r: 5.2 });
+        }
+        if (state.showVecEps) {
           drawArrow3D(O, last.eps, basis, '#2563eb', 2.8, 10);
+          tips.push({ pt: last.eps, color: '#2563eb', r: 5.2 });
+        }
 
-          // Points mis en relief aux extrémités
-          const tips = [
-            { pt: last.proj, color: '#059669', r: 4.5 },
-            { pt: last.res, color: '#ea580c', r: 5.2 },
-            { pt: last.eps, color: '#2563eb', r: 5.2 }
-          ];
-          for (const t of tips) {
-            const p = projectPoint(t.pt, basis);
-            ctx3D.save();
-            ctx3D.beginPath();
-            ctx3D.arc(p.sx, p.sy, t.r, 0, Math.PI * 2);
-            ctx3D.fillStyle = t.color;
-            ctx3D.fill();
-            ctx3D.strokeStyle = '#ffffff';
-            ctx3D.lineWidth = 1.6;
-            ctx3D.stroke();
-            ctx3D.restore();
-          }
+        // Points mis en relief aux extrémités des vecteurs affichés
+        for (const t of tips) {
+          const p = projectPoint(t.pt, basis);
+          ctx3D.save();
+          ctx3D.beginPath();
+          ctx3D.arc(p.sx, p.sy, t.r, 0, Math.PI * 2);
+          ctx3D.fillStyle = t.color;
+          ctx3D.fill();
+          ctx3D.strokeStyle = '#ffffff';
+          ctx3D.lineWidth = 1.6;
+          ctx3D.stroke();
+          ctx3D.restore();
         }
 
         if (state.showCoords) {
-          const pEps = projectPoint(last.eps, basis);
-          const pRes = projectPoint(last.res, basis);
-          const pProj = projectPoint(last.proj, basis);
+          if (state.showVecEps) {
+            const pEps = projectPoint(last.eps, basis);
+            drawPillLabel(
+              ctx3D,
+              `ε = (${fmt(SIGMA * last.eps.x)}, ${fmt(SIGMA * last.eps.y)}, ${fmt(SIGMA * last.eps.z)})`,
+              pEps.sx,
+              pEps.sy - 20,
+              {
+                font: '700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                textColor: '#1d4ed8',
+                bgColor: 'rgba(239, 246, 255, 0.95)',
+                borderColor: 'rgba(37, 99, 235, 0.65)',
+                padX: 8,
+                padY: 3
+              }
+            );
+          }
 
-          drawPillLabel(
-            ctx3D,
-            `ε = (${fmt(SIGMA * last.eps.x)}, ${fmt(SIGMA * last.eps.y)}, ${fmt(SIGMA * last.eps.z)})`,
-            pEps.sx,
-            pEps.sy - 20,
-            {
-              font: '700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-              textColor: '#1d4ed8',
-              bgColor: 'rgba(239, 246, 255, 0.95)',
-              borderColor: 'rgba(37, 99, 235, 0.65)',
-              padX: 8,
-              padY: 3
-            }
-          );
+          if (state.showVecRes) {
+            const pRes = projectPoint(last.res, basis);
+            drawPillLabel(
+              ctx3D,
+              `e = (${fmt(SIGMA * last.res.x)}, ${fmt(SIGMA * last.res.y)}, ${fmt(SIGMA * last.res.z)})`,
+              pRes.sx,
+              pRes.sy + 22,
+              {
+                font: '700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                textColor: '#c2410c',
+                bgColor: 'rgba(255, 247, 237, 0.95)',
+                borderColor: 'rgba(234, 88, 12, 0.65)',
+                padX: 8,
+                padY: 3
+              }
+            );
+          }
 
-          drawPillLabel(
-            ctx3D,
-            `e = (${fmt(SIGMA * last.res.x)}, ${fmt(SIGMA * last.res.y)}, ${fmt(SIGMA * last.res.z)})`,
-            pRes.sx,
-            pRes.sy + 22,
-            {
-              font: '700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-              textColor: '#c2410c',
-              bgColor: 'rgba(255, 247, 237, 0.95)',
-              borderColor: 'rgba(234, 88, 12, 0.65)',
-              padX: 8,
-              padY: 3
-            }
-          );
-
-          drawPillLabel(
-            ctx3D,
-            `(ȳ − μ)·1 = (${fmt(SIGMA * last.zbar)}, ${fmt(SIGMA * last.zbar)}, ${fmt(SIGMA * last.zbar)})`,
-            pProj.sx,
-            pProj.sy - 20,
-            {
-              font: '700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-              textColor: '#047857',
-              bgColor: 'rgba(236, 253, 245, 0.95)',
-              borderColor: 'rgba(5, 150, 105, 0.6)',
-              padX: 7,
-              padY: 3
-            }
-          );
+          if (state.showVecProj) {
+            const pProj = projectPoint(last.proj, basis);
+            drawPillLabel(
+              ctx3D,
+              `(ȳ − μ)·1 = (${fmt(SIGMA * last.zbar)}, ${fmt(SIGMA * last.zbar)}, ${fmt(SIGMA * last.zbar)})`,
+              pProj.sx,
+              pProj.sy - 20,
+              {
+                font: '700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                textColor: '#047857',
+                bgColor: 'rgba(236, 253, 245, 0.95)',
+                borderColor: 'rgba(5, 150, 105, 0.6)',
+                padX: 7,
+                padY: 3
+              }
+            );
+          }
         }
       }
 
@@ -1943,10 +1979,34 @@
       chkAutoRotate.addEventListener('change', (e) => { state.autoRotate = e.target.checked; });
       chkErrors.addEventListener('change', (e) => { state.showErrors = e.target.checked; });
       chkResiduals.addEventListener('change', (e) => { state.showResiduals = e.target.checked; });
-      chkVectors.addEventListener('change', (e) => { state.showVectors = e.target.checked; });
       chkCoords.addEventListener('change', (e) => { state.showCoords = e.target.checked; });
       chkPlane.addEventListener('change', (e) => { state.showPlane = e.target.checked; });
       chkGrid12.addEventListener('change', (e) => { state.showGrid12 = e.target.checked; });
+
+      // Bouton global + 3 cases à cocher individuelles pour l'affichage des vecteurs
+      btnToggleVecs.addEventListener('click', () => {
+        const next = !(state.showVecEps || state.showVecRes || state.showVecProj);
+        state.showVecEps = next;
+        state.showVecRes = next;
+        state.showVecProj = next;
+        chkVecEps.checked = next;
+        chkVecRes.checked = next;
+        chkVecProj.checked = next;
+        updateVecToggleButtonUI();
+      });
+
+      chkVecEps.addEventListener('change', (e) => {
+        state.showVecEps = e.target.checked;
+        updateVecToggleButtonUI();
+      });
+      chkVecRes.addEventListener('change', (e) => {
+        state.showVecRes = e.target.checked;
+        updateVecToggleButtonUI();
+      });
+      chkVecProj.addEventListener('change', (e) => {
+        state.showVecProj = e.target.checked;
+        updateVecToggleButtonUI();
+      });
 
       // Bouton global + 3 cases à cocher individuelles pour les parallélépipèdes de coordonnées
       btnToggleBoxes.addEventListener('click', () => {
@@ -2100,6 +2160,7 @@
       window.onload = function () {
         resizeCanvases();
         updateSpeedFromSlider();
+        updateVecToggleButtonUI();
         updateBoxToggleButtonUI();
         maxPointsLabel.textContent = fmtInt(state.maxPoints);
         addDraw();
