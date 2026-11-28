@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loi de Benford par la machine de Kapteyn</title>
+  <!-- Police Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-[#f6f8f5] text-[#14301e] font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- En-tête principal -->
+  <header class="bg-white border-b border-[#dfe6dc] sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-[#228b22] text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- Icône éventail multiplicatif -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="5" r="1.3" fill="currentColor" />
+            <circle cx="6" cy="10" r="1.3" fill="currentColor" />
+            <circle cx="11.5" cy="10" r="1.3" fill="currentColor" />
+            <circle cx="4.5" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="9" cy="15" r="1.3" fill="currentColor" />
+            <circle cx="17" cy="15" r="1.3" fill="currentColor" />
+            <path d="M3 20h18" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold text-[#143c1e] leading-tight">Loi de Benford par la machine de Kapteyn</h1>
+          <p class="text-xs sm:text-sm text-[#5b6b60]">
+            Chocs multiplicatifs <span class="font-semibold text-[#14301e]">X<sub>t+1</sub> = X<sub>t</sub> × u ou × d</span> → empilement de la partie fractionnaire <span class="font-semibold text-[#14301e]">M = log<sub>10</sub>(X) mod 1</span> → premier chiffre de X
+          </p>
+        </div>
+      </div>
+
+      <!-- Badge d'état global -->
+      <div class="flex items-center gap-2">
+        <span id="status-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#f6f9f5] text-[#5b6b60] border border-[#dfe6dc]">
+          <span id="status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="status-text">En pause</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal : 2 colonnes responsives -->
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- Colonne Gauche (8 cols) : les 3 graphiques couplés -->
+      <div class="lg:col-span-8 flex flex-col gap-4">
+
+        <!-- GRAPHIQUE 1 : Machine de Kapteyn <-> Planche de Galton (log10 X) -->
+        <section class="bg-white border border-[#dfe6dc] rounded-2xl shadow-sm p-3.5 sm:p-4 flex flex-col gap-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5b6b60]">
+              1. Machine de Kapteyn (X) ↔ Planche de Galton (log<sub>10</sub> X)
+            </h2>
+            <!-- Bascule animée X <-> log10(X) -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex bg-[#f3f7f2] border border-[#dfe6dc] rounded-xl p-0.5">
+                <button id="btn-mode-kapteyn" type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-[#008080] text-white shadow-sm">
+                  Échelle X
+                </button>
+                <button id="btn-mode-galton" type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all text-[#5b6b60] hover:text-[#143c1e]">
+                  Échelle log<sub>10</sub> X
+                </button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-semibold text-[#228b22]">log<sub>10</sub> X</span>
+                <input id="slider-morph" type="range" min="0" max="100" step="1" value="100" aria-label="Transition entre échelle log10(X) et échelle linéaire X" class="w-20 sm:w-24 accent-[#228b22] cursor-pointer" />
+                <span class="text-[11px] font-semibold text-[#008080]">X</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Légende dynamique des ordres de grandeur -->
+          <div id="legK" class="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-2.5 py-1.5 rounded-xl bg-[#f8faf7] border border-[#e9efe7] text-[11px] text-[#5b6b60]"></div>
+
+          <!-- Canvas Machine de Kapteyn -->
+          <div class="relative w-full rounded-xl overflow-hidden border border-[#eef2ec] bg-[#fcfdfb]">
+            <canvas id="cKapteyn" height="390" class="block w-full"></canvas>
+            <!-- Badge persistant de la dernière bille arrêtée -->
+            <div id="last-ball-badge" class="hidden pointer-events-none absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg text-[11px] bg-white/95 text-[#14301e] border border-[#dfe6dc] shadow-sm font-mono flex items-center gap-1.5">
+              <span id="lb-dot" class="w-2.5 h-2.5 rounded-full shrink-0"></span>
+              <span>X = <strong id="lb-x">—</strong></span>
+              <span class="text-[#5b6b60]">·</span>
+              <span>M = <strong id="lb-m">—</strong></span>
+              <span class="text-[#5b6b60]">·</span>
+              <span>D = <strong id="lb-d" class="text-[#2f6fbf]">—</strong></span>
+            </div>
+            <!-- Note si sigma est grand en échelle linéaire -->
+            <div id="kapteyn-note" class="hidden pointer-events-none absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#fff8eb]/95 text-[#9a6318] border border-[#f1d49b] shadow-sm">
+              σ grand : passez en log<sub>10</sub> X pour voir toutes les tranches
+            </div>
+          </div>
+
+          <p class="text-xs text-[#5b6b60]">
+            Chaque bille subit <i>n</i> chocs multiplicatifs, s'arrête uniformément dans l'intervalle entre les deux derniers clous, et prend la couleur de son ordre de grandeur [10<sup>k</sup> ; 10<sup>k+1</sup>[. À son arrivée, sa valeur <strong>X</strong> s'affiche au-dessus du bac.
+          </p>
+        </section>
+
+        <!-- GRAPHIQUE 2 : Empilement des tranches sur [0 ; 1[ (Partie fractionnaire M) -->
+        <section class="bg-white border border-[#dfe6dc] rounded-2xl shadow-sm p-3.5 sm:p-4 flex flex-col gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5b6b60]">
+              2. Empilement sur [0 ; 1[ : partie fractionnaire M = Y − ⌊Y⌋ = log<sub>10</sub>(X) mod 1
+            </h2>
+            <span class="text-[11px] text-[#5b6b60] font-medium">Courbe verte : modèle · Pointillés : uniforme (1)</span>
+          </div>
+          <div id="legM" class="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-2.5 py-1.5 rounded-xl bg-[#f8faf7] border border-[#e9efe7] text-[11px] text-[#5b6b60]"></div>
+          <div class="w-full rounded-xl overflow-hidden border border-[#eef2ec] bg-[#fcfdfb]">
+            <canvas id="cM" height="250" class="block w-full"></canvas>
+          </div>
+          <p class="text-xs text-[#5b6b60]">
+            Les billes tombées s'empilent ici dans des classes de même largeur sur [0 ; 1[ (hauteur = densité), en conservant la couleur de leur ordre de grandeur. En haut : zones du premier chiffre de X.
+          </p>
+        </section>
+
+        <!-- GRAPHIQUE 3 : Loi du premier chiffre de X -->
+        <section class="bg-white border border-[#dfe6dc] rounded-2xl shadow-sm p-3.5 sm:p-4 flex flex-col gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5b6b60]">
+              3. Loi du premier chiffre de X : billes observées, modèle et Benford
+            </h2>
+            <div class="flex flex-wrap items-center gap-3 text-[11px] font-medium text-[#5b6b60]">
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[#2f6fbf] inline-block"></span>Billes observées</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm border-2 border-[#228b22] bg-transparent inline-block"></span>Modèle log-normal</span>
+              <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[#cd5c5c] inline-block"></span>Loi de Benford</span>
+            </div>
+          </div>
+          <div class="w-full rounded-xl overflow-hidden border border-[#eef2ec] bg-[#fcfdfb]">
+            <canvas id="cD" height="225" class="block w-full"></canvas>
+          </div>
+          <p class="text-xs text-[#5b6b60]">
+            Barres bleues : fréquences observées des billes arrivées. Cadres verts : probabilités théoriques du modèle log-normal. Points rouges : loi de Benford P(D = d) = log<sub>10</sub>(1 + 1/d).
+          </p>
+        </section>
+
+      </div>
+
+      <!-- Colonne Droite (4 cols) : Commandes, Préréglages, Paramètres & Résultats -->
+      <aside class="lg:col-span-4 flex flex-col gap-4">
+
+        <!-- Carte 1 : Commandes & Son -->
+        <section class="bg-white border border-[#dfe6dc] rounded-2xl shadow-sm p-4 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5b6b60]">Commandes</h2>
+            <button id="btn-reset" type="button" class="text-xs font-semibold text-[#5b6b60] hover:text-rose-600 px-2.5 py-1 rounded-lg hover:bg-rose-50 transition-colors">
+              Réinitialiser
+            </button>
+          </div>
+
+          <button id="btn-toggle" type="button" class="w-full py-2.5 px-4 rounded-xl font-semibold text-sm text-white bg-[#228b22] hover:bg-[#1c751c] active:scale-[0.99] transition-all shadow-sm flex items-center justify-center gap-2">
+            <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+            <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z" /></svg>
+            <span id="btn-toggle-label">Lancer le flux continu</span>
+          </button>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button id="btn-add-1" type="button" class="py-2 px-2 rounded-xl text-xs font-semibold bg-[#f3f7f2] hover:bg-[#e9f7e9] text-[#143c1e] border border-[#dfe6dc] transition-colors active:scale-95">
+              +1 bille
+            </button>
+            <button id="btn-add-50" type="button" class="py-2 px-2 rounded-xl text-xs font-semibold bg-[#f3f7f2] hover:bg-[#e9f7e9] text-[#143c1e] border border-[#dfe6dc] transition-colors active:scale-95">
+              +50 billes
+            </button>
+            <button id="btn-add-500" type="button" class="py-2 px-2 rounded-xl text-xs font-semibold bg-[#e9f7e9] hover:bg-[#d8f1d8] text-[#143c1e] border border-[#b9dcb9] transition-colors active:scale-95">
+              +500 billes
+            </button>
+          </div>
+
+          <!-- Son des billes -->
+          <div class="pt-3 border-t border-[#eef2ec] space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-[#14301e]">
+                <input id="chk-sound" type="checkbox" checked class="w-4 h-4 rounded accent-[#228b22] cursor-pointer" />
+                <span>Son des billes</span>
+              </label>
+              <span id="val-volume" class="text-[11px] font-mono font-bold text-[#228b22] bg-[#e9f7e9] px-2 py-0.5 rounded-full">60 %</span>
+            </div>
+            <input id="slider-volume" type="range" min="0" max="100" step="5" value="60" aria-label="Volume sonore" class="w-full accent-[#228b22] cursor-pointer" />
+          </div>
+        </section>
+
+        <!-- Carte 2 : Préréglages & Paramètres -->
+        <section class="bg-white border border-[#dfe6dc] rounded-2xl shadow-sm p-4 space-y-3.5">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-[#5b6b60]">Exemples préréglés</h2>
+          <div class="flex flex-wrap gap-1.5">
+            <button id="p-horm" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#e9f7e9] hover:bg-[#d8f1d8] text-[#143c1e] border border-[#b9dcb9] transition-colors">
+              Hormone (pas Benford)
+            </button>
+            <button id="p-mid" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#f3f7f2] hover:bg-[#e9f7e9] text-[#143c1e] border border-[#dfe6dc] transition-colors">
+              Cloche intermédiaire (σ ≈ 0,3)
+            </button>
+            <button id="p-benf" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#f3f7f2] hover:bg-[#e9f7e9] text-[#143c1e] border border-[#dfe6dc] transition-colors">
+              Fortes fluctuations (Benford)
+            </button>
+          </div>
+
+          <div class="pt-2 border-t border-[#eef2ec] space-y-3">
+            <!-- Nombre d'étapes n -->
+            <div>
+              <div class="flex justify-between items-baseline text-xs font-semibold mb-0.5">
+                <label for="s-n">Nombre d'étapes (n)</label>
+                <span id="v-n" class="font-mono text-[#228b22] bg-[#e9f7e9] px-2 py-0.5 rounded-full">16</span>
+              </div>
+              <input id="s-n" type="range" min="4" max="50" step="1" value="16" class="w-full accent-[#228b22] cursor-pointer" />
+            </div>
+
+            <!-- Facteur u -->
+            <div>
+              <div class="flex justify-between items-baseline text-xs font-semibold mb-0.5">
+                <label for="s-u">Facteur haut (× u)</label>
+                <span id="v-u" class="font-mono text-[#228b22] bg-[#e9f7e9] px-2 py-0.5 rounded-full">×1,133</span>
+              </div>
+              <input id="s-u" type="range" min="1.05" max="1.65" step="0.005" value="1.133" class="w-full accent-[#228b22] cursor-pointer" />
+            </div>
+
+            <!-- Facteur d -->
+            <div>
+              <div class="flex justify-between items-baseline text-xs font-semibold mb-0.5">
+                <label for="s-d">Facteur bas (× d)</label>
+                <div class="flex items-center gap-1.5">
+                  <button id="btn-inv-u" type="button" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#f3f7f2] hover:bg-[#e9f7e9] text-[#5b6b60] border border-[#dfe6dc]">d = 1/u</button>
+                  <span id="v-d" class="font-mono text-[#228b22] bg-[#e9f7e9] px-2 py-0.5 rounded-full">×0,883</span>
+                </div>
+              </div>
+              <input id="s-d" type="range" min="0.60" max="1.15" step="0.005" value="0.883" class="w-full accent-[#228b22] cursor-pointer" />
+            </div>
+
+            <!-- Probabilité droite p -->
+            <div>
+              <div class="flex justify-between items-baseline text-xs font-semibold mb-0.5">
+                <label for="s-p">Probabilité droite (p)</label>
+                <span id="v-p" class="font-mono text-[#228b22] bg-[#e9f7e9] px-2 py-0.5 rounded-full">0,50</span>
+              </div>
+              <input id="s-p" type="range" min="0.20" max="0.80" step="0.01" value="0.50" class="w-full accent-[#228b22] cursor-pointer" />
+            </div>
+
+            <!-- Changement d'unité X * c -->
+            <div>
+              <div class="flex justify-between items-baseline text-xs font-semibold mb-0.5">
+                <label for="s-c">Changement d'unité : X × c</label>
+                <span id="v-c" class="font-mono text-[#228b22] bg-[#e9f7e9] px-2 py-0.5 rounded-full">c = 1,00</span>
+              </div>
+              <input id="s-c" type="range" min="-1" max="1" step="0.01" value="0" class="w-full accent-[#228b22] cursor-pointer" />
+              <p class="text-[11px] text-[#5b6b60] mt-0.5">Décale log<sub>10</sub> X sans changer les rebonds : teste l'invariance d'échelle.</p>
+            </div>
+
+            <!-- Vitesse -->
+            <div>
+              <div class="flex justify-between items-baseline text-xs font-semibold mb-0.5">
+                <label for="s-speed">Vitesse de chute</label>
+                <span id="v-speed" class="font-mono text-[#5b6b60] bg-[#f3f7f2] px-2 py-0.5 rounded-full">Normale</span>
+              </div>
+              <input id="s-speed" type="range" min="1" max="10" step="1" value="5" class="w-full accent-[#228b22] cursor-pointer" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Carte 3 : Résultats en direct -->
+        <section class="bg-white border border-[#dfe6dc] rounded-2xl shadow-sm p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-[#5b6b60]">Résultats en direct</h2>
+            <span class="text-xs font-mono font-bold text-[#143c1e]">N = <span id="o-N">0</span></span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-[#f6f9f5] border border-[#dfe6dc] rounded-xl p-2.5">
+              <div class="text-[10px] text-[#5b6b60]">Sur log<sub>10</sub> X ~ 𝒩(μ, σ²)</div>
+              <div class="font-mono font-bold text-[#143c1e] mt-0.5">μ = <span id="o-mu">—</span> · σ = <span id="o-sig">—</span></div>
+            </div>
+            <div class="bg-[#f6f9f5] border border-[#dfe6dc] rounded-xl p-2.5">
+              <div class="text-[10px] text-[#5b6b60]">Premier chiffre = 1</div>
+              <div class="font-mono font-bold text-[#2f6fbf] mt-0.5"><span id="o-p1-obs">—</span> <span class="text-[10px] font-normal text-[#5b6b60]">(Benf. 30,1 %)</span></div>
+            </div>
+            <div class="bg-[#f6f9f5] border border-[#dfe6dc] rounded-xl p-2.5">
+              <div class="text-[10px] text-[#5b6b60]">Écart max. modèle / Benford</div>
+              <div class="font-mono font-bold text-[#143c1e] mt-0.5" id="o-dev-mod">—</div>
+            </div>
+            <div class="bg-[#f6f9f5] border border-[#dfe6dc] rounded-xl p-2.5">
+              <div class="text-[10px] text-[#5b6b60]">Écart max. observé / Benford</div>
+              <div class="font-mono font-bold text-[#2f6fbf] mt-0.5" id="o-dev-obs">—</div>
+            </div>
+          </div>
+
+          <div id="verdict" class="p-2.5 rounded-xl text-xs border"></div>
+
+          <ul class="text-[11px] text-[#5b6b60] list-disc pl-4 space-y-1">
+            <li>Lancez <strong>+500 billes</strong> en mode <em>Fortes fluctuations</em> (chaque étape multiplie X par 1,44 ou par 0,70, comme les effectifs d'une colonie ou d'une population qui varient beaucoup d'une génération à l'autre) : les tranches colorées se compensent sur [0 ; 1[ et les barres bleues se rapprochent des points rouges de Benford, d'autant mieux que N est grand.</li>
+            <li>Le mode <em>Cloche intermédiaire</em> (σ ≈ 0,3) montre l'entre-deux : le chiffre 1 est déjà le plus fréquent, mais l'écart à Benford reste visible.</li>
+            <li>Comparez avec <em>Hormone</em> : une seule tranche domine, et le changement d'unité (<strong>c</strong>) déplace le chiffre dominant.</li>
+          </ul>
+        </section>
+
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. CONSTANTES, OUTILS MATHÉMATIQUES & ÉTAT GLOBAL
+      // =========================================================================
+      const COLS = ['#2e8b57', '#008080', '#da9132', '#cd5c5c', '#6a8f2f', '#3f7fbf', '#b8742a', '#8e5aa8', '#4a9d8f', '#c0504d'];
+      const BENF = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => Math.log10(1 + 1 / d));
+      const M_BINS = 20; // Classes de même largeur (0,05) sur [0 ; 1[
+
+      const $ = id => document.getElementById(id);
+
+      const st = {
+        // Préréglage Hormone par défaut : ln(X) ~ N(1 ; 0,5²)
+        n: 16,
+        u: 1.133,
+        d: 0.883,
+        p: 0.50,
+        x0: Math.E,
+        logc: 0,
+        speed: 5,
+        morph: 1.0,            // 0 = échelle log10(X), 1 = échelle linéaire X (par défaut)
+        targetMorph: 1.0,
+        soundEnabled: true,
+        volume: 0.60,
+        running: false,
+        queuedBalls: 0,
+        spawnTimer: 0,
+        balls: [],
+        popups: [],            // Étiquettes flottantes "X = ..." à l'arrêt des billes
+        lastPopupMs: 0,
+        lastBall: null,
+        bins: [],              // Effectifs par colonne k = 0..n
+        totalBalls: 0,
+        mStacks: [],           // mStacks[i] = { [decade]: count } pour chaque classe i = 0..M_BINS-1
+        digitCounts: new Array(9).fill(0),
+        displayMaxDensityK: 0.01,
+        lastTimestamp: 0,
+      };
+
+      const gK = {
+        w: 640, h: 390,
+        L: 54, R: 18, T: 30, B: 34,
+        pw: 568, ph: 326,
+        funnelTop: 32, funnelMouth: 56, pegStartY: 74,
+        dy: 10, binTop: 230, binBot: 356, binH: 126,
+        pegR: 3.0, ballR: 3.6,
+        yMin: -0.5, yMax: 1.5, xMaxLin: 10,
+      };
+
+      function sliceColor(k) {
+        return COLS[((k % COLS.length) + COLS.length) % COLS.length];
+      }
+
+      function fmt(x, d) {
+        if (!Number.isFinite(x)) return '—';
+        const clean = Math.abs(x) < 1e-12 ? 0 : x;
+        return clean.toFixed(d).replace('.', ',').replace('-', '−');
+      }
+
+      function fmtX(x) {
+        if (!Number.isFinite(x)) return '—';
+        if (x === 0) return '0';
+        const ax = Math.abs(x);
+        if (ax >= 1e5 || ax < 1e-2) {
+          return x.toExponential(2).replace('.', ',').replace('e+', '×10^').replace('e-', '×10^−').replace('-', '−');
+        }
+        const d = ax >= 100 ? 0 : (ax >= 10 ? 1 : 2);
+        return fmt(x, d).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+      }
+
+      function fmtDecade(k) {
+        if (k >= -2 && k <= 3) {
+          const a = Math.pow(10, k), b = Math.pow(10, k + 1);
+          const fa = k < 0 ? fmt(a, -k) : String(Math.round(a)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+          const fb = (k + 1) < 0 ? fmt(b, -(k + 1)) : String(Math.round(b)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+          return '[' + fa + ' ; ' + fb + '[';
+        }
+        return '[10^' + String(k).replace('-', '−') + ' ; 10^' + String(k + 1).replace('-', '−') + '[';
+      }
+
+      function niceStep(raw) {
+        if (!Number.isFinite(raw) || raw <= 0) return 1;
+        const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+        const n = raw / pow;
+        if (n <= 1) return 1 * pow;
+        if (n <= 2) return 2 * pow;
+        if (n <= 2.5) return 2.5 * pow;
+        if (n <= 5) return 5 * pow;
+        return 10 * pow;
+      }
+
+      function fmtTick(v, step) {
+        if (Math.abs(v) < step * 1e-6) return '0';
+        const av = Math.abs(v);
+        if (av >= 1e5 || (av > 0 && av < 1e-3)) {
+          return v.toExponential(1).replace('.', ',').replace('e+', 'e').replace('e-', 'e−').replace('-', '−');
+        }
+        const dec = Math.max(0, Math.min(4, Math.ceil(-Math.log10(step) + 1e-9)));
+        return fmt(v, dec).replace(/,0+$/, '').replace(/(,\d*?[1-9])0+$/, '$1');
+      }
+
+      function getSpeedLabel(v) {
+        if (v === 1) return 'Très lente';
+        if (v <= 3) return 'Lente';
+        if (v <= 5) return 'Normale';
+        if (v <= 8) return 'Rapide';
+        return 'Très rapide';
+      }
+
+      function phi(z) {
+        return Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
+      }
+
+      function Phi(z) {
+        const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+        const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z / 2);
+        return z >= 0 ? 0.5 * (1 + y) : 0.5 * (1 - y);
+      }
+
+      /** Paramètres exacts de Y = log10(X) pour le processus multiplicatif. */
+      function getLog10Params() {
+        const lU = Math.log10(st.u);
+        const lD = Math.log10(st.d);
+        const delta = Math.max(1e-6, lU - lD);
+        const y0 = Math.log10(st.x0) + st.logc;
+        const mu = y0 + st.n * (st.p * lU + (1 - st.p) * lD);
+        // Variance binomiale des chocs + variance δ²/12 du tirage uniforme entre les deux derniers clous
+        const sig = Math.max(0.02, Math.sqrt(st.n * st.p * (1 - st.p) * delta * delta + delta * delta / 12));
+        return { lU, lD, delta, y0, mu, sig };
+      }
+
+      function fY(y, mu, sig) {
+        return phi((y - mu) / sig) / sig;
+      }
+
+      function kRange(mu, sig) {
+        return [Math.floor(mu - 5 * sig) - 1, Math.ceil(mu + 5 * sig)];
+      }
+
+      function sliceMass(k, mu, sig) {
+        return Phi((k + 1 - mu) / sig) - Phi((k - mu) / sig);
+      }
+
+      function modelDigitProbs(mu, sig) {
+        const [k0, k1] = kRange(mu, sig);
+        const p = new Array(9).fill(0);
+        for (let k = k0; k <= k1; k++) {
+          for (let d = 1; d <= 9; d++) {
+            p[d - 1] += Phi((k + Math.log10(d + 1) - mu) / sig) - Phi((k + Math.log10(d) - mu) / sig);
+          }
+        }
+        return p;
+      }
+
+      // =========================================================================
+      // 2. SYNTHÉTISEUR AUDIO AUTONOME (WEB AUDIO API)
+      // =========================================================================
+      const audio = {
+        ctx: null,
+        master: null,
+        comp: null,
+        noiseBuf: null,
+        lastPegMs: 0,
+        lastLandMs: 0,
+      };
+
+      function ensureAudio() {
+        if (!st.soundEnabled || st.volume <= 0) return false;
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return false;
+          if (!audio.ctx) {
+            audio.ctx = new AC();
+            audio.comp = audio.ctx.createDynamicsCompressor();
+            audio.comp.threshold.setValueAtTime(-16, audio.ctx.currentTime);
+            audio.comp.ratio.setValueAtTime(8, audio.ctx.currentTime);
+
+            audio.master = audio.ctx.createGain();
+            audio.master.gain.setValueAtTime(st.volume * 0.5, audio.ctx.currentTime);
+            audio.comp.connect(audio.master);
+            audio.master.connect(audio.ctx.destination);
+
+            const sr = audio.ctx.sampleRate;
+            const len = Math.floor(sr * 0.035);
+            audio.noiseBuf = audio.ctx.createBuffer(1, len, sr);
+            const data = audio.noiseBuf.getChannelData(0);
+            for (let i = 0; i < len; i++) {
+              data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sr * 0.007));
+            }
+          }
+          if (audio.ctx.state === 'suspended') audio.ctx.resume();
+          return true;
+        } catch (err) {
+          return false;
+        }
+      }
+
+      function syncVolume() {
+        if (audio.ctx && audio.master) {
+          audio.master.gain.setTargetAtTime(st.soundEnabled ? st.volume * 0.5 : 0, audio.ctx.currentTime, 0.015);
+        }
+        $('val-volume').textContent = Math.round(st.volume * 100) + ' %';
+      }
+
+      function connectPan(node, sx) {
+        const pan = ((sx - gK.L) / Math.max(1, gK.pw)) * 2 - 1;
+        if (typeof audio.ctx.createStereoPanner === 'function') {
+          const p = audio.ctx.createStereoPanner();
+          p.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, pan * 0.85)), audio.ctx.currentTime);
+          node.connect(p);
+          p.connect(audio.comp);
+        } else {
+          node.connect(audio.comp);
+        }
+      }
+
+      function playPeg(row, sx) {
+        if (!st.soundEnabled || st.volume <= 0 || !audio.ctx || audio.ctx.state !== 'running') return;
+        const now = performance.now();
+        const gap = st.balls.length > 40 ? 30 : (st.balls.length > 12 ? 18 : 10);
+        if (now - audio.lastPegMs < gap) return;
+        audio.lastPegMs = now;
+        try {
+          const t0 = audio.ctx.currentTime;
+          const sc = st.balls.length > 30 ? 0.55 : 1.0;
+          const osc = audio.ctx.createOscillator();
+          const g = audio.ctx.createGain();
+          const f = 1480 + (row / Math.max(1, st.n - 1)) * 650 + (Math.random() - 0.5) * 240;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, t0);
+          osc.frequency.exponentialRampToValueAtTime(f * 0.52, t0 + 0.022);
+          g.gain.setValueAtTime(0.0001, t0);
+          g.gain.linearRampToValueAtTime(0.13 * sc, t0 + 0.002);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.024);
+          osc.connect(g);
+          connectPan(g, sx);
+          osc.start(t0);
+          osc.stop(t0 + 0.026);
+        } catch (err) {
+          // Ignore les erreurs audio transitoires
+        }
+      }
+
+      function playLand(sx, prevCount) {
+        if (!st.soundEnabled || st.volume <= 0 || !audio.ctx || audio.ctx.state !== 'running') return;
+        const now = performance.now();
+        const gap = st.balls.length > 40 ? 34 : 18;
+        if (now - audio.lastLandMs < gap) return;
+        audio.lastLandMs = now;
+        try {
+          const t0 = audio.ctx.currentTime;
+          const sc = st.balls.length > 30 ? 0.6 : 1.0;
+          const osc = audio.ctx.createOscillator();
+          const g = audio.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(290 + Math.random() * 65, t0);
+          osc.frequency.exponentialRampToValueAtTime(115, t0 + 0.042);
+          g.gain.setValueAtTime(0.0001, t0);
+          g.gain.linearRampToValueAtTime(0.16 * sc, t0 + 0.003);
+          g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.045);
+          osc.connect(g);
+          connectPan(g, sx);
+          osc.start(t0);
+          osc.stop(t0 + 0.048);
+
+          if (prevCount > 0) {
+            const c = audio.ctx.createOscillator();
+            const cg = audio.ctx.createGain();
+            const cf = 2850 + Math.random() * 650;
+            c.type = 'sine';
+            c.frequency.setValueAtTime(cf, t0);
+            c.frequency.exponentialRampToValueAtTime(cf * 0.85, t0 + 0.022);
+            cg.gain.setValueAtTime(0.0001, t0);
+            cg.gain.linearRampToValueAtTime(0.06 * sc, t0 + 0.0015);
+            cg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.025);
+            c.connect(cg);
+            connectPan(cg, sx);
+            c.start(t0);
+            c.stop(t0 + 0.026);
+          }
+        } catch (err) {
+          // Ignore les erreurs audio transitoires
+        }
+      }
+
+      // =========================================================================
+      // 3. GÉOMÉTRIE DE LA MACHINE DE KAPTEYN (log10 X <-> X)
+      // =========================================================================
+      function setupCanvas(c) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        if (!c.dataset.h) c.dataset.h = c.getAttribute('height') || '240';
+        const w = Math.max(260, c.clientWidth || 600);
+        const h = parseInt(c.dataset.h, 10);
+        if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+          c.width = Math.round(w * dpr);
+          c.height = Math.round(h * dpr);
+          c.style.height = h + 'px';
+        }
+        const ctx = c.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        return { ctx, w, h };
+      }
+
+      function computeGeomK() {
+        const c = $('cKapteyn');
+        const w = Math.max(260, c.clientWidth || 600);
+        const h = parseInt(c.dataset.h || c.getAttribute('height') || '390', 10);
+        const { lU, lD, delta, y0, mu, sig } = getLog10Params();
+
+        gK.w = w;
+        gK.h = h;
+        gK.L = 56;
+        gK.R = 18;
+        gK.T = 30;
+        gK.B = 34;
+        gK.pw = Math.max(160, w - gK.L - gK.R);
+        gK.ph = Math.max(180, h - gK.T - gK.B);
+
+        // Fenêtre en y = log10(X) : couvre tous les picots ou ±3.6σ
+        const yPegMin = Math.min(y0, y0 + st.n * lD) - 0.6 * delta;
+        const yPegMax = Math.max(y0, y0 + st.n * lU) + 0.6 * delta;
+        gK.yMin = Math.max(yPegMin, mu - 4.2 * sig);
+        gK.yMax = Math.min(yPegMax, mu + 4.2 * sig);
+        if (gK.yMax - gK.yMin < 1.2) {
+          gK.yMin = mu - 0.8;
+          gK.yMax = mu + 0.8;
+        }
+        // Inclut toujours y0 pour que l'entonnoir reste visible
+        gK.yMin = Math.min(gK.yMin, y0 - 0.35);
+        gK.yMax = Math.max(gK.yMax, y0 + 0.35);
+
+        // Fenêtre en X linéaire : de 0 à q95
+        gK.xMaxLin = Math.pow(10, mu + 1.64485 * sig);
+
+        gK.funnelTop = gK.T + 2;
+        gK.funnelMouth = gK.T + 26;
+        gK.pegStartY = gK.funnelMouth + 14;
+        const pegAreaH = gK.ph * 0.45;
+        gK.dy = pegAreaH / st.n;
+        gK.binTop = gK.pegStartY + st.n * gK.dy + Math.max(8, Math.min(16, gK.dy * 0.45));
+        gK.binBot = gK.T + gK.ph;
+        gK.binH = Math.max(70, gK.binBot - gK.binTop);
+
+        const minSp = Math.min(gK.pw / (st.n + 2), gK.dy);
+        gK.pegR = Math.max(1.0, Math.min(3.6, minSp * 0.16));
+        gK.ballR = Math.max(1.7, Math.min(4.0, minSp * 0.24));
+      }
+
+      /** Convertit y = log10(X) en coordonnée écran s(y, alpha). */
+      function yToScreenX(y, alpha) {
+        const a = alpha !== undefined ? alpha : st.morph;
+        const sLog = gK.L + ((y - gK.yMin) / (gK.yMax - gK.yMin)) * gK.pw;
+        const sLin = gK.L + (Math.pow(10, y) / gK.xMaxLin) * gK.pw;
+        return (1 - a) * sLog + a * sLin;
+      }
+
+      /** Dérivée ds/dy > 0 pour conserver l'aire = 1 de la densité théorique. */
+      function dScreenX_dy(y, alpha) {
+        const a = alpha !== undefined ? alpha : st.morph;
+        const dLog = gK.pw / (gK.yMax - gK.yMin);
+        const dLin = (gK.pw / gK.xMaxLin) * Math.pow(10, y) * Math.LN10;
+        return (1 - a) * dLog + a * dLin;
+      }
+
+      function getPegPos(r, c) {
+        const { lU, lD, y0 } = getLog10Params();
+        const y = y0 + c * lU + (r - c) * lD;
+        return { x: yToScreenX(y), y: gK.pegStartY + r * gK.dy, yVal: y };
+      }
+
+      function getBinBounds(k) {
+        const { lD, delta, y0 } = getLog10Params();
+        const yc = y0 + st.n * lD + k * delta;
+        const left = yToScreenX(yc - 0.5 * delta);
+        const right = yToScreenX(yc + 0.5 * delta);
+        const center = yToScreenX(yc);
+        return { left, right, center, width: Math.max(1.2, right - left), yc };
+      }
+
+      function maxTheoDensityK() {
+        const { mu, sig } = getLog10Params();
+        let maxD = 0;
+        const steps = 160;
+        for (let i = 0; i <= steps; i++) {
+          const y = gK.yMin + (i / steps) * (gK.yMax - gK.yMin);
+          const sx = yToScreenX(y);
+          if (sx < gK.L || sx > gK.L + gK.pw) continue;
+          const d = fY(y, mu, sig) / dScreenX_dy(y);
+          if (d > maxD && Number.isFinite(d)) maxD = d;
+        }
+        return Math.max(1e-6, maxD);
+      }
+
+      // =========================================================================
+      // 4. SIMULATION DES BILLES (AVEC TIRAGE UNIFORME ENTRE LES 2 DERNIERS CLOUS)
+      // =========================================================================
+      function spawnBall() {
+        const { lD, delta, y0 } = getLog10Params();
+        const path = new Array(st.n);
+        let k = 0;
+        for (let r = 0; r < st.n; r++) {
+          const goR = Math.random() < st.p ? 1 : 0;
+          path[r] = goR;
+          k += goR;
+        }
+        // Distribution uniforme dans l'intervalle [y_centre - Δ/2 ; y_centre + Δ/2[ entre les 2 derniers clous
+        const yCenter = y0 + st.n * lD + k * delta;
+        const yFinal = yCenter + (Math.random() - 0.5) * delta;
+        const xFinal = Math.pow(10, yFinal);
+        const decade = Math.floor(yFinal);
+        const M = yFinal - decade;
+        const digit = Math.min(9, Math.max(1, Math.floor(Math.pow(10, M) + 1e-12)));
+
+        st.balls.push({
+          phase: 'funnel',
+          step: 0,
+          col: 0,
+          path,
+          finalBin: k,
+          yFinal,
+          xFinal,
+          decade,
+          M,
+          digit,
+          color: sliceColor(decade),
+          t: 0,
+          x: yToScreenX(y0),
+          y: gK.funnelTop,
+          hop: 0.28 + Math.random() * 0.12,
+        });
+      }
+
+      function updateBall(b, dt, speedMult) {
+        const { y0 } = getLog10Params();
+        const offY = gK.pegR + gK.ballR;
+
+        if (b.phase === 'funnel') {
+          b.t += dt / (0.14 / speedMult);
+          const x0 = yToScreenX(y0);
+          const endY = gK.pegStartY - offY;
+          if (b.t >= 1) {
+            b.phase = 'pegs';
+            b.step = 0;
+            b.col = 0;
+            b.t = 0;
+            b.x = x0;
+            b.y = endY;
+            playPeg(0, x0);
+            return false;
+          }
+          b.x = x0;
+          b.y = gK.funnelTop + (endY - gK.funnelTop) * (b.t * b.t);
+          return false;
+        }
+
+        if (b.phase === 'pegs') {
+          const baseDur = Math.max(0.065, 0.19 - Math.max(0, st.n - 10) * 0.004);
+          b.t += dt / (baseDur / speedMult);
+          const pStart = getPegPos(b.step, b.col);
+          const nextCol = b.col + b.path[b.step];
+          const sx = pStart.x;
+          const sy = pStart.y - offY;
+
+          let ex, ey;
+          if (b.step + 1 < st.n) {
+            const pNext = getPegPos(b.step + 1, nextCol);
+            ex = pNext.x;
+            ey = pNext.y - offY;
+          } else {
+            ex = yToScreenX(b.yFinal);
+            ey = gK.binTop;
+          }
+
+          if (b.t >= 1) {
+            b.col = nextCol;
+            b.step += 1;
+            b.t = 0;
+            b.x = ex;
+            b.y = ey;
+            if (b.step >= st.n) {
+              b.phase = 'drop';
+            } else {
+              playPeg(b.step, ex);
+            }
+            return false;
+          }
+
+          const t = b.t;
+          const hop = Math.min(gK.dy * b.hop, 20);
+          b.x = sx + (ex - sx) * t;
+          b.y = sy - hop * t + (ey - sy + hop) * (t * t);
+          return false;
+        }
+
+        // Phase 'drop' dans le bac
+        const bin = getBinBounds(b.finalBin);
+        const cnt = st.bins[b.finalBin] || 0;
+        const dens = st.totalBalls > 0 ? (cnt / st.totalBalls) / bin.width : 0;
+        const barH = Math.min(gK.binH, (dens / st.displayMaxDensityK) * gK.binH);
+        const targetY = Math.max(gK.binTop + 4, gK.binBot - barH - gK.ballR);
+        b.t += dt / (0.12 / speedMult);
+        if (b.t >= 1) return true;
+        b.x = yToScreenX(b.yFinal);
+        b.y = gK.binTop + (targetY - gK.binTop) * (b.t * b.t);
+        return false;
+      }
+
+      function recordArrival(b) {
+        const prev = st.bins[b.finalBin] || 0;
+        st.bins[b.finalBin] = prev + 1;
+        st.totalBalls += 1;
+
+        // Empilement dans l'histogramme à M_BINS classes de même largeur sur [0 ; 1[
+        const mIdx = Math.min(M_BINS - 1, Math.max(0, Math.floor(b.M * M_BINS)));
+        st.mStacks[mIdx][b.decade] = (st.mStacks[mIdx][b.decade] || 0) + 1;
+
+        // Premier chiffre observé
+        st.digitCounts[b.digit - 1] += 1;
+
+        // Badge persistant de la dernière bille arrêtée
+        st.lastBall = { x: b.xFinal, M: b.M, digit: b.digit, color: b.color };
+        updateLastBallBadge();
+
+        // Étiquette flottante "X = ..." au-dessus du bac d'arrivée (régulée lors des rafales)
+        const now = performance.now();
+        const minGap = st.balls.length > 20 ? 150 : 0;
+        if (now - st.lastPopupMs >= minGap) {
+          st.lastPopupMs = now;
+          const bin = getBinBounds(b.finalBin);
+          const dens = (st.bins[b.finalBin] / st.totalBalls) / bin.width;
+          const barH = Math.min(gK.binH, (dens / st.displayMaxDensityK) * gK.binH);
+          const startY = Math.max(gK.binTop + 14, gK.binBot - barH - 12);
+          st.popups.push({
+            yVal: b.yFinal,
+            py: startY,
+            text: 'X = ' + fmtX(b.xFinal),
+            color: b.color,
+            age: 0,
+            life: st.balls.length > 10 ? 1.15 : 2.1,
+          });
+          if (st.popups.length > 12) st.popups.shift();
+        }
+
+        playLand(yToScreenX(b.yFinal), prev);
+      }
+
+      function updateLastBallBadge() {
+        const badge = $('last-ball-badge');
+        if (!st.lastBall) {
+          badge.classList.add('hidden');
+          return;
+        }
+        badge.classList.remove('hidden');
+        $('lb-dot').style.backgroundColor = st.lastBall.color;
+        $('lb-x').textContent = fmtX(st.lastBall.x);
+        $('lb-m').textContent = fmt(st.lastBall.M, 3);
+        $('lb-d').textContent = String(st.lastBall.digit);
+      }
+
+      function stepSim(dt) {
+        const mDiff = st.targetMorph - st.morph;
+        if (Math.abs(mDiff) > 0.0005) {
+          st.morph += mDiff * Math.min(1, dt * 8.5);
+          $('slider-morph').value = String(Math.round(st.morph * 100));
+          updateMorphButtons();
+        } else if (st.morph !== st.targetMorph) {
+          st.morph = st.targetMorph;
+          $('slider-morph').value = String(Math.round(st.morph * 100));
+          updateMorphButtons();
+        }
+
+        // Courbe exponentielle : très lente à vitesse = 1, fluide en vitesse normale, très rapide à 10
+        const speedMult = 0.20 * Math.pow(1.42, st.speed - 1);
+        const contRate = 0.35 * Math.pow(1.75, st.speed - 1);
+
+        if (st.queuedBalls > 0) {
+          const burst = Math.max(contRate * 2.5, Math.min(320, st.queuedBalls * 4));
+          st.spawnTimer += dt * burst;
+          let nSpawn = Math.floor(st.spawnTimer);
+          if (nSpawn > 0) {
+            st.spawnTimer -= nSpawn;
+            nSpawn = Math.min(nSpawn, st.queuedBalls, 30);
+            for (let i = 0; i < nSpawn; i++) {
+              spawnBall();
+              st.queuedBalls -= 1;
+            }
+          }
+        } else if (st.running) {
+          st.spawnTimer += dt * contRate;
+          let nSpawn = Math.floor(st.spawnTimer);
+          if (nSpawn > 0) {
+            st.spawnTimer -= nSpawn;
+            nSpawn = Math.min(nSpawn, 12);
+            for (let i = 0; i < nSpawn; i++) spawnBall();
+          }
+        }
+
+        let arrivedAny = false;
+        for (let i = st.balls.length - 1; i >= 0; i--) {
+          if (updateBall(st.balls[i], dt, speedMult)) {
+            recordArrival(st.balls[i]);
+            st.balls.splice(i, 1);
+            arrivedAny = true;
+          }
+        }
+
+        // Animation des étiquettes flottantes "X = ..."
+        for (let i = st.popups.length - 1; i >= 0; i--) {
+          const pop = st.popups[i];
+          pop.age += dt;
+          pop.py -= dt * 16;
+          if (pop.age >= pop.life) st.popups.splice(i, 1);
+        }
+
+        if (arrivedAny) {
+          updateResultsUI();
+          drawM();
+          drawD();
+        }
+        updateStatusBadge();
+
+        // Mise à l'échelle verticale douce de l'histogramme de la machine de Kapteyn
+        const maxTheo = maxTheoDensityK();
+        let maxObs = 0;
+        if (st.totalBalls > 0) {
+          for (let k = 0; k <= st.n; k++) {
+            const c = st.bins[k];
+            if (c > 0) {
+              const b = getBinBounds(k);
+              if (b.right >= gK.L && b.left <= gK.L + gK.pw) {
+                const d = (c / st.totalBalls) / b.width;
+                if (d > maxObs) maxObs = d;
+              }
+            }
+          }
+        }
+        const wObs = Math.min(1, st.totalBalls / 15);
+        const needed = Math.max(maxTheo * 1.18, maxObs * 1.15 * wObs + maxTheo * 1.18 * (1 - wObs));
+        st.displayMaxDensityK += (needed - st.displayMaxDensityK) * Math.min(1, dt * 8);
+      }
+
+      // =========================================================================
+      // 5. DESSIN DES 3 GRAPHIQUES COUPLÉS
+      // =========================================================================
+      function drawYAxisTitle(ctx, text, T, ph) {
+        ctx.save();
+        ctx.translate(14, T + ph / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.fillStyle = '#14301e';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+      }
+
+      /** Graphique 1 : Machine de Kapteyn <-> Planche de Galton (log10 X). */
+      function drawKapteyn() {
+        const { ctx } = setupCanvas($('cKapteyn'));
+        const { y0, mu, sig } = getLog10Params();
+        const L = gK.L, T = gK.T, pw = gK.pw, ph = gK.ph;
+
+        // Note si σ est grand en échelle linéaire
+        $('kapteyn-note').classList.toggle('hidden', !(st.morph > 0.65 && sig > 0.55));
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(L, T, pw, ph);
+        ctx.clip();
+
+        // 1. Bandes colorées légères en fond pour chaque ordre de grandeur [10^k ; 10^(k+1)[
+        const kMinVis = Math.floor(gK.yMin) - 1;
+        const kMaxVis = Math.ceil(gK.yMax) + 1;
+        for (let k = kMinVis; k <= kMaxVis; k++) {
+          const xA = yToScreenX(k);
+          const xB = yToScreenX(k + 1);
+          if (xB < L || xA > L + pw) continue;
+          const x0 = Math.max(L, xA);
+          const x1 = Math.min(L + pw, xB);
+          ctx.fillStyle = sliceColor(k) + '14';
+          ctx.fillRect(x0, gK.binTop, x1 - x0, gK.binH);
+
+          if (xA >= L && xA <= L + pw) {
+            ctx.strokeStyle = 'rgba(130, 145, 136, 0.45)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.moveTo(xA, T);
+            ctx.lineTo(xA, gK.binBot);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+
+        // 2. Entonnoir
+        const cx0 = yToScreenX(y0);
+        if (cx0 >= L - 30 && cx0 <= L + pw + 30) {
+          const mouthW = Math.max(gK.ballR + 3, 6);
+          ctx.strokeStyle = '#7e9084';
+          ctx.lineWidth = 2.2;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(cx0 - 20, gK.funnelTop);
+          ctx.lineTo(cx0 - mouthW, gK.funnelMouth);
+          ctx.lineTo(cx0 - mouthW, gK.funnelMouth + 4);
+          ctx.moveTo(cx0 + 20, gK.funnelTop);
+          ctx.lineTo(cx0 + mouthW, gK.funnelMouth);
+          ctx.lineTo(cx0 + mouthW, gK.funnelMouth + 4);
+          ctx.stroke();
+        }
+
+        // 3. Barres de l'histogramme colorées selon l'ordre de grandeur du bac
+        for (let k = 0; k <= st.n; k++) {
+          const b = getBinBounds(k);
+          if (b.right < L || b.left > L + pw) continue;
+
+          ctx.strokeStyle = 'rgba(195, 208, 198, 0.7)';
+          ctx.lineWidth = 0.9;
+          ctx.beginPath();
+          ctx.moveTo(b.left, gK.binTop);
+          ctx.lineTo(b.left, gK.binBot);
+          ctx.stroke();
+
+          const cnt = st.bins[k] || 0;
+          if (cnt > 0 && st.totalBalls > 0) {
+            const dens = (cnt / st.totalBalls) / b.width;
+            const barH = Math.min(gK.binH, (dens / st.displayMaxDensityK) * gK.binH);
+            const gap = b.width > 7 ? 1.4 : 0.3;
+            const x = b.left + gap * 0.5;
+            const w = Math.max(1.0, b.width - gap);
+            const dec = Math.floor(b.yc);
+            ctx.fillStyle = sliceColor(dec) + 'c8';
+            ctx.fillRect(x, gK.binBot - barH, w, barH);
+          }
+        }
+
+        // 4. Courbe théorique exacte (Normale en log10 X, Log-normale en X)
+        ctx.beginPath();
+        let started = false;
+        const steps = 240;
+        for (let i = 0; i <= steps; i++) {
+          const y = gK.yMin + (i / steps) * (gK.yMax - gK.yMin);
+          const px = yToScreenX(y);
+          if (px < L - 8 || px > L + pw + 8) continue;
+          const dens = fY(y, mu, sig) / dScreenX_dy(y);
+          const py = gK.binBot - Math.min(gK.binH, (dens / st.displayMaxDensityK) * gK.binH);
+          if (!started) {
+            ctx.moveTo(px, py);
+            started = true;
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+        ctx.strokeStyle = '#143c1e';
+        ctx.lineWidth = 2.0;
+        ctx.stroke();
+
+        // 5. Picots
+        const rP = gK.pegR;
+        for (let r = 0; r < st.n; r++) {
+          for (let c = 0; c <= r; c++) {
+            const pos = getPegPos(r, c);
+            if (pos.x < L - 6 || pos.x > L + pw + 6) continue;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, rP, 0, Math.PI * 2);
+            ctx.fillStyle = '#4c5f52';
+            ctx.fill();
+          }
+        }
+
+        // 6. Billes en chute (colorées selon leur ordre de grandeur d'arrivée)
+        const rB = gK.ballR;
+        for (let i = 0; i < st.balls.length; i++) {
+          const b = st.balls[i];
+          if (b.x < L - 8 || b.x > L + pw + 8) continue;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, rB, 0, Math.PI * 2);
+          ctx.fillStyle = b.color;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+
+        // 7. Étiquettes flottantes "X = ..." au moment où les billes s'arrêtent
+        if (st.popups.length > 0) {
+          ctx.font = '700 10.5px ui-monospace, Menlo, Consolas, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          for (let i = 0; i < st.popups.length; i++) {
+            const pop = st.popups[i];
+            const px = yToScreenX(pop.yVal);
+            if (px < L + 16 || px > L + pw - 16) continue;
+            const alpha = Math.max(0, Math.min(1, 1 - Math.pow(pop.age / pop.life, 2)));
+            const tw = ctx.measureText(pop.text).width + 10;
+            const th = 16;
+            const bx = Math.max(L + 4, Math.min(L + pw - tw - 4, px - tw / 2));
+            const by = Math.max(T + 4, pop.py - th / 2);
+
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+            ctx.strokeStyle = pop.color;
+            ctx.lineWidth = 1.2;
+            ctx.fillRect(bx, by, tw, th);
+            ctx.strokeRect(bx, by, tw, th);
+            ctx.fillStyle = '#14301e';
+            ctx.fillText(pop.text, bx + tw / 2, by + th / 2 + 0.5);
+            ctx.restore();
+          }
+        }
+
+        ctx.restore();
+
+        // Axes & graduations
+        ctx.strokeStyle = '#94a39a';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(L, gK.binBot);
+        ctx.lineTo(L + pw, gK.binBot);
+        ctx.moveTo(L, T);
+        ctx.lineTo(L, gK.binBot);
+        ctx.stroke();
+
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        if (st.morph < 0.5) {
+          let lastTop = -Infinity, lastBot = -Infinity;
+          for (let k = kMinVis; k <= kMaxVis; k++) {
+            const px = yToScreenX(k);
+            if (px < L - 2 || px > L + pw + 2) continue;
+            if (px - lastBot >= 24) {
+              ctx.fillStyle = '#5b6b60';
+              ctx.fillText(String(k).replace('-', '−'), px, gK.binBot + 14);
+              lastBot = px;
+            }
+            const lx = Math.min(L + pw - 36, Math.max(L + 36, px));
+            if (lx - lastTop >= 86) {
+              ctx.fillStyle = '#008080';
+              ctx.fillText('X = ' + fmtX(Math.pow(10, k)), lx, T - 8);
+              lastTop = lx;
+            }
+          }
+          ctx.fillStyle = '#14301e';
+          ctx.textAlign = 'right';
+          ctx.fillText('y = log₁₀ X', L + pw, gK.binBot + 28);
+        } else {
+          const xStep = niceStep(gK.xMaxLin / 5);
+          let lastX = -Infinity;
+          for (let v = 0; v <= gK.xMaxLin + xStep * 0.01; v += xStep) {
+            const px = L + (v / gK.xMaxLin) * pw;
+            if (px < L - 2 || px > L + pw + 2) continue;
+            if (px - lastX >= 44) {
+              ctx.fillStyle = '#5b6b60';
+              ctx.fillText(fmtTick(v, xStep), px, gK.binBot + 14);
+              lastX = px;
+            }
+          }
+          ctx.fillStyle = '#14301e';
+          ctx.textAlign = 'right';
+          ctx.fillText('X (échelle linéaire)', L + pw, gK.binBot + 28);
+        }
+
+        drawYAxisTitle(ctx, st.morph < 0.5 ? 'densité de log₁₀ X' : 'densité de X', T, ph);
+      }
+
+      /** Graphique 2 : Empilement des billes sur [0 ; 1[ en M_BINS classes de même largeur. */
+      function drawM() {
+        const { ctx, w, h } = setupCanvas($('cM'));
+        const L = 56, R = 16, T = 34, B = 32, pw = w - L - R, ph = h - T - B;
+        const { mu, sig } = getLog10Params();
+        const [k0, k1] = kRange(mu, sig);
+
+        // Densité théorique f_M(m) = Σ_k f_Y(k + m)
+        const theoVals = new Array(201);
+        let peak = 1.15;
+        for (let i = 0; i <= 200; i++) {
+          const m = i / 200;
+          let sum = 0;
+          for (let k = k0; k <= k1; k++) sum += fY(k + m, mu, sig);
+          theoVals[i] = sum;
+          if (sum > peak) peak = sum;
+        }
+
+        // Hauteur max des classes empilées observées (densité = (effectif / N) * M_BINS)
+        if (st.totalBalls > 0) {
+          for (let i = 0; i < M_BINS; i++) {
+            let tot = 0;
+            const map = st.mStacks[i];
+            for (const dec in map) tot += map[dec];
+            const dens = (tot / st.totalBalls) * M_BINS;
+            if (dens > peak) peak = dens;
+          }
+        }
+
+        const yStep = niceStep(Math.max(1.2, peak) / 4);
+        const ymax = Math.max(1.25, Math.ceil((peak * 1.12) / yStep) * yStep);
+        const X = v => L + v * pw;
+        const Yp = v => T + ph - (v / ymax) * ph;
+
+        // Grille horizontale + graduations Y
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        for (let v = 0; v <= ymax + yStep * 0.01; v += yStep) {
+          const py = Yp(v);
+          ctx.strokeStyle = '#edf2eb';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(L, py);
+          ctx.lineTo(L + pw, py);
+          ctx.stroke();
+          ctx.fillStyle = '#5b6b60';
+          ctx.fillText(fmtTick(v, yStep), L - 6, py + 4);
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(L, T, pw, ph);
+        ctx.clip();
+
+        // Barres empilées observées (classes de même largeur 1 / M_BINS)
+        if (st.totalBalls > 0) {
+          const binW = pw / M_BINS;
+          for (let i = 0; i < M_BINS; i++) {
+            const map = st.mStacks[i];
+            const decs = Object.keys(map).map(Number).sort((a, b) => a - b);
+            let acc = 0;
+            for (const dec of decs) {
+              const cnt = map[dec];
+              if (!cnt) continue;
+              const dH = (cnt / st.totalBalls) * M_BINS;
+              const yBot = Yp(acc);
+              const yTop = Yp(acc + dH);
+              ctx.fillStyle = sliceColor(dec) + 'cc';
+              ctx.fillRect(L + i * binW + 0.8, yTop, Math.max(1, binW - 1.6), yBot - yTop);
+              acc += dH;
+            }
+          }
+        }
+
+        // Séparateurs des zones de premier chiffre
+        ctx.strokeStyle = 'rgba(120, 130, 125, 0.5)';
+        ctx.lineWidth = 1;
+        for (let d = 2; d <= 9; d++) {
+          const xd = X(Math.log10(d));
+          ctx.beginPath();
+          ctx.moveTo(xd, T);
+          ctx.lineTo(xd, T + ph);
+          ctx.stroke();
+        }
+
+        // Courbe théorique f_M(m)
+        ctx.beginPath();
+        for (let i = 0; i <= 200; i++) {
+          const px = X(i / 200), py = Yp(theoVals[i]);
+          i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+        ctx.strokeStyle = '#228b22';
+        ctx.lineWidth = 2.0;
+        ctx.stroke();
+
+        // Droite uniforme y = 1
+        ctx.setLineDash([7, 5]);
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(X(0), Yp(1));
+        ctx.lineTo(X(1), Yp(1));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // Axes
+        ctx.strokeStyle = '#94a39a';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(L, T + ph);
+        ctx.lineTo(L + pw, T + ph);
+        ctx.moveTo(L, T);
+        ctx.lineTo(L, T + ph);
+        ctx.stroke();
+
+        // Graduations X
+        ctx.font = '11px Inter, sans-serif';
+        ctx.fillStyle = '#5b6b60';
+        ctx.textAlign = 'center';
+        for (let i = 0; i <= 4; i++) {
+          const v = i * 0.25;
+          ctx.fillText(fmtTick(v, 0.25), X(v), T + ph + 14);
+        }
+
+        // Premiers chiffres au-dessus de la courbe
+        ctx.fillStyle = '#5b6b60';
+        ctx.font = '600 10.5px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('Premier chiffre de X :', L, 11);
+        ctx.strokeStyle = 'rgba(120, 130, 125, 0.45)';
+        for (let d = 1; d <= 9; d++) {
+          const a = X(Math.log10(d)), b = X(Math.log10(d + 1));
+          if (d > 1) {
+            ctx.beginPath();
+            ctx.moveTo(a, T - 13);
+            ctx.lineTo(a, T);
+            ctx.stroke();
+          }
+          ctx.fillStyle = '#143c1e';
+          ctx.font = '700 11.5px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(d), (a + b) / 2, T - 4);
+        }
+
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#14301e';
+        ctx.fillText('M = partie fractionnaire log₁₀ X', L + pw, T + ph + 28);
+        drawYAxisTitle(ctx, 'densité de M', T, ph);
+      }
+
+      /** Graphique 3 : Loi du premier chiffre de X. */
+      function drawD() {
+        const { ctx, w, h } = setupCanvas($('cD'));
+        const L = 56, R = 16, T = 14, B = 32, pw = w - L - R, ph = h - T - B;
+        const { mu, sig } = getLog10Params();
+        const pMod = modelDigitProbs(mu, sig);
+        const fObs = st.totalBalls > 0 ? st.digitCounts.map(c => c / st.totalBalls) : null;
+
+        const peak = Math.max(0.32, ...pMod, ...(fObs || [0]));
+        const pctSteps = [0.05, 0.1, 0.2, 0.25];
+        let yStep = 0.1;
+        for (const s of pctSteps) {
+          if (peak / s <= 5.5) { yStep = s; break; }
+        }
+        const ymax = Math.min(1.05, Math.max(0.35, Math.ceil((peak * 1.12) / yStep) * yStep));
+        const Yp = v => T + ph - (v / ymax) * ph;
+        const bw = pw / 9;
+
+        // Grille horizontale
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        for (let v = 0; v <= ymax + yStep * 0.01; v += yStep) {
+          if (v > 1.001) continue;
+          const py = Yp(v);
+          ctx.strokeStyle = '#e8eee6';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(L, py);
+          ctx.lineTo(L + pw, py);
+          ctx.stroke();
+          ctx.fillStyle = '#5b6b60';
+          ctx.fillText(Math.round(v * 100) + ' %', L - 6, py + 4);
+        }
+
+        // Barres bleues observées + cadres verts modèle
+        for (let d = 1; d <= 9; d++) {
+          const x0 = L + (d - 1) * bw;
+          if (fObs) {
+            const yObs = Yp(fObs[d - 1]);
+            ctx.fillStyle = '#2f6fbfcc';
+            ctx.fillRect(x0 + bw * 0.2, yObs, bw * 0.6, T + ph - yObs);
+          }
+          const yMod = Yp(pMod[d - 1]);
+          ctx.strokeStyle = '#228b22';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x0 + bw * 0.16, yMod, bw * 0.68, T + ph - yMod);
+
+          ctx.fillStyle = '#14301e';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(d), x0 + bw * 0.5, T + ph + 14);
+        }
+
+        // Courbe et points rouges Benford
+        ctx.strokeStyle = '#cd5c5c';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let d = 1; d <= 9; d++) {
+          const cx = L + (d - 0.5) * bw, cy = Yp(BENF[d - 1]);
+          d > 1 ? ctx.lineTo(cx, cy) : ctx.moveTo(cx, cy);
+        }
+        ctx.stroke();
+        for (let d = 1; d <= 9; d++) {
+          ctx.fillStyle = '#cd5c5c';
+          ctx.beginPath();
+          ctx.arc(L + (d - 0.5) * bw, Yp(BENF[d - 1]), 4.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Axes
+        ctx.strokeStyle = '#94a39a';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(L, T + ph);
+        ctx.lineTo(L + pw, T + ph);
+        ctx.moveTo(L, T);
+        ctx.lineTo(L, T + ph);
+        ctx.stroke();
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#14301e';
+        ctx.fillText('premier chiffre de X', L + pw, T + ph + 28);
+        drawYAxisTitle(ctx, 'probabilité', T, ph);
+      }
+
+      // =========================================================================
+      // 6. LÉGENDES, RÉSULTATS & CONTRÔLES UI
+      // =========================================================================
+      function updateLegends() {
+        const { mu, sig } = getLog10Params();
+        const [k0, k1] = kRange(mu, sig);
+        const active = [];
+        for (let k = k0; k <= k1; k++) {
+          const m = sliceMass(k, mu, sig);
+          if (m >= 0.005) active.push({ k, m });
+        }
+        if (!active.length) active.push({ k: Math.floor(mu), m: 1 });
+        let shown = active.slice(), extra = 0;
+        if (shown.length > 6) {
+          shown.sort((a, b) => b.m - a.m);
+          extra = shown.length - 6;
+          shown = shown.slice(0, 6).sort((a, b) => a.k - b.k);
+        }
+        const items = shown.map(o =>
+          '<span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="w-2.5 h-2.5 rounded-sm inline-block border border-black/15" style="background:' + sliceColor(o.k) + 'cc"></span>' + fmtDecade(o.k) + '</span>'
+        ).join('') + (extra ? '<span>(+' + extra + ' autres)</span>' : '');
+
+        const html = '<span class="font-bold text-[#143c1e] mr-0.5">Ordre de grandeur de X :</span>' + items;
+        $('legK').innerHTML = html;
+        $('legM').innerHTML = html;
+      }
+
+      function updateResultsUI() {
+        const { mu, sig } = getLog10Params();
+        const pMod = modelDigitProbs(mu, sig);
+        const devMod = Math.max(...pMod.map((v, i) => Math.abs(v - BENF[i])));
+
+        $('o-N').textContent = st.totalBalls.toLocaleString('fr-FR');
+        $('o-mu').textContent = fmt(mu, 2);
+        $('o-sig').textContent = fmt(sig, 2);
+        $('o-dev-mod').textContent = fmt(devMod * 100, 1) + ' pts';
+
+        if (st.totalBalls > 0) {
+          const fObs = st.digitCounts.map(c => c / st.totalBalls);
+          const devObs = Math.max(...fObs.map((v, i) => Math.abs(v - BENF[i])));
+          $('o-p1-obs').textContent = fmt(fObs[0] * 100, 1) + ' %';
+          $('o-dev-obs').textContent = fmt(devObs * 100, 1) + ' pts';
+        } else {
+          $('o-p1-obs').textContent = '—';
+          $('o-dev-obs').textContent = '—';
+        }
+
+        const v = $('verdict');
+        if (devMod < 0.01) {
+          v.className = 'p-2.5 rounded-xl text-xs border bg-[#ecf8ec] border-[#b5dfb5] text-[#143c1e]';
+          v.innerHTML = '<b>Benford :</b> σ est assez grand pour que les tranches colorées se compensent sur [0 ; 1[. L’empilement devient plat.';
+        } else if (devMod < 0.04) {
+          v.className = 'p-2.5 rounded-xl text-xs border bg-[#fff8eb] border-[#f1d49b] text-[#7a4f10]';
+          v.innerHTML = '<b>Presque Benford :</b> l’empilement ondule encore légèrement.';
+        } else {
+          v.className = 'p-2.5 rounded-xl text-xs border bg-[#fcefef] border-[#eebcbc] text-[#7a1e1e]';
+          const dmax = pMod.indexOf(Math.max(...pMod)) + 1;
+          v.innerHTML = '<b>Pas Benford :</b> la cloche est trop étroite (σ = ' + fmt(sig, 2) + '), une ou deux tranches dominent. Chiffre dominant : ' + dmax + ' (' + Math.round(pMod[dmax - 1] * 100) + ' %).';
+        }
+      }
+
+      function updateMorphButtons() {
+        const isLin = st.targetMorph >= 0.5;
+        $('btn-mode-galton').className = isLin
+          ? 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all text-[#5b6b60] hover:text-[#143c1e]'
+          : 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-[#228b22] text-white shadow-sm';
+        $('btn-mode-kapteyn').className = isLin
+          ? 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all bg-[#008080] text-white shadow-sm'
+          : 'px-2.5 py-1 rounded-lg text-xs font-semibold transition-all text-[#5b6b60] hover:text-[#143c1e]';
+      }
+
+      function updateStatusBadge() {
+        if (st.running) {
+          $('status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+          $('status-text').textContent = 'Flux continu';
+        } else if (st.queuedBalls > 0 || st.balls.length > 0) {
+          $('status-dot').className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+          $('status-text').textContent = 'Chute en cours';
+        } else {
+          $('status-dot').className = 'w-2 h-2 rounded-full bg-slate-400';
+          $('status-text').textContent = 'En pause';
+        }
+      }
+
+      function updateToggleBtn() {
+        const btn = $('btn-toggle');
+        if (st.running) {
+          btn.classList.remove('bg-[#228b22]', 'hover:bg-[#1c751c]');
+          btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+          $('btn-toggle-label').textContent = 'Mettre en pause';
+          $('icon-play').classList.add('hidden');
+          $('icon-pause').classList.remove('hidden');
+        } else {
+          btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+          btn.classList.add('bg-[#228b22]', 'hover:bg-[#1c751c]');
+          $('btn-toggle-label').textContent = 'Lancer le flux continu';
+          $('icon-play').classList.remove('hidden');
+          $('icon-pause').classList.add('hidden');
+        }
+        updateStatusBadge();
+      }
+
+      function syncSliderLabels() {
+        $('v-n').textContent = String(st.n);
+        $('v-u').textContent = '×' + fmt(st.u, 3);
+        $('v-d').textContent = '×' + fmt(st.d, 3);
+        $('v-p').textContent = fmt(st.p, 2);
+        $('v-c').textContent = 'c = ' + fmt(Math.pow(10, st.logc), 2);
+        $('v-speed').textContent = getSpeedLabel(st.speed);
+      }
+
+      function resetSim() {
+        st.balls = [];
+        st.popups = [];
+        st.lastBall = null;
+        st.queuedBalls = 0;
+        st.spawnTimer = 0;
+        st.bins = new Array(st.n + 1).fill(0);
+        st.totalBalls = 0;
+        st.mStacks = Array.from({ length: M_BINS }, () => ({}));
+        st.digitCounts = new Array(9).fill(0);
+
+        computeGeomK();
+        st.displayMaxDensityK = maxTheoDensityK() * 1.2;
+        syncSliderLabels();
+        updateLastBallBadge();
+        updateLegends();
+        updateResultsUI();
+        updateStatusBadge();
+        drawKapteyn();
+        drawM();
+        drawD();
+      }
+
+      function applyPreset(n, u, d, p, x0) {
+        st.n = n;
+        st.u = u;
+        st.d = d;
+        st.p = p;
+        st.x0 = x0;
+        st.logc = 0;
+        $('s-n').value = String(n);
+        $('s-u').value = String(u);
+        $('s-d').value = String(d);
+        $('s-p').value = String(p);
+        $('s-c').value = '0';
+        resetSim();
+      }
+
+      // =========================================================================
+      // 7. ÉVÉNEMENTS UTILISATEUR
+      // =========================================================================
+      $('btn-mode-galton').addEventListener('click', () => {
+        st.targetMorph = 0.0;
+        updateMorphButtons();
+      });
+
+      $('btn-mode-kapteyn').addEventListener('click', () => {
+        st.targetMorph = 1.0;
+        updateMorphButtons();
+      });
+
+      $('slider-morph').addEventListener('input', e => {
+        const v = parseInt(e.target.value, 10) / 100;
+        st.morph = v;
+        st.targetMorph = v;
+        updateMorphButtons();
+      });
+
+      $('btn-toggle').addEventListener('click', () => {
+        ensureAudio();
+        st.running = !st.running;
+        updateToggleBtn();
+      });
+
+      $('btn-add-1').addEventListener('click', () => {
+        ensureAudio();
+        spawnBall();
+        updateStatusBadge();
+      });
+
+      $('btn-add-50').addEventListener('click', () => {
+        ensureAudio();
+        st.queuedBalls += 50;
+        updateStatusBadge();
+      });
+
+      $('btn-add-500').addEventListener('click', () => {
+        ensureAudio();
+        st.queuedBalls += 500;
+        updateStatusBadge();
+      });
+
+      $('btn-reset').addEventListener('click', () => {
+        st.running = false;
+        updateToggleBtn();
+        resetSim();
+      });
+
+      $('chk-sound').addEventListener('change', e => {
+        st.soundEnabled = e.target.checked;
+        if (st.soundEnabled) ensureAudio();
+        syncVolume();
+      });
+
+      $('slider-volume').addEventListener('input', e => {
+        st.volume = parseInt(e.target.value, 10) / 100;
+        if (st.volume > 0 && !st.soundEnabled) {
+          st.soundEnabled = true;
+          $('chk-sound').checked = true;
+        }
+        if (st.soundEnabled) ensureAudio();
+        syncVolume();
+      });
+
+      $('p-horm').addEventListener('click', () => applyPreset(16, 1.133, 0.883, 0.50, Math.E));
+      $('p-mid').addEventListener('click', () => applyPreset(20, 1.165, 0.855, 0.50, 10));
+      $('p-benf').addEventListener('click', () => applyPreset(34, 1.44, 0.70, 0.50, 10));
+
+      $('s-n').addEventListener('input', e => {
+        st.n = parseInt(e.target.value, 10);
+        resetSim();
+      });
+
+      $('s-u').addEventListener('input', e => {
+        st.u = parseFloat(e.target.value);
+        if (st.d > st.u - 0.04) {
+          st.d = Math.max(0.60, Number((st.u - 0.04).toFixed(3)));
+          $('s-d').value = String(st.d);
+        }
+        resetSim();
+      });
+
+      $('s-d').addEventListener('input', e => {
+        st.d = parseFloat(e.target.value);
+        if (st.u < st.d + 0.04) {
+          st.u = Math.min(1.65, Number((st.d + 0.04).toFixed(3)));
+          $('s-u').value = String(st.u);
+        }
+        resetSim();
+      });
+
+      $('btn-inv-u').addEventListener('click', () => {
+        st.d = Math.max(0.60, Math.min(1.15, Number((1 / st.u).toFixed(3))));
+        $('s-d').value = String(st.d);
+        resetSim();
+      });
+
+      $('s-p').addEventListener('input', e => {
+        st.p = parseFloat(e.target.value);
+        resetSim();
+      });
+
+      $('s-c').addEventListener('input', e => {
+        st.logc = parseFloat(e.target.value);
+        resetSim();
+      });
+
+      $('s-speed').addEventListener('input', e => {
+        st.speed = parseInt(e.target.value, 10);
+        $('v-speed').textContent = getSpeedLabel(st.speed);
+      });
+
+      window.addEventListener('resize', () => {
+        computeGeomK();
+        drawKapteyn();
+        drawM();
+        drawD();
+      });
+
+      // =========================================================================
+      // 8. BOUCLE D'ANIMATION PRINCIPALE
+      // =========================================================================
+      function animate(ts) {
+        try {
+          if (!st.lastTimestamp) st.lastTimestamp = ts;
+          const dt = Math.min(0.05, (ts - st.lastTimestamp) / 1000);
+          st.lastTimestamp = ts;
+
+          stepSim(dt);
+          drawKapteyn();
+        } catch (err) {
+          console.error('Erreur animation :', err);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      function init() {
+        syncVolume();
+        updateMorphButtons();
+        resetSim();
+        requestAnimationFrame(animate);
+      }
+
+      if (document.readyState === 'complete') {
+        init();
+      } else {
+        window.addEventListener('load', init);
+      }
+    })();
+  </script>
+</body>
+</html>
