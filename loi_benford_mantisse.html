@@ -12,25 +12,50 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.45;padding:18px 16px 32px}
   .wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-  header h1{font-size:clamp(1.2rem,2.2vw,1.6rem);color:var(--dark)}
+  header h1{font-size:clamp(1.2rem,2.2vw,1.6rem);color:var(--dark);margin-bottom:4px}
   header p{font-size:.92rem;color:var(--muted);max-width:980px}
   .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:14px;align-items:start}
   @media(max-width:980px){.grid{grid-template-columns:1fr}}
   .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(20,48,30,.05)}
-  .card h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+  .card h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .card-head h2{margin-bottom:0}
+  .card-head .head-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .card-head label.chk{margin-bottom:0;font-size:.78rem;color:var(--muted)}
+  .btn-mini{font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:7px;border:1px solid var(--border);background:#f6f9f5;color:var(--muted);cursor:pointer;line-height:1.3}
+  .btn-mini:hover{background:var(--light);color:var(--dark);border-color:#b9dcb9}
+  .btn-mini.active{background:#ecf8ec;color:var(--green);border-color:#a7d7a7}
+  .zoom-val{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.7rem;color:var(--muted);min-width:38px;text-align:center}
+  .hidden{display:none!important}
+  .legend{display:flex;flex-wrap:wrap;align-items:center;gap:5px 9px;margin-bottom:8px;padding:6px 9px;border-radius:9px;background:#f8faf7;border:1px solid #e9efe7;font-size:.73rem;color:var(--muted)}
+  .legend .leg-title{font-weight:700;color:var(--dark);margin-right:2px}
+  .legend .leg-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .legend .swatch{width:10px;height:10px;border-radius:3px;display:inline-block;border:1px solid rgba(20,60,30,.18);flex-shrink:0}
+  .legend .swatch-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .legend .swatch-diam{width:8px;height:8px;transform:rotate(45deg);display:inline-block;flex-shrink:0}
   canvas{display:block;width:100%;border-radius:10px;background:#fcfdfb;border:1px solid #eef2ec}
-  .cap{font-size:.8rem;color:var(--muted);margin-top:6px}
+  canvas.pannable{cursor:grab;touch-action:none}
+  canvas.pannable.dragging{cursor:grabbing}
+  .cap{font-size:.79rem;color:var(--muted);margin-top:6px}
   .ctrl{margin-bottom:12px}
-  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem;font-weight:600}
-  .ctrl .val{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--green);background:var(--light);padding:1px 8px;border-radius:999px;font-size:.85rem}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem;font-weight:600;gap:8px}
+  .ctrl .val{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--green);background:var(--light);padding:1px 8px;border-radius:999px;font-size:.85rem;white-space:nowrap}
   .ctrl .sub{font-size:.76rem;color:var(--muted);margin-top:2px}
-  input[type=range]{width:100%;accent-color:var(--green)}
-  .btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-  button{font:inherit;font-size:.8rem;font-weight:600;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:#f3f7f2;color:var(--dark);cursor:pointer}
+  .param-split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(158px,1fr);gap:10px;align-items:stretch;margin-bottom:12px}
+  @media(max-width:520px){.param-split{grid-template-columns:1fr}}
+  .log-box{background:#f6f9f5;border:1px solid var(--border);border-radius:11px;padding:9px 10px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+  .log-box .lb-title{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+  .log-box .lb-item{display:flex;flex-direction:column;gap:1px}
+  .log-box .lb-lbl{font-size:.72rem;color:var(--muted)}
+  .log-box .lb-val{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88rem;font-weight:700;color:var(--dark);white-space:nowrap}
+  input[type=range]{width:100%;accent-color:var(--green);cursor:pointer}
+  .btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
+  button{font:inherit;font-size:.8rem;font-weight:600;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:#f3f7f2;color:var(--dark);cursor:pointer;transition:background .12s,border-color .12s}
   button:hover{background:var(--light);border-color:#b9dcb9}
   button.primary{background:var(--green);color:#fff;border-color:var(--green)}
   button.primary:hover{background:#1c751c}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  @media(max-width:480px){.stats{grid-template-columns:1fr}}
   .stat{background:#f6f9f5;border:1px solid var(--border);border-radius:10px;padding:7px 9px}
   .stat .l{font-size:.7rem;color:var(--muted)}
   .stat .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:1rem}
@@ -39,55 +64,131 @@
   .mid{background:#fff8eb;border-color:#f1d49b}
   .no{background:#fcefef;border-color:#eebcbc}
   ul.tips{font-size:.8rem;color:var(--muted);padding-left:18px;margin-top:8px}
-  ul.tips li{margin-bottom:3px}
-  label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;margin-bottom:6px;cursor:pointer}
+  ul.tips li{margin-bottom:4px}
+  label.chk{display:flex;gap:6px;align-items:center;font-size:.84rem;margin-bottom:0;cursor:pointer;user-select:none}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Loi de Benford : découper et empiler les tranches</h1>
-    <p>On suppose que Y = log<sub>10</sub> X suit une loi normale 𝒩(μ ; σ²), c'est-à-dire que X est log-normale. La densité de Y est découpée en tranches de largeur 1 ; les tranches empilées sur [0 ; 1[ donnent la densité de la mantisse M, qui fixe le premier chiffre de X. Si M est uniforme, le premier chiffre suit la loi de Benford.</p>
+    <p>On suppose que Y = log<sub>10</sub> X suit une loi normale 𝒩(μ ; σ²), c'est-à-dire que X suit une loi log-normale. La densité de Y est découpée en tranches de largeur 1 ; les tranches empilées sur [0 ; 1[ donnent la densité de la partie fractionnaire de log<sub>10</sub>(X), <strong>M = Y − ⌊Y⌋ = log<sub>10</sub>(X) mod 1</strong>, qui fixe le premier chiffre de X. Si M est uniforme sur [0 ; 1[, le premier chiffre suit la loi de Benford.</p>
   </header>
 
   <div class="grid">
+    <!-- Colonne gauche : les 4 graphiques interactifs -->
     <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- Graphique 1 : Densité log-normale de X -->
       <section class="card">
-        <h2>1. Densité de Y = log<sub>10</sub> X, découpée en tranches [k ; k+1[</h2>
-        <canvas id="cY" height="230"></canvas>
-        <p class="cap">Chaque couleur est une tranche. En haut, la valeur de X correspondant aux frontières entières (10<sup>k</sup>). Les axes s'adaptent automatiquement à μ et σ.</p>
+        <div class="card-head">
+          <h2>1. Densité log-normale : X ~ LN(μ, σ²) (échelle linéaire, 0 à q<sub>95</sub>)</h2>
+          <div class="head-actions">
+            <button type="button" class="btn-mini" id="zOutX" title="Dézoomer horizontalement">−</button>
+            <span class="zoom-val" id="zValX">100 %</span>
+            <button type="button" class="btn-mini" id="zInX" title="Zoomer horizontalement">+</button>
+            <button type="button" class="btn-mini" id="rX" title="Recentrer et réinitialiser le zoom (ou double-clic)">Recentrer</button>
+            <label class="chk"><input type="checkbox" id="chkX" checked> afficher</label>
+          </div>
+        </div>
+        <div id="wrapX">
+          <div class="legend" id="legX"></div>
+          <canvas id="cX" class="pannable" height="210"></canvas>
+          <p class="cap">Mêmes tranches [10<sup>k</sup> ; 10<sup>k+1</sup>[ qu'en dessous. Trait rouge : médiane (10<sup>μ</sup>) · Trait orange : moyenne. Molette ou −/+ : zoom horizontal · Glisser : translater · Double-clic : recentrer.</p>
+        </div>
       </section>
+
+      <!-- Graphique 2 : Densité de Y = log10(X) -->
       <section class="card">
-        <h2>2. Tranches empilées sur [0 ; 1[ : densité de la mantisse M</h2>
-        <canvas id="cM" height="260"></canvas>
-        <p class="cap">f<sub>M</sub>(m) = Σ<sub>k</sub> f<sub>Y</sub>(k + m). Pointillés : densité uniforme (1). Traits gris et barre du bas : zones du premier chiffre, de largeur log<sub>10</sub>(1 + 1/d).</p>
+        <div class="card-head">
+          <h2>2. Densité de Y = log<sub>10</sub> X ~ 𝒩(μ, σ²), découpée en tranches [k ; k+1[</h2>
+          <div class="head-actions">
+            <button type="button" class="btn-mini" id="zOutY" title="Dézoomer horizontalement">−</button>
+            <span class="zoom-val" id="zValY">100 %</span>
+            <button type="button" class="btn-mini" id="zInY" title="Zoomer horizontalement">+</button>
+            <button type="button" class="btn-mini" id="rY" title="Recentrer et réinitialiser le zoom (ou double-clic)">Recentrer</button>
+          </div>
+        </div>
+        <div class="legend" id="legY"></div>
+        <canvas id="cY" class="pannable" height="230"></canvas>
+        <p class="cap">Chaque couleur correspond à un ordre de grandeur [10<sup>k</sup> ; 10<sup>k+1</sup>[. En haut, la valeur de X aux frontières entières. Molette ou −/+ : zoom horizontal · Glisser : translater · Double-clic : recentrer.</p>
       </section>
+
+      <!-- Graphique 3 : Tranches empilées sur [0 ; 1[ (Partie fractionnaire M) -->
       <section class="card">
-        <h2>3. Loi du premier chiffre : modèle, Benford et échantillon simulé</h2>
-        <canvas id="cD" height="230"></canvas>
-        <p class="cap">Barres vertes : probabilité donnée par le modèle (aire de f<sub>M</sub> sur chaque zone). Points rouges : loi de Benford. Losanges bleus : fréquences dans un échantillon simulé de N individus.</p>
+        <div class="card-head">
+          <h2>3. Tranches empilées sur [0 ; 1[ : densité de la partie fractionnaire M = Y − ⌊Y⌋ = log<sub>10</sub>(X) mod 1</h2>
+          <div class="head-actions">
+            <button type="button" class="btn-mini" id="rM" title="Recentrer (ou double-clic)">Recentrer</button>
+          </div>
+        </div>
+        <div class="legend" id="legM"></div>
+        <canvas id="cM" class="pannable" height="260"></canvas>
+        <p class="cap">f<sub>M</sub>(m) = Σ<sub>k</sub> f<sub>Y</sub>(k + m) pour M = Y − ⌊Y⌋ = log<sub>10</sub>(X) mod 1. Pointillés : densité uniforme (1). En haut : zones du premier chiffre de X, de largeur log<sub>10</sub>(1 + 1/d). Glisser : translater.</p>
       </section>
+
+      <!-- Graphique 4 : Loi du premier chiffre de X -->
+      <section class="card">
+        <div class="card-head">
+          <h2>4. Loi du premier chiffre de X : modèle, Benford et échantillon simulé</h2>
+          <div class="head-actions">
+            <button type="button" class="btn-mini" id="rD" title="Recentrer (ou double-clic)">Recentrer</button>
+          </div>
+        </div>
+        <div class="legend" id="legD">
+          <span class="leg-title">Légende :</span>
+          <span class="leg-item"><span class="swatch" style="background:#5fae5fcc"></span>Modèle théorique</span>
+          <span class="leg-item"><span class="swatch-dot" style="background:#cd5c5c"></span>Loi de Benford</span>
+          <span class="leg-item"><span class="swatch-diam" style="background:#2f6fbf"></span>Échantillon simulé (N)</span>
+        </div>
+        <canvas id="cD" class="pannable" height="230"></canvas>
+        <p class="cap">Barres vertes : probabilité donnée par le modèle (aire de f<sub>M</sub> sur chaque zone). Points rouges : loi de Benford. Losanges bleus : fréquences dans un échantillon simulé de N individus. Glisser : translater.</p>
+      </section>
+
     </div>
 
+    <!-- Colonne droite : Contrôles & Résultats -->
     <aside style="display:flex;flex-direction:column;gap:14px">
       <section class="card">
         <h2>Exemples</h2>
         <div class="btns">
-          <button id="pHorm">Hormone (exercice 7.5)</button>
-          <button id="pBact">Charge bactérienne</button>
-          <button id="pLarge">Cloche large (σ = 0,6)</button>
+          <button type="button" id="pHorm">Hormone (exercice 7.5)</button>
+          <button type="button" id="pBact">Charge bactérienne</button>
+          <button type="button" id="pLarge">Cloche large (σ = 0,6)</button>
         </div>
 
-        <div class="ctrl">
-          <div class="row"><span>μ = moyenne de log<sub>10</sub> X</span><span class="val" id="vMu"></span></div>
-          <input type="range" id="sMu" min="-2" max="5" step="0.001">
-          <div class="sub" id="tMu"></div>
+        <!-- Contrôle de μ_X et σ²_X à gauche, affichage de μ_log10X, σ²_log10X et σ_log10X à droite -->
+        <div class="param-split">
+          <div>
+            <div class="ctrl">
+              <div class="row"><span>Moyenne de X</span><span class="val">μ<sub>X</sub> = <span id="vMeanX"></span></span></div>
+              <input type="range" id="sMeanX" min="-2" max="6" step="0.005">
+              <div class="sub" id="tMeanX"></div>
+            </div>
+            <div class="ctrl" style="margin-bottom:0">
+              <div class="row"><span>Variance de X</span><span class="val">σ²<sub>X</sub> = <span id="vVarX"></span></span></div>
+              <input type="range" id="sVarX" min="-4" max="12" step="0.01">
+              <div class="sub" id="tVarX"></div>
+            </div>
+          </div>
+
+          <div class="log-box" aria-live="polite">
+            <div class="lb-title">Sur Y = log<sub>10</sub> X ~ 𝒩(μ, σ²)</div>
+            <div class="lb-item">
+              <span class="lb-lbl">Moyenne</span>
+              <span class="lb-val">μ = <span id="oLogMean"></span></span>
+            </div>
+            <div class="lb-item">
+              <span class="lb-lbl">Variance</span>
+              <span class="lb-val">σ² = <span id="oLogVar"></span></span>
+            </div>
+            <div class="lb-item">
+              <span class="lb-lbl">Écart-type</span>
+              <span class="lb-val">σ = <span id="oLogSd"></span></span>
+            </div>
+          </div>
         </div>
-        <div class="ctrl">
-          <div class="row"><span>σ = écart-type de log<sub>10</sub> X</span><span class="val" id="vSig"></span></div>
-          <input type="range" id="sSig" min="0.05" max="1.5" step="0.001">
-          <div class="sub" id="tSig"></div>
-        </div>
+
         <div class="ctrl">
           <div class="row"><span>Changement d'unité : X × c</span><span class="val" id="vC"></span></div>
           <input type="range" id="sC" min="-1" max="1" step="0.01" value="0">
@@ -98,14 +199,14 @@
           <input type="range" id="sT" min="0" max="100" step="1" value="100">
           <div class="sub">À 0 %, aucune tranche n'est encore empilée ; à 100 %, toutes le sont.</div>
         </div>
-        <div class="btns"><button class="primary" id="bAnim">▶ Animer l'empilement</button></div>
+        <div class="btns"><button type="button" class="primary" id="bAnim">▶ Animer l'empilement</button></div>
 
         <div class="ctrl">
           <div class="row"><span>Taille N de l'échantillon simulé</span><span class="val" id="vN"></span></div>
           <input type="range" id="sN" min="1" max="4" step="0.05" value="3">
         </div>
         <div class="btns">
-          <button id="bSamp">Nouveau tirage</button>
+          <button type="button" id="bSamp">Nouveau tirage</button>
           <label class="chk"><input type="checkbox" id="chkSamp" checked> afficher l'échantillon</label>
         </div>
       </section>
@@ -119,8 +220,8 @@
         </div>
         <div class="verdict" id="verdict"></div>
         <ul class="tips">
-          <li>Augmentez σ : dès σ ≈ 0,5 (valeurs étalées sur environ un ordre de grandeur de part et d'autre de la médiane), l'empilement devient plat.</li>
-          <li>Avec σ petit, déplacez μ ou changez d'unité : le chiffre qui domine change. Avec σ grand, plus rien ne bouge : c'est l'invariance d'échelle de la loi de Benford.</li>
+          <li>Augmentez la variance σ²<sub>X</sub> (à μ<sub>X</sub> fixé) : dès que σ ≈ 0,5 (valeurs étalées sur environ un ordre de grandeur de part et d'autre de la médiane), l'empilement devient plat.</li>
+          <li>Avec σ petit, faites varier μ<sub>X</sub> ou changez d'unité : le chiffre qui domine change. Avec σ grand, plus rien ne bouge : c'est l'invariance d'échelle de la loi de Benford.</li>
           <li>Avec un petit échantillon (N = 10 ou 30), les fréquences observées s'écartent beaucoup des probabilités : il faut des centaines de valeurs pour tester Benford.</li>
         </ul>
       </section>
@@ -132,71 +233,159 @@
 (function(){
 'use strict';
 
-// Palettes et constantes de la loi de Benford
+// =========================================================================
+// CONSTANTES & ÉTAT GLOBAL
+// =========================================================================
 const COLS=['#2e8b57','#008080','#da9132','#cd5c5c','#6a8f2f','#3f7fbf','#b8742a','#8e5aa8','#4a9d8f','#c0504d'];
-const DIGCOLS=['#eef1ec','#dfe5dc','#eef1ec','#dfe5dc','#eef1ec','#dfe5dc','#eef1ec','#dfe5dc','#eef1ec'];
 const BENF=[1,2,3,4,5,6,7,8,9].map(d=>Math.log10(1+1/d));
 
-// État global
-const st={mu:Math.LOG10E, sig:0.5*Math.LOG10E, logc:0, t:1, N:1000, sample:[], show:true, anim:null};
+const st={
+  mu:Math.LOG10E, sig:0.5*Math.LOG10E,
+  meanX:Math.exp(1 + 0.125), varX:Math.exp(2.25)*Math.expm1(0.25),
+  logc:0, t:1, N:1000,
+  sample:[], show:true, showX:true, anim:null,
+  pan:{
+    X:{dx:0,dy:0,zx:1},
+    Y:{dx:0,dy:0,zx:1},
+    M:{dx:0,dy:0,zx:1},
+    D:{dx:0,dy:0,zx:1}
+  },
+  plotBox:{
+    X:{L:72,pw:1,ph:1},
+    Y:{L:58,pw:1,ph:1},
+    M:{L:58,pw:1,ph:1},
+    D:{L:58,pw:1,ph:1}
+  }
+};
 
 const $=id=>document.getElementById(id);
-const sMu=$('sMu'),sSig=$('sSig'),sC=$('sC'),sT=$('sT'),sN=$('sN');
+const sMeanX=$('sMeanX'), sVarX=$('sVarX'), sC=$('sC'), sT=$('sT'), sN=$('sN');
 
-// Formatage des nombres (virgule française et signe moins typographique)
+// Conversion exacte (E[X], Var(X)) <-> (mu, sigma) de log10(X)
+function syncLogFromX(){
+  const mX=Math.max(1e-6, st.meanX);
+  const vX=Math.max(1e-10, st.varX);
+  const sigLn2=Math.log1p(vX/(mX*mX));
+  const sigLn=Math.sqrt(sigLn2);
+  const muLn=Math.log(mX)-0.5*sigLn2;
+  st.sig=Math.max(0.03, Math.min(2.0, sigLn/Math.LN10));
+  st.mu=muLn/Math.LN10;
+}
+
+function syncXFromLog(){
+  const muLn=st.mu*Math.LN10;
+  const sigLn=st.sig*Math.LN10;
+  const sigLn2=sigLn*sigLn;
+  st.meanX=Math.exp(muLn+0.5*sigLn2);
+  st.varX=st.meanX*st.meanX*Math.expm1(sigLn2);
+  sMeanX.value=Math.max(-2, Math.min(6, Math.log10(st.meanX)));
+  sVarX.value=Math.max(-4, Math.min(12, Math.log10(Math.max(1e-4, st.varX))));
+}
+
+// =========================================================================
+// OUTILS DE FORMATAGE & FONCTIONS MATHÉMATIQUES
+// =========================================================================
+function sliceColor(k){
+  return COLS[((k%COLS.length)+COLS.length)%COLS.length];
+}
+
 function fmt(x,d){
-  const clean=Math.abs(x)<1e-10?0:x;
+  if(!Number.isFinite(x)) return '—';
+  const clean=Math.abs(x)<1e-12?0:x;
   return clean.toFixed(d).replace('.',',').replace('-','−');
 }
+
 function fmtX(x){
-  if(x>=1e5||x<1e-2) return x.toExponential(2).replace('.',',').replace('e+','×10^').replace('e-','×10^−');
-  const d=x>=100?0:(x>=10?1:2);
-  return fmt(x,d).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  if(!Number.isFinite(x)) return '—';
+  if(x===0) return '0';
+  const ax=Math.abs(x);
+  if(ax>=1e5||ax<1e-2){
+    return x.toExponential(2).replace('.',',').replace('e+','×10^').replace('e-','×10^−').replace('-','−');
+  }
+  const d=ax>=100?0:(ax>=10?1:2);
+  return fmt(x,d).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f');
 }
+
+function fmtDecade(k){
+  if(k>=-2 && k<=3){
+    const a=Math.pow(10,k), b=Math.pow(10,k+1);
+    const fa=k<0?fmt(a,-k):String(Math.round(a)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f');
+    const fb=(k+1)<0?fmt(b,-(k+1)):String(Math.round(b)).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f');
+    return '['+fa+' ; '+fb+'[';
+  }
+  const sk=String(k).replace('-','−');
+  const sk1=String(k+1).replace('-','−');
+  return '[10^'+sk+' ; 10^'+sk1+'[';
+}
+
+function niceStep(raw){
+  if(!Number.isFinite(raw)||raw<=0) return 1;
+  const pow=Math.pow(10,Math.floor(Math.log10(raw)));
+  const n=raw/pow;
+  if(n<=1) return 1*pow;
+  if(n<=2) return 2*pow;
+  if(n<=2.5) return 2.5*pow;
+  if(n<=5) return 5*pow;
+  return 10*pow;
+}
+
 function fmtTick(v,step){
-  const dec=step<0.1?2:(step<1?1:0);
-  return fmt(v,dec);
+  if(Math.abs(v)<step*1e-6) return '0';
+  const av=Math.abs(v);
+  if(av>=1e5 || (av>0 && av<1e-3)){
+    return v.toExponential(1).replace('.',',').replace('e+','e').replace('e-','e−').replace('-','−');
+  }
+  const dec=Math.max(0, Math.min(4, Math.ceil(-Math.log10(step)+1e-9)));
+  return fmt(v,dec).replace(/,0+$/,'').replace(/(,\d*?[1-9])0+$/,'$1');
 }
 
-// Choisit un pas de graduation "propre" (1, 2, 2.5 ou 5 × 10^k) adapté à l'amplitude
-function niceStep(rawStep){
-  if(rawStep<=0||!Number.isFinite(rawStep)) return 1;
-  const exp=Math.floor(Math.log10(rawStep));
-  const frac=rawStep/Math.pow(10,exp);
-  let nice=10;
-  if(frac<=1) nice=1;
-  else if(frac<=2) nice=2;
-  else if(frac<=2.5) nice=2.5;
-  else if(frac<=5) nice=5;
-  return nice*Math.pow(10,exp);
-}
-
-// Fonctions de la loi normale
 function phi(z){return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI);}
-function Phi(z){ // Abramowitz-Stegun 7.1.26
+
+function Phi(z){
+  // Approximation d'Abramowitz-Stegun (7.1.26)
   const t=1/(1+0.3275911*Math.abs(z)/Math.SQRT2);
   const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z/2);
   return z>=0?0.5*(1+y):0.5*(1-y);
 }
+
 function muEff(){return st.mu+st.logc;}
 function fY(y){return phi((y-muEff())/st.sig)/st.sig;}
-function kRange(){const m=muEff(),s=st.sig;return [Math.floor(m-5*s)-1, Math.ceil(m+5*s)];}
+function fX(x){
+  if(x<=0) return 0;
+  return fY(Math.log10(x))/(x*Math.LN10);
+}
 
-// Probabilités théoriques des 9 premiers chiffres
+function kRange(){
+  const m=muEff(), s=st.sig;
+  return [Math.floor(m-5*s)-1, Math.ceil(m+5*s)];
+}
+
+function sliceMass(k){
+  return Phi((k+1-muEff())/st.sig)-Phi((k-muEff())/st.sig);
+}
+
 function digitProbs(){
-  const [k0,k1]=kRange(),m=muEff(),s=st.sig,p=new Array(9).fill(0);
-  for(let k=k0;k<=k1;k++) for(let d=1;d<=9;d++){
-    p[d-1]+=Phi((k+Math.log10(d+1)-m)/s)-Phi((k+Math.log10(d)-m)/s);
+  const [k0,k1]=kRange(), m=muEff(), s=st.sig, p=new Array(9).fill(0);
+  for(let k=k0;k<=k1;k++){
+    for(let d=1;d<=9;d++){
+      p[d-1]+=Phi((k+Math.log10(d+1)-m)/s)-Phi((k+Math.log10(d)-m)/s);
+    }
   }
   return p;
 }
 
-// Échantillonnage standardisé (réutilisé lors du changement de μ, σ ou c)
-function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function randn(){
+  let u=0,v=0;
+  while(!u) u=Math.random();
+  while(!v) v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
 function drawSample(){
   st.sample=[];
   for(let i=0;i<st.N;i++) st.sample.push(randn());
 }
+
 function sampleFreq(){
   const f=new Array(9).fill(0);
   for(const z of st.sample){
@@ -205,162 +394,409 @@ function sampleFreq(){
     const d=Math.floor(Math.pow(10,M)+1e-12);
     f[Math.min(9,Math.max(1,d))-1]++;
   }
-  return f.map(c=>c/st.sample.length);
+  return f.map(c=>c/Math.max(1,st.sample.length));
 }
 
-// Configuration haute résolution (DPR) d'un canvas
+// =========================================================================
+// LÉGENDES DYNAMIQUES (MÊME INTITULÉ "Ordre de grandeur de X :" PARTOUT)
+// =========================================================================
+function updateLegends(){
+  const [k0,k1]=kRange();
+  const active=[];
+  for(let k=k0;k<=k1;k++){
+    const m=sliceMass(k);
+    if(m>=0.005) active.push({k,m});
+  }
+  if(!active.length) active.push({k:Math.floor(muEff()), m:1});
+
+  let shown=active.slice();
+  let extra=0;
+  if(shown.length>7){
+    shown.sort((a,b)=>b.m-a.m);
+    extra=shown.length-7;
+    shown=shown.slice(0,7).sort((a,b)=>a.k-b.k);
+  }
+
+  const baseItems=shown.map(o=>
+    '<span class="leg-item"><span class="swatch" style="background:'+sliceColor(o.k)+'cc"></span>'+fmtDecade(o.k)+'</span>'
+  ).join('') + (extra?'<span class="leg-item">(+'+extra+' autres)</span>':'');
+
+  const massItems=shown.map(o=>
+    '<span class="leg-item"><span class="swatch" style="background:'+sliceColor(o.k)+'cc"></span>'+fmtDecade(o.k)+' ('+Math.round(o.m*100)+' %)</span>'
+  ).join('') + (extra?'<span class="leg-item">(+'+extra+' autres)</span>':'');
+
+  $('legX').innerHTML='<span class="leg-title">Ordre de grandeur de X :</span>'+baseItems;
+  $('legY').innerHTML='<span class="leg-title">Ordre de grandeur de X :</span>'+baseItems;
+  $('legM').innerHTML='<span class="leg-title">Ordre de grandeur de X :</span>'+massItems;
+}
+
+// =========================================================================
+// GESTION CANVAS (HAUTEUR LOGIQUE MÉMORISÉE POUR ÉVITER LE BUG DPR)
+// =========================================================================
 function setupCanvas(c){
   const dpr=window.devicePixelRatio||1;
-  // Mémorise la hauteur logique CSS une seule fois pour éviter qu'elle ne soit multipliée par dpr à chaque redessin
   if(!c.dataset.h) c.dataset.h=c.getAttribute('height')||'230';
-  const w=Math.max(1,c.clientWidth), h=parseInt(c.dataset.h,10);
+  const w=Math.max(240, c.clientWidth||600);
+  const h=parseInt(c.dataset.h,10);
   c.width=Math.round(w*dpr);
   c.height=Math.round(h*dpr);
   c.style.height=h+'px';
   const ctx=c.getContext('2d');
   ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
   return {ctx,w,h};
 }
 
+function drawYAxisTitle(ctx, text, T, ph){
+  ctx.save();
+  ctx.translate(13, T+ph/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.font='600 11px sans-serif';
+  ctx.fillStyle='#14301e';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+}
+
 // =========================================================================
-// GRAPHIQUE 1 : Densité de Y = log10(X) avec échelles X et Y adaptatives
+// GRAPHIQUE 1 : Densité log-normale de X (échelle linéaire, 0 à q95)
+// =========================================================================
+function drawX(){
+  if(!st.showX) return;
+  const {ctx,w,h}=setupCanvas($('cX'));
+  const L=72, R=16, T=26, B=32, pw=w-L-R, ph=h-T-B;
+  st.plotBox.X={L,pw,ph};
+  const m=muEff(), s=st.sig;
+
+  const xMax=Math.pow(10, m+1.64485*s);
+  const xMed=Math.pow(10, m);
+  const xMode=Math.pow(10, m-s*s*Math.LN10);
+  const xMean=Math.pow(10, m+0.5*s*s*Math.LN10);
+
+  const minSampleX=xMax/260;
+  let peakX=0;
+  if(xMode>=minSampleX && xMode<=xMax) peakX=fX(xMode);
+  for(let i=1;i<=260;i++){
+    const v=fX(xMax*i/260);
+    if(v>peakX) peakX=v;
+  }
+  if(!Number.isFinite(peakX)||peakX<=0) peakX=1;
+  const modeCollapsed=xMode<minSampleX;
+  const yStep=niceStep(peakX/4);
+  const ymax=Math.max(yStep, Math.ceil((peakX*1.12)/yStep)*yStep);
+
+  const {dx,dy,zx}=st.pan.X;
+  const xSpan=xMax/zx;
+  const x0=dx*xMax, x1=x0+xSpan;
+  const v0=dy*ymax, v1=v0+ymax;
+
+  const Xp=v=>L+((v-x0)/xSpan)*pw;
+  const Yp=v=>T+ph-((v-v0)/ymax)*ph;
+
+  // Grille horizontale + graduations Y
+  ctx.font='11px sans-serif';
+  ctx.textAlign='right';
+  const yStart=Math.ceil((v0-1e-12)/yStep)*yStep;
+  for(let v=yStart; v<=v1+yStep*0.01; v+=yStep){
+    const py=Yp(v);
+    if(py<T-1||py>T+ph+1) continue;
+    ctx.strokeStyle='#edf2eb'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(L,py); ctx.lineTo(L+pw,py); ctx.stroke();
+    ctx.fillStyle='#5b6b60';
+    ctx.fillText(fmtTick(v,yStep), L-6, py+4);
+  }
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+
+  const xVisMin=Math.max(xSpan/2000, x0);
+  const xVisMax=x1;
+  const baseY=Yp(0);
+
+  if(xVisMax>0){
+    const kMax=Math.floor(Math.log10(Math.max(1e-12,xVisMax)));
+    const kMin=Math.max(Math.floor(Math.log10(Math.max(1e-12,xVisMin)))-1, kMax-12);
+    for(let k=kMin;k<=kMax;k++){
+      const a=Math.max(xVisMin, Math.pow(10,k));
+      const b=Math.min(xVisMax, Math.pow(10,k+1));
+      if(b<=a) continue;
+      ctx.beginPath();
+      ctx.moveTo(Xp(a), baseY);
+      const nPts=Math.max(18, Math.min(70, Math.round(((b-a)/xSpan)*140)));
+      for(let i=0;i<=nPts;i++){
+        const xv=a+(b-a)*i/nPts;
+        ctx.lineTo(Xp(xv), Yp(fX(xv)));
+      }
+      ctx.lineTo(Xp(b), baseY);
+      ctx.closePath();
+      ctx.fillStyle=sliceColor(k)+'b0';
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<=360;i++){
+      const xv=xVisMin+(xVisMax-xVisMin)*i/360;
+      const px=Xp(xv), py=Yp(fX(xv));
+      if(!started){ctx.moveTo(px,py); started=true;} else ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle='#143c1e'; ctx.lineWidth=1.9; ctx.stroke();
+
+    if(xMed>=x0 && xMed<=x1){
+      const px=Xp(xMed);
+      ctx.strokeStyle='#cd5c5c'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(px,T+4); ctx.lineTo(px,T+ph); ctx.stroke();
+      ctx.fillStyle='#cd5c5c'; ctx.font='600 11px sans-serif'; ctx.textAlign='left';
+      ctx.fillText('Méd.', Math.min(L+pw-30, px+4), T+14);
+    }
+
+    if(xMean>=x0 && xMean<=x1 && Math.abs(Xp(xMean)-Xp(xMed))>6){
+      const px=Xp(xMean);
+      ctx.strokeStyle='#da9132'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(px,T+18); ctx.lineTo(px,T+ph); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#b8742a'; ctx.font='600 11px sans-serif'; ctx.textAlign='left';
+      ctx.fillText('Moy.', Math.min(L+pw-30, px+4), T+28);
+    }
+
+    if(modeCollapsed){
+      ctx.fillStyle='rgba(255,248,235,0.92)';
+      ctx.strokeStyle='#f1d49b';
+      ctx.lineWidth=1;
+      const bw=184, bh=20, bx=L+pw-bw-6, by=T+5;
+      ctx.fillRect(bx,by,bw,bh); ctx.strokeRect(bx,by,bw,bh);
+      ctx.fillStyle='#9a6318'; ctx.font='600 10.5px sans-serif'; ctx.textAlign='center';
+      ctx.fillText('Pic écrasé près de 0 (σ grand)', bx+bw/2, by+14);
+    }
+  }
+  ctx.restore();
+
+  ctx.strokeStyle='#94a39a'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(L,T+ph); ctx.lineTo(L+pw,T+ph); ctx.moveTo(L,T); ctx.lineTo(L,T+ph); ctx.stroke();
+
+  const xStep=niceStep(xSpan/5);
+  ctx.font='11px sans-serif'; ctx.fillStyle='#5b6b60'; ctx.textAlign='center';
+  let lastXTick=-Infinity;
+  const xStart=Math.ceil((x0-1e-12)/xStep)*xStep;
+  for(let v=xStart; v<=x1+xStep*0.01; v+=xStep){
+    const px=Xp(v);
+    if(px<L-2||px>L+pw+2) continue;
+    if(px-lastXTick>=44){
+      ctx.fillText(fmtTick(v,xStep), px, T+ph+14);
+      lastXTick=px;
+    }
+  }
+  ctx.fillStyle='#14301e'; ctx.textAlign='right';
+  ctx.fillText('X (échelle linéaire)', L+pw, T+ph+28);
+  drawYAxisTitle(ctx, 'densité de X', T, ph);
+
+  // Encart indiquant la loi de X sur le graphique
+  ctx.save();
+  ctx.font='600 11px sans-serif';
+  const lblX='X ~ LN(μ, σ²)';
+  const lwX=ctx.measureText(lblX).width+14;
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.strokeStyle='#dfe6dc';
+  ctx.lineWidth=1;
+  ctx.fillRect(L+8, T+6, lwX, 20);
+  ctx.strokeRect(L+8, T+6, lwX, 20);
+  ctx.fillStyle='#143c1e';
+  ctx.textAlign='left';
+  ctx.fillText(lblX, L+15, T+20);
+  ctx.restore();
+}
+
+// =========================================================================
+// GRAPHIQUE 2 : Densité de Y = log10(X) avec échelles X et Y adaptatives
 // =========================================================================
 function drawY(){
   const {ctx,w,h}=setupCanvas($('cY'));
-  const L=48,R=16,T=26,B=32, pw=w-L-R, ph=h-T-B;
+  const L=58, R=16, T=26, B=32, pw=w-L-R, ph=h-T-B;
+  st.plotBox.Y={L,pw,ph};
   const m=muEff(), s=st.sig;
 
-  // Cadrage horizontal adaptatif autour de μ ± 3,6 σ (au moins 2 tranches visibles)
-  let y0=Math.floor(m-3.6*s);
-  let y1=Math.ceil(m+3.6*s);
-  if(y1-y0<2){
-    y0=Math.floor(m)-1;
-    y1=Math.floor(m)+2;
+  let y0Base=Math.floor(m-3.6*s);
+  let y1Base=Math.ceil(m+3.6*s);
+  if(y1Base-y0Base<2){
+    y0Base=Math.floor(m)-1;
+    y1Base=Math.floor(m)+2;
   }
+  const xSpanBase=y1Base-y0Base;
 
-  // Échelle verticale adaptative sans plancher fixe (la cloche occupe toujours bien la hauteur)
   const peakY=1/(s*Math.sqrt(2*Math.PI));
   const yStep=niceStep(peakY/4);
   const ymax=Math.max(yStep, Math.ceil((peakY*1.12)/yStep)*yStep);
 
-  const X=v=>L+(v-y0)/(y1-y0)*pw;
-  const Yp=v=>T+ph-(v/ymax)*ph;
+  const {dx,dy,zx}=st.pan.Y;
+  const xSpan=xSpanBase/zx;
+  const y0=y0Base+dx*xSpanBase, y1=y0+xSpan;
+  const v0=dy*ymax, v1=v0+ymax;
 
-  // Grille horizontale et graduations de l'axe vertical
-  ctx.font='11px sans-serif';
-  ctx.lineWidth=1;
-  for(let v=0; v<=ymax+yStep*0.01; v+=yStep){
+  const X=v=>L+(v-y0)/xSpan*pw;
+  const Yp=v=>T+ph-((v-v0)/ymax)*ph;
+
+  ctx.font='11px sans-serif'; ctx.textAlign='right';
+  const yStart=Math.ceil((v0-1e-12)/yStep)*yStep;
+  for(let v=yStart; v<=v1+yStep*0.01; v+=yStep){
     const py=Yp(v);
-    if(v>0){
-      ctx.strokeStyle='#edf2eb';
-      ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
-    }
+    if(py<T-1||py>T+ph+1) continue;
+    ctx.strokeStyle='#edf2eb'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(L,py); ctx.lineTo(L+pw,py); ctx.stroke();
     ctx.fillStyle='#5b6b60';
-    ctx.textAlign='right';
-    ctx.fillText(fmtTick(v,yStep),L-6,py+4);
+    ctx.fillText(fmtTick(v,yStep), L-6, py+4);
   }
 
-  // Tranches colorées [k ; k+1[
-  for(let k=y0;k<y1;k++){
-    ctx.beginPath();ctx.moveTo(X(k),Yp(0));
-    for(let i=0;i<=60;i++){const y=k+i/60;ctx.lineTo(X(y),Yp(fY(y)));}
-    ctx.lineTo(X(k+1),Yp(0));ctx.closePath();
-    ctx.fillStyle=COLS[((k%COLS.length)+COLS.length)%COLS.length]+'b0';ctx.fill();
+  const kStart=Math.floor(y0), kEnd=Math.ceil(y1);
+  const kSliceMin=Math.max(kStart, Math.floor(m-6*s)-1);
+  const kSliceMax=Math.min(kEnd, Math.ceil(m+6*s)+1);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+
+  for(let k=kSliceMin;k<kSliceMax;k++){
+    ctx.beginPath();
+    ctx.moveTo(X(k), Yp(0));
+    for(let i=0;i<=60;i++){
+      const y=k+i/60;
+      ctx.lineTo(X(y), Yp(fY(y)));
+    }
+    ctx.lineTo(X(k+1), Yp(0));
+    ctx.closePath();
+    ctx.fillStyle=sliceColor(k)+'b0';
+    ctx.fill();
   }
 
-  // Courbe de densité f_Y(y)
   ctx.beginPath();
   for(let i=0;i<=400;i++){
-    const y=y0+(y1-y0)*i/400;
-    i?ctx.lineTo(X(y),Yp(fY(y))):ctx.moveTo(X(y),Yp(fY(y)));
+    const y=y0+xSpan*i/400;
+    const px=X(y), py=Yp(fY(y));
+    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
   }
-  ctx.strokeStyle='#143c1e';ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle='#143c1e'; ctx.lineWidth=2; ctx.stroke();
 
-  // Axes principaux
-  ctx.strokeStyle='#94a39a';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(L,T+ph);ctx.lineTo(L+pw,T+ph);ctx.moveTo(L,T);ctx.lineTo(L,T+ph);ctx.stroke();
+  for(let k=kStart;k<=kEnd;k++){
+    const px=X(k);
+    if(px<L||px>L+pw) continue;
+    ctx.strokeStyle='#b7c2ba'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(px,T); ctx.lineTo(px,T+ph); ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
-  // Frontières entières k et étiquettes X = 10^k (espacées pour éviter tout chevauchement)
-  ctx.font='11px sans-serif';ctx.textAlign='center';
+  if(m>=y0 && m<=y1){
+    const pm=X(m);
+    ctx.strokeStyle='#cd5c5c'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(pm,T+6); ctx.lineTo(pm,T+ph); ctx.stroke();
+    ctx.fillStyle='#cd5c5c'; ctx.font='600 11px sans-serif'; ctx.textAlign='left';
+    ctx.fillText('μ', Math.min(L+pw-14, pm+4), T+16);
+  }
+  ctx.restore();
+
+  ctx.strokeStyle='#94a39a'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(L,T+ph); ctx.lineTo(L+pw,T+ph); ctx.moveTo(L,T); ctx.lineTo(L,T+ph); ctx.stroke();
+
+  ctx.font='11px sans-serif'; ctx.textAlign='center';
   let lastTopLabelX=-Infinity;
   let lastBotLabelX=-Infinity;
-  for(let k=y0;k<=y1;k++){
+  for(let k=kStart;k<=kEnd;k++){
     const px=X(k);
-    ctx.strokeStyle='#b7c2ba';ctx.setLineDash([4,3]);
-    ctx.beginPath();ctx.moveTo(px,T);ctx.lineTo(px,T+ph);ctx.stroke();
-    ctx.setLineDash([]);
+    if(px<L-2||px>L+pw+2) continue;
 
-    if(px-lastBotLabelX>=24){
+    if(xSpan>=2 && px-lastBotLabelX>=24){
       ctx.fillStyle='#5b6b60';
-      ctx.fillText(String(k).replace('-','−'),px,T+ph+14);
+      ctx.fillText(String(k).replace('-','−'), px, T+ph+14);
       lastBotLabelX=px;
     }
 
-    const lx=Math.min(L+pw-34,Math.max(L+34,px));
+    const lx=Math.min(L+pw-34, Math.max(L+34, px));
     if(lx-lastTopLabelX>=82){
       ctx.fillStyle='#008080';
-      ctx.fillText('X = '+fmtX(Math.pow(10,k)),lx,T-8);
+      ctx.fillText('X = '+fmtX(Math.pow(10,k)), lx, T-8);
       lastTopLabelX=lx;
     }
   }
-  ctx.fillStyle='#14301e';ctx.textAlign='right';ctx.fillText('y = log₁₀ X',L+pw,T+ph+28);
+  if(xSpan<2){
+    const subStep=niceStep(xSpan/6);
+    const subStart=Math.ceil((y0-1e-12)/subStep)*subStep;
+    ctx.fillStyle='#5b6b60';
+    for(let v=subStart; v<=y1+subStep*0.01; v+=subStep){
+      const px=X(v);
+      if(px<L-2||px>L+pw+2) continue;
+      if(px-lastBotLabelX>=34){
+        ctx.fillText(fmtTick(v,subStep), px, T+ph+14);
+        lastBotLabelX=px;
+      }
+    }
+  }
+  ctx.fillStyle='#14301e'; ctx.textAlign='right';
+  ctx.fillText('y = log₁₀ X', L+pw, T+ph+28);
+  drawYAxisTitle(ctx, 'densité de Y', T, ph);
 
-  // Repère de la moyenne effective μ
-  ctx.strokeStyle='#cd5c5c';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(X(m),T+4);ctx.lineTo(X(m),T+ph);ctx.stroke();
-  ctx.fillStyle='#cd5c5c';ctx.textAlign=X(m)>L+pw-24?'right':'left';
-  ctx.fillText('μ',X(m)+(X(m)>L+pw-24?-4:4),T+14);
+  // Encart indiquant la loi de log10(X) sur le graphique
+  ctx.save();
+  ctx.font='600 11px sans-serif';
+  const lblY='log₁₀ X ~ 𝒩(μ, σ²)';
+  const lwY=ctx.measureText(lblY).width+14;
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.strokeStyle='#dfe6dc';
+  ctx.lineWidth=1;
+  ctx.fillRect(L+8, T+6, lwY, 20);
+  ctx.strokeRect(L+8, T+6, lwY, 20);
+  ctx.fillStyle='#143c1e';
+  ctx.textAlign='left';
+  ctx.fillText(lblY, L+15, T+20);
+  ctx.restore();
 }
 
 // =========================================================================
-// GRAPHIQUE 2 : Empilement des tranches sur [0 ; 1[ (densité de M)
+// GRAPHIQUE 3 : Empilement des tranches sur [0 ; 1[ (densité de M)
 // =========================================================================
 function drawM(){
   const {ctx,w,h}=setupCanvas($('cM'));
-  const L=48,R=16,T=14,B=58, pw=w-L-R, ph=h-T-B;
+  const L=58, R=16, T=36, B=32, pw=w-L-R, ph=h-T-B;
+  st.plotBox.M={L,pw,ph};
+
   const [k0,k1]=kRange();
   const ks=[];
   for(let k=k0;k<=k1;k++) ks.push(k);
 
-  // Trie les tranches par masse décroissante pour empiler d'abord les tranches centrales
-  const mass=k=>Phi((k+1-muEff())/st.sig)-Phi((k-muEff())/st.sig);
-  const order=ks.filter(k=>mass(k)>1e-6).sort((a,b)=>mass(b)-mass(a));
+  const order=ks.filter(k=>sliceMass(k)>1e-6).sort((a,b)=>sliceMass(b)-sliceMass(a));
   const nShown=st.t*order.length;
 
-  let peak=0;
+  let peak=1;
   for(let i=0;i<=200;i++){
     const m=i/200;
     let sum=0;
     for(const k of ks) sum+=fY(k+m);
     if(sum>peak) peak=sum;
   }
+  const yStep=niceStep(Math.max(1.2, peak)/4);
+  const ymax=Math.max(1.25, Math.ceil((peak*1.12)/yStep)*yStep);
 
-  // Échelle verticale adaptative (garde toujours la droite uniforme y = 1 bien visible)
-  const rawMax=Math.max(1.25, peak*1.12);
-  const yStep=niceStep(rawMax/4);
-  const ymax=Math.max(yStep, Math.ceil(rawMax/yStep)*yStep);
+  const {dx,dy}=st.pan.M;
+  const x0=dx, x1=1+dx;
+  const v0=dy*ymax, v1=v0+ymax;
 
-  const X=v=>L+v*pw;
-  const Yp=v=>T+ph-(v/ymax)*ph;
+  const X=v=>L+(v-x0)*pw;
+  const Yp=v=>T+ph-((v-v0)/ymax)*ph;
 
-  // Grille horizontale et graduations Y
-  ctx.font='11px sans-serif';
-  ctx.lineWidth=1;
-  for(let v=0; v<=ymax+yStep*0.01; v+=yStep){
+  ctx.font='11px sans-serif'; ctx.textAlign='right';
+  const yStart=Math.ceil((v0-1e-12)/yStep)*yStep;
+  for(let v=yStart; v<=v1+yStep*0.01; v+=yStep){
     const py=Yp(v);
-    if(v>0){
-      ctx.strokeStyle='#edf2eb';
-      ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
-    }
+    if(py<T-1||py>T+ph+1) continue;
+    ctx.strokeStyle='#edf2eb'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(L,py); ctx.lineTo(L+pw,py); ctx.stroke();
     ctx.fillStyle='#5b6b60';
-    ctx.textAlign='right';
-    ctx.fillText(fmtTick(v,yStep),L-6,py+4);
+    ctx.fillText(fmtTick(v,yStep), L-6, py+4);
   }
 
-  // Aires empilées
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+
   const base=new Array(201).fill(0);
   order.forEach((k,idx)=>{
-    const frac=Math.max(0,Math.min(1,nShown-idx));
+    const frac=Math.max(0, Math.min(1, nShown-idx));
     if(frac<=0) return;
     ctx.beginPath();
     for(let i=0;i<=200;i++){
@@ -368,181 +804,397 @@ function drawM(){
       const top=base[i]+frac*fY(k+m);
       i?ctx.lineTo(X(m),Yp(top)):ctx.moveTo(X(m),Yp(top));
     }
-    for(let i=200;i>=0;i--) ctx.lineTo(X(i/200),Yp(base[i]));
+    for(let i=200;i>=0;i--){
+      ctx.lineTo(X(i/200),Yp(base[i]));
+    }
     ctx.closePath();
-    ctx.fillStyle=COLS[((k%COLS.length)+COLS.length)%COLS.length]+'c0';
+    ctx.fillStyle=sliceColor(k)+'c0';
     ctx.fill();
     for(let i=0;i<=200;i++) base[i]+=frac*fY(k+i/200);
   });
 
-  // Contour supérieur de l'empilement courant
   ctx.beginPath();
   for(let i=0;i<=200;i++){
     const m=i/200;
     i?ctx.lineTo(X(m),Yp(base[i])):ctx.moveTo(X(m),Yp(base[i]));
   }
-  ctx.strokeStyle='#143c1e';ctx.lineWidth=1.6;ctx.stroke();
+  ctx.strokeStyle='#143c1e'; ctx.lineWidth=1.6; ctx.stroke();
 
-  // Frontières des 9 premiers chiffres
-  ctx.strokeStyle='rgba(120,130,125,.55)';ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(120,130,125,.55)'; ctx.lineWidth=1;
   for(let d=2;d<=9;d++){
     const x=X(Math.log10(d));
-    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,T+ph);ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,T+ph); ctx.stroke();
   }
 
-  // Droite de densité uniforme (y = 1)
-  ctx.setLineDash([7,5]);ctx.strokeStyle='#111';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(X(0),Yp(1));ctx.lineTo(X(1),Yp(1));ctx.stroke();
+  ctx.setLineDash([7,5]); ctx.strokeStyle='#111'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(X(0),Yp(1)); ctx.lineTo(X(1),Yp(1)); ctx.stroke();
   ctx.setLineDash([]);
+  ctx.restore();
 
-  // Axes
-  ctx.strokeStyle='#94a39a';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(L,T+ph);ctx.lineTo(L+pw,T+ph);ctx.moveTo(L,T);ctx.lineTo(L,T+ph);ctx.stroke();
+  ctx.strokeStyle='#94a39a'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(L,T+ph); ctx.lineTo(L+pw,T+ph); ctx.moveTo(L,T); ctx.lineTo(L,T+ph); ctx.stroke();
 
-  ctx.font='11px sans-serif';ctx.fillStyle='#5b6b60';ctx.textAlign='center';
-  [0,0.25,0.5,0.75,1].forEach(v=>ctx.fillText(fmt(v,v%1?2:0).replace(',50',',5'),X(v),T+ph+13));
+  ctx.font='11px sans-serif'; ctx.fillStyle='#5b6b60'; ctx.textAlign='center';
+  const mStart=Math.ceil((x0-1e-12)/0.25)*0.25;
+  for(let v=mStart; v<=x1+0.001; v+=0.25){
+    const px=X(v);
+    if(px<L-2||px>L+pw+2) continue;
+    ctx.fillText(fmtTick(v,0.25), px, T+ph+14);
+  }
 
-  // Barre inférieure des premiers chiffres
-  const by=T+ph+19, bh=14;
+  // Indications des premiers chiffres de X au-dessus de la courbe
+  ctx.fillStyle='#5b6b60'; ctx.font='600 10.5px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('Premier chiffre de X :', L, 11);
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L, 14, pw, T-14); ctx.clip();
+  ctx.strokeStyle='rgba(120,130,125,.45)'; ctx.lineWidth=1;
   for(let d=1;d<=9;d++){
     const a=X(Math.log10(d)), b=X(Math.log10(d+1));
-    ctx.fillStyle=DIGCOLS[d-1];ctx.fillRect(a,by,b-a,bh);
-    ctx.strokeStyle='#143c1e';ctx.strokeRect(a,by,b-a,bh);
-    ctx.fillStyle='#14301e';ctx.textAlign='center';ctx.fillText(String(d),(a+b)/2,by+11);
+    if(d>1){
+      ctx.beginPath(); ctx.moveTo(a, T-14); ctx.lineTo(a, T); ctx.stroke();
+    }
+    ctx.fillStyle='#143c1e'; ctx.font='700 11.5px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(String(d), (a+b)/2, T-4);
   }
-  ctx.textAlign='right';ctx.fillStyle='#14301e';
-  ctx.fillText('mantisse M ; barre : premier chiffre',L+pw,by+bh+15);
+  ctx.restore();
+
+  ctx.font='11px sans-serif'; ctx.textAlign='right'; ctx.fillStyle='#14301e';
+  ctx.fillText('M = partie fractionnaire log₁₀X', L+pw, T+ph+28);
+  drawYAxisTitle(ctx, 'densité de M', T, ph);
 }
 
 // =========================================================================
-// GRAPHIQUE 3 : Loi du premier chiffre avec axe % adaptatif
+// GRAPHIQUE 4 : Loi du premier chiffre de X avec axe vertical en % adaptatif
 // =========================================================================
 function drawD(){
   const {ctx,w,h}=setupCanvas($('cD'));
-  const L=48,R=16,T=14,B=30, pw=w-L-R, ph=h-T-B;
-  const p=digitProbs(), f=st.show?sampleFreq():null;
+  const L=58, R=16, T=16, B=32, pw=w-L-R, ph=h-T-B;
+  st.plotBox.D={L,pw,ph};
 
-  const maxVal=Math.max(0.32,...p,...(f||[0]));
-  const rawMax=Math.min(1.0, maxVal*1.12);
-  const yStep=niceStep(rawMax/4);
-  const ymax=Math.min(1.0, Math.max(maxVal, Math.ceil(rawMax/yStep)*yStep));
+  const p=digitProbs();
+  const f=st.show?sampleFreq():null;
+  const peak=Math.max(0.32, ...p, ...(f||[0]));
 
+  const pctSteps=[0.05, 0.1, 0.2, 0.25];
+  let yStep=0.1;
+  for(const s of pctSteps){
+    if(peak/s<=5.5){yStep=s; break;}
+  }
+  const ymax=Math.min(1.05, Math.max(0.35, Math.ceil((peak*1.12)/yStep)*yStep));
+
+  const {dx,dy}=st.pan.D;
   const bw=pw/9;
-  const Yp=v=>T+ph-(v/ymax)*ph;
+  const xShift=dx*pw;
+  const v0=dy*ymax, v1=v0+ymax;
 
-  // Grille horizontale et graduations en %
-  ctx.strokeStyle='#e3e9e1';ctx.lineWidth=1;
-  ctx.font='11px sans-serif';ctx.fillStyle='#5b6b60';ctx.textAlign='right';
-  for(let v=0; v<=ymax+yStep*0.01; v+=yStep){
-    const clamped=Math.min(1.0,v);
-    const py=Yp(clamped);
-    ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
-    ctx.fillText(Math.round(clamped*100)+' %',L-6,py+4);
+  const Yp=v=>T+ph-((v-v0)/ymax)*ph;
+  const Xd=d=>L+(d-1)*bw-xShift;
+
+  // Grille horizontale + graduations en %
+  ctx.font='11px sans-serif'; ctx.textAlign='right';
+  const yStart=Math.ceil((v0-1e-12)/yStep)*yStep;
+  for(let v=yStart; v<=v1+yStep*0.01; v+=yStep){
+    if(v<-1e-9 || v>1.001) continue;
+    const py=Yp(v);
+    if(py<T-1||py>T+ph+1) continue;
+    ctx.strokeStyle='#e8eee6'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(L,py); ctx.lineTo(L+pw,py); ctx.stroke();
+    ctx.fillStyle='#5b6b60';
+    ctx.fillText(Math.round(v*100)+' %', L-6, py+4);
   }
 
+  // Contenu clippé : barres, courbe Benford et losanges échantillon
+  ctx.save();
+  ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+
+  const yZero=Yp(0);
   for(let d=1;d<=9;d++){
-    const x0=L+(d-1)*bw;
+    const x0=Xd(d);
+    const yBar=Yp(p[d-1]);
     ctx.fillStyle='#5fae5fcc';
-    ctx.fillRect(x0+bw*0.2,Yp(p[d-1]),bw*0.6,Yp(0)-Yp(p[d-1]));
-    ctx.fillStyle='#14301e';ctx.textAlign='center';
-    ctx.fillText(String(d),x0+bw/2,T+ph+15);
+    ctx.fillRect(x0+bw*0.2, yBar, bw*0.6, yZero-yBar);
+  }
 
-    // Points rouges : loi de Benford
+  // Ligne brisée Benford
+  ctx.strokeStyle='#cd5c5c'; ctx.lineWidth=1.4;
+  ctx.beginPath();
+  for(let d=1;d<=9;d++){
+    const cx=Xd(d)+bw*0.5, cy=Yp(BENF[d-1]);
+    d>1?ctx.lineTo(cx,cy):ctx.moveTo(cx,cy);
+  }
+  ctx.stroke();
+
+  // Points Benford et losanges échantillon
+  for(let d=1;d<=9;d++){
+    const x0=Xd(d);
     ctx.fillStyle='#cd5c5c';
-    ctx.beginPath();ctx.arc(x0+bw/2,Yp(BENF[d-1]),4.5,0,2*Math.PI);ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x0+bw*0.5, Yp(BENF[d-1]), 4.5, 0, 2*Math.PI);
+    ctx.fill();
 
-    // Losanges bleus : fréquences simulées
     if(f){
       ctx.fillStyle='#2f6fbf';
       const cx=x0+bw*0.72, cy=Yp(f[d-1]);
       ctx.beginPath();
-      ctx.moveTo(cx,cy-5);ctx.lineTo(cx+5,cy);ctx.lineTo(cx,cy+5);ctx.lineTo(cx-5,cy);
-      ctx.closePath();ctx.fill();
+      ctx.moveTo(cx,cy-5); ctx.lineTo(cx+5,cy); ctx.lineTo(cx,cy+5); ctx.lineTo(cx-5,cy);
+      ctx.closePath();
+      ctx.fill();
     }
   }
+  ctx.restore();
 
-  // Courbe de Benford
-  ctx.strokeStyle='#cd5c5c';ctx.lineWidth=1.2;
-  ctx.beginPath();
+  // Axes principaux
+  ctx.strokeStyle='#94a39a'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(L,T+ph); ctx.lineTo(L+pw,T+ph); ctx.moveTo(L,T); ctx.lineTo(L,T+ph); ctx.stroke();
+
+  // Étiquettes 1..9 sous l'axe X
+  ctx.font='11px sans-serif'; ctx.fillStyle='#14301e'; ctx.textAlign='center';
   for(let d=1;d<=9;d++){
-    const x=L+(d-0.5)*bw;
-    d>1?ctx.lineTo(x,Yp(BENF[d-1])):ctx.moveTo(x,Yp(BENF[d-1]));
+    const cx=Xd(d)+bw*0.5;
+    if(cx<L-4||cx>L+pw+4) continue;
+    ctx.fillText(String(d), cx, T+ph+14);
   }
-  ctx.stroke();
 
-  ctx.strokeStyle='#94a39a';ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(L,T+ph);ctx.lineTo(L+pw,T+ph);ctx.stroke();
-  ctx.textAlign='right';ctx.fillStyle='#14301e';
-  ctx.fillText('premier chiffre d',L+pw,T+ph+27);
+  ctx.textAlign='right'; ctx.fillStyle='#14301e';
+  ctx.fillText('premier chiffre de X', L+pw, T+ph+28);
+  drawYAxisTitle(ctx, 'probabilité', T, ph);
   return p;
 }
 
 // =========================================================================
-// MISE À JOUR GLOBALE & ÉVÉNEMENTS
+// MISE À JOUR GLOBALE DE L'INTERFACE
 // =========================================================================
+function updatePanButtons(){
+  ['X','Y','M','D'].forEach(k=>{
+    const p=st.pan[k];
+    const moved=Math.abs(p.dx)>1e-4 || Math.abs(p.dy)>1e-4 || Math.abs(p.zx-1)>1e-4;
+    $('r'+k).classList.toggle('active', moved);
+  });
+  $('zValX').textContent=Math.round(st.pan.X.zx*100)+' %';
+  $('zValY').textContent=Math.round(st.pan.Y.zx*100)+' %';
+}
+
 function update(){
-  $('vMu').textContent=fmt(st.mu,2);
-  $('tMu').textContent='Médiane de X (sans changement d’unité) : 10^μ = '+fmtX(Math.pow(10,st.mu));
-  $('vSig').textContent=fmt(st.sig,2);
-  $('tSig').textContent='Écart-type de ln X : σ × ln 10 = '+fmt(st.sig*Math.LN10,2)+' · X varie environ d’un facteur '+fmtX(Math.pow(10,2*st.sig))+' (±1 écart-type)';
-  const c=Math.pow(10,st.logc);
-  $('vC').textContent='c = '+fmt(c,2);
-  $('vT').textContent=Math.round(st.t*100)+' %';
-  $('vN').textContent=String(st.N).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+  try{
+    const sdX=Math.sqrt(Math.max(0, st.varX));
+    const cvX=sdX/Math.max(1e-12, st.meanX);
+    $('vMeanX').textContent=fmtX(st.meanX);
+    $('tMeanX').textContent='Écart-type σ_X = '+fmtX(sdX)+' · CV = σ_X / μ_X = '+fmtX(cvX);
+    $('vVarX').textContent=fmtX(st.varX);
+    $('tVarX').textContent='X varie environ d’un facteur '+fmtX(Math.pow(10, 2*st.sig))+' (±1 écart-type sur log₁₀ X)';
 
-  drawY();
-  drawM();
-  const p=drawD();
+    $('oLogMean').textContent=fmt(st.mu, 2);
+    $('oLogVar').textContent=fmt(st.sig*st.sig, 3);
+    $('oLogSd').textContent=fmt(st.sig, 2);
 
-  $('oMed').textContent=fmtX(Math.pow(10,muEff()));
-  $('oP1').textContent=fmt(p[0]*100,1)+' %';
-  const dev=Math.max(...p.map((v,i)=>Math.abs(v-BENF[i])));
-  $('oDev').textContent=fmt(dev*100,1)+' pts';
+    const c=Math.pow(10, st.logc);
+    $('vC').textContent='c = '+fmt(c, 2);
+    $('vT').textContent=Math.round(st.t*100)+' %';
+    $('vN').textContent=String(st.N).replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f');
 
-  const v=$('verdict');
-  if(dev<0.01){
-    v.className='verdict ok';
-    v.innerHTML='<b>Benford :</b> la mantisse est presque uniforme, l’empilement est plat.';
-  }else if(dev<0.04){
-    v.className='verdict mid';
-    v.innerHTML='<b>Presque Benford :</b> l’empilement ondule encore un peu.';
-  }else{
-    v.className='verdict no';
-    const dmax=p.indexOf(Math.max(...p))+1;
-    v.innerHTML='<b>Pas Benford :</b> la cloche est trop étroite, une ou deux tranches dominent. Le chiffre le plus fréquent est '+dmax+' ('+Math.round(p[dmax-1]*100)+' %).';
+    updatePanButtons();
+    updateLegends();
+    drawX();
+    drawY();
+    drawM();
+    const p=drawD();
+
+    $('oMed').textContent=fmtX(Math.pow(10, muEff()));
+    $('oP1').textContent=fmt(p[0]*100, 1)+' %';
+    const dev=Math.max(...p.map((v,i)=>Math.abs(v-BENF[i])));
+    $('oDev').textContent=fmt(dev*100, 1)+' pts';
+
+    const v=$('verdict');
+    if(dev<0.01){
+      v.className='verdict ok';
+      v.innerHTML='<b>Benford :</b> la partie fractionnaire de log<sub>10</sub>(X) est presque uniforme, l’empilement est plat.';
+    } else if(dev<0.04){
+      v.className='verdict mid';
+      v.innerHTML='<b>Presque Benford :</b> l’empilement ondule encore un peu.';
+    } else {
+      v.className='verdict no';
+      const dmax=p.indexOf(Math.max(...p))+1;
+      v.innerHTML='<b>Pas Benford :</b> la cloche est trop étroite, une ou deux tranches dominent. Le chiffre le plus fréquent est '+dmax+' ('+Math.round(p[dmax-1]*100)+' %).';
+    }
+  } catch(err){
+    console.error('Erreur de rendu :', err);
   }
 }
 
+// =========================================================================
+// TRANSLATION (4 FIGURES) & ZOOM HORIZONTAL (FIGURES 1 ET 2)
+// =========================================================================
+function applyZoom(key, factor, uNorm){
+  const p=st.pan[key];
+  const newZx=Math.max(0.2, Math.min(20, p.zx*factor));
+  if(Math.abs(newZx-p.zx)<1e-6) return;
+  p.dx=p.dx + uNorm*(1/p.zx - 1/newZx);
+  p.zx=newZx;
+  update();
+}
+
+function resetView(key){
+  st.pan[key]={dx:0, dy:0, zx:1};
+  update();
+}
+
+function attachPanZoom(canvasId, key, allowZoom){
+  const c=$(canvasId);
+  let dragging=false, lastX=0, lastY=0, pinchDist=0;
+
+  c.addEventListener('mousedown', e=>{
+    if(e.button!==0) return;
+    dragging=true;
+    lastX=e.clientX;
+    lastY=e.clientY;
+    c.classList.add('dragging');
+  });
+
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    const dxPx=e.clientX-lastX;
+    const dyPx=e.clientY-lastY;
+    lastX=e.clientX;
+    lastY=e.clientY;
+    const box=st.plotBox[key];
+    const p=st.pan[key];
+    p.dx -= (dxPx/Math.max(1,box.pw))/p.zx;
+    p.dy += dyPx/Math.max(1,box.ph);
+    update();
+  });
+
+  window.addEventListener('mouseup', ()=>{
+    if(!dragging) return;
+    dragging=false;
+    c.classList.remove('dragging');
+  });
+
+  c.addEventListener('dblclick', ()=>resetView(key));
+
+  if(allowZoom){
+    c.addEventListener('wheel', e=>{
+      e.preventDefault();
+      const rect=c.getBoundingClientRect();
+      const box=st.plotBox[key];
+      const u=Math.max(0, Math.min(1, (e.clientX-rect.left-box.L)/Math.max(1,box.pw)));
+      const factor=e.deltaY<0 ? 1.18 : 1/1.18;
+      applyZoom(key, factor, u);
+    }, {passive:false});
+  }
+
+  // Tactile : 1 doigt = translation, 2 doigts = pincement horizontal (si allowZoom)
+  c.addEventListener('touchstart', e=>{
+    if(e.touches.length===1){
+      dragging=true;
+      lastX=e.touches[0].clientX;
+      lastY=e.touches[0].clientY;
+    } else if(allowZoom && e.touches.length===2){
+      dragging=false;
+      pinchDist=Math.abs(e.touches[0].clientX-e.touches[1].clientX);
+    }
+  }, {passive:true});
+
+  c.addEventListener('touchmove', e=>{
+    if(e.touches.length===1 && dragging){
+      e.preventDefault();
+      const dxPx=e.touches[0].clientX-lastX;
+      const dyPx=e.touches[0].clientY-lastY;
+      lastX=e.touches[0].clientX;
+      lastY=e.touches[0].clientY;
+      const box=st.plotBox[key];
+      const p=st.pan[key];
+      p.dx -= (dxPx/Math.max(1,box.pw))/p.zx;
+      p.dy += dyPx/Math.max(1,box.ph);
+      update();
+    } else if(allowZoom && e.touches.length===2){
+      e.preventDefault();
+      const newDist=Math.abs(e.touches[0].clientX-e.touches[1].clientX);
+      if(pinchDist>10 && newDist>10){
+        const rect=c.getBoundingClientRect();
+        const midX=0.5*(e.touches[0].clientX+e.touches[1].clientX);
+        const box=st.plotBox[key];
+        const u=Math.max(0, Math.min(1, (midX-rect.left-box.L)/Math.max(1,box.pw)));
+        applyZoom(key, newDist/pinchDist, u);
+      }
+      pinchDist=newDist;
+    }
+  }, {passive:false});
+
+  c.addEventListener('touchend', ()=>{
+    dragging=false;
+    pinchDist=0;
+  });
+}
+
+// =========================================================================
+// ÉCOUTEURS D'ÉVÉNEMENTS & INITIALISATION
+// =========================================================================
+attachPanZoom('cX','X',true);
+attachPanZoom('cY','Y',true);
+attachPanZoom('cM','M',false);
+attachPanZoom('cD','D',false);
+
+$('zInX').addEventListener('click', ()=>applyZoom('X', 1.35, 0.5));
+$('zOutX').addEventListener('click', ()=>applyZoom('X', 1/1.35, 0.5));
+$('zInY').addEventListener('click', ()=>applyZoom('Y', 1.35, 0.5));
+$('zOutY').addEventListener('click', ()=>applyZoom('Y', 1/1.35, 0.5));
+$('rX').addEventListener('click', ()=>resetView('X'));
+$('rY').addEventListener('click', ()=>resetView('Y'));
+$('rM').addEventListener('click', ()=>resetView('M'));
+$('rD').addEventListener('click', ()=>resetView('D'));
+
+$('chkX').addEventListener('change', e=>{
+  st.showX=e.target.checked;
+  $('wrapX').classList.toggle('hidden', !st.showX);
+  update();
+});
+
 function setFromSliders(){
-  st.mu=parseFloat(sMu.value);
-  st.sig=parseFloat(sSig.value);
+  st.meanX=Math.pow(10, parseFloat(sMeanX.value));
+  st.varX=Math.pow(10, parseFloat(sVarX.value));
+  syncLogFromX();
   st.logc=parseFloat(sC.value);
   st.t=parseInt(sT.value,10)/100;
   update();
 }
 
-function preset(mu,sig){
-  st.mu=mu;st.sig=sig;st.logc=0;
-  sMu.value=mu;sSig.value=sig;sC.value=0;
+function preset(mu, sig){
+  st.mu=mu;
+  st.sig=sig;
+  st.logc=0;
+  sC.value=0;
+  syncXFromLog();
   update();
 }
 
-[sMu,sSig,sC,sT].forEach(s=>s.addEventListener('input',setFromSliders));
-sN.addEventListener('input',()=>{
-  st.N=Math.round(Math.pow(10,parseFloat(sN.value)));
+[sMeanX, sVarX, sC, sT].forEach(s=>s.addEventListener('input', setFromSliders));
+
+sN.addEventListener('input', ()=>{
+  st.N=Math.round(Math.pow(10, parseFloat(sN.value)));
   drawSample();
   update();
 });
-$('bSamp').addEventListener('click',()=>{drawSample();update();});
-$('chkSamp').addEventListener('change',e=>{st.show=e.target.checked;update();});
-$('pHorm').addEventListener('click',()=>preset(Math.LOG10E,0.5*Math.LOG10E));
-$('pBact').addEventListener('click',()=>preset(4,0.8));
-$('pLarge').addEventListener('click',()=>preset(Math.LOG10E,0.6));
-$('bAnim').addEventListener('click',()=>{
+
+$('bSamp').addEventListener('click', ()=>{
+  drawSample();
+  update();
+});
+
+$('chkSamp').addEventListener('change', e=>{
+  st.show=e.target.checked;
+  update();
+});
+
+$('pHorm').addEventListener('click', ()=>preset(Math.LOG10E, 0.5*Math.LOG10E));
+$('pBact').addEventListener('click', ()=>preset(4, 0.8));
+$('pLarge').addEventListener('click', ()=>preset(Math.LOG10E, 0.6));
+
+$('bAnim').addEventListener('click', ()=>{
   if(st.anim) cancelAnimationFrame(st.anim);
   const t0=performance.now(), dur=3500;
   const step=now=>{
-    const u=Math.min(1,(now-t0)/dur);
+    const u=Math.min(1, (now-t0)/dur);
     st.t=u;
     sT.value=Math.round(u*100);
     update();
@@ -551,12 +1203,13 @@ $('bAnim').addEventListener('click',()=>{
   };
   st.anim=requestAnimationFrame(step);
 });
-window.addEventListener('resize',update);
 
-sMu.value=st.mu;
-sSig.value=st.sig;
+window.addEventListener('resize', update);
+
+// Initialisation
 sT.value=100;
 sN.value=3;
+syncXFromLog();
 drawSample();
 update();
 })();
