@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loi de Benford : découper et empiler les tranches</title>
+<style>
+  :root{
+    --bg:#f6f8f5; --card:#ffffff; --border:#dfe6dc; --text:#14301e; --muted:#5b6b60;
+    --green:#228b22; --dark:#143c1e; --accent:#008080; --orange:#da9132; --red:#cd5c5c; --light:#e9f7e9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.45;padding:18px 16px 32px}
+  .wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  header h1{font-size:clamp(1.2rem,2.2vw,1.6rem);color:var(--dark)}
+  header p{font-size:.92rem;color:var(--muted);max-width:980px}
+  .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:14px;align-items:start}
+  @media(max-width:980px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(20,48,30,.05)}
+  .card h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+  canvas{display:block;width:100%;border-radius:10px;background:#fcfdfb;border:1px solid #eef2ec}
+  .cap{font-size:.8rem;color:var(--muted);margin-top:6px}
+  .ctrl{margin-bottom:12px}
+  .ctrl .row{display:flex;justify-content:space-between;align-items:baseline;font-size:.9rem;font-weight:600}
+  .ctrl .val{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--green);background:var(--light);padding:1px 8px;border-radius:999px;font-size:.85rem}
+  .ctrl .sub{font-size:.76rem;color:var(--muted);margin-top:2px}
+  input[type=range]{width:100%;accent-color:var(--green)}
+  .btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  button{font:inherit;font-size:.8rem;font-weight:600;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:#f3f7f2;color:var(--dark);cursor:pointer}
+  button:hover{background:var(--light);border-color:#b9dcb9}
+  button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+  button.primary:hover{background:#1c751c}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:#f6f9f5;border:1px solid var(--border);border-radius:10px;padding:7px 9px}
+  .stat .l{font-size:.7rem;color:var(--muted)}
+  .stat .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:1rem}
+  .verdict{margin-top:10px;padding:9px 11px;border-radius:10px;font-size:.86rem;border:1px solid}
+  .ok{background:#ecf8ec;border-color:#b5dfb5}
+  .mid{background:#fff8eb;border-color:#f1d49b}
+  .no{background:#fcefef;border-color:#eebcbc}
+  ul.tips{font-size:.8rem;color:var(--muted);padding-left:18px;margin-top:8px}
+  ul.tips li{margin-bottom:3px}
+  label.chk{display:flex;gap:6px;align-items:center;font-size:.85rem;margin-bottom:6px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Loi de Benford : découper et empiler les tranches</h1>
+    <p>On suppose que Y = log<sub>10</sub> X suit une loi normale 𝒩(μ ; σ²), c'est-à-dire que X est log-normale. La densité de Y est découpée en tranches de largeur 1 ; les tranches empilées sur [0 ; 1[ donnent la densité de la mantisse M, qui fixe le premier chiffre de X. Si M est uniforme, le premier chiffre suit la loi de Benford.</p>
+  </header>
+
+  <div class="grid">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <section class="card">
+        <h2>1. Densité de Y = log<sub>10</sub> X, découpée en tranches [k ; k+1[</h2>
+        <canvas id="cY" height="230"></canvas>
+        <p class="cap">Chaque couleur est une tranche. En haut, la valeur de X correspondant aux frontières entières (10<sup>k</sup>). Les axes s'adaptent automatiquement à μ et σ.</p>
+      </section>
+      <section class="card">
+        <h2>2. Tranches empilées sur [0 ; 1[ : densité de la mantisse M</h2>
+        <canvas id="cM" height="260"></canvas>
+        <p class="cap">f<sub>M</sub>(m) = Σ<sub>k</sub> f<sub>Y</sub>(k + m). Pointillés : densité uniforme (1). Traits gris et barre du bas : zones du premier chiffre, de largeur log<sub>10</sub>(1 + 1/d).</p>
+      </section>
+      <section class="card">
+        <h2>3. Loi du premier chiffre : modèle, Benford et échantillon simulé</h2>
+        <canvas id="cD" height="230"></canvas>
+        <p class="cap">Barres vertes : probabilité donnée par le modèle (aire de f<sub>M</sub> sur chaque zone). Points rouges : loi de Benford. Losanges bleus : fréquences dans un échantillon simulé de N individus.</p>
+      </section>
+    </div>
+
+    <aside style="display:flex;flex-direction:column;gap:14px">
+      <section class="card">
+        <h2>Exemples</h2>
+        <div class="btns">
+          <button id="pHorm">Hormone (exercice 7.5)</button>
+          <button id="pBact">Charge bactérienne</button>
+          <button id="pLarge">Cloche large (σ = 0,6)</button>
+        </div>
+
+        <div class="ctrl">
+          <div class="row"><span>μ = moyenne de log<sub>10</sub> X</span><span class="val" id="vMu"></span></div>
+          <input type="range" id="sMu" min="-2" max="5" step="0.001">
+          <div class="sub" id="tMu"></div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><span>σ = écart-type de log<sub>10</sub> X</span><span class="val" id="vSig"></span></div>
+          <input type="range" id="sSig" min="0.05" max="1.5" step="0.001">
+          <div class="sub" id="tSig"></div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><span>Changement d'unité : X × c</span><span class="val" id="vC"></span></div>
+          <input type="range" id="sC" min="-1" max="1" step="0.01" value="0">
+          <div class="sub">Multiplier X par c décale Y de log<sub>10</sub> c. Un facteur 10, 100, 1 000… (log<sub>10</sub> c entier) ne change rien au premier chiffre.</div>
+        </div>
+        <div class="ctrl">
+          <div class="row"><span>Empilement des tranches</span><span class="val" id="vT"></span></div>
+          <input type="range" id="sT" min="0" max="100" step="1" value="100">
+          <div class="sub">À 0 %, aucune tranche n'est encore empilée ; à 100 %, toutes le sont.</div>
+        </div>
+        <div class="btns"><button class="primary" id="bAnim">▶ Animer l'empilement</button></div>
+
+        <div class="ctrl">
+          <div class="row"><span>Taille N de l'échantillon simulé</span><span class="val" id="vN"></span></div>
+          <input type="range" id="sN" min="1" max="4" step="0.05" value="3">
+        </div>
+        <div class="btns">
+          <button id="bSamp">Nouveau tirage</button>
+          <label class="chk"><input type="checkbox" id="chkSamp" checked> afficher l'échantillon</label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Résultats</h2>
+        <div class="stats">
+          <div class="stat"><div class="l">Médiane de X (10<sup>μ</sup>)</div><div class="v" id="oMed"></div></div>
+          <div class="stat"><div class="l">P(premier chiffre = 1)</div><div class="v" id="oP1"></div></div>
+          <div class="stat"><div class="l">Écart max. à Benford</div><div class="v" id="oDev"></div></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+        <ul class="tips">
+          <li>Augmentez σ : dès σ ≈ 0,5 (valeurs étalées sur environ un ordre de grandeur de part et d'autre de la médiane), l'empilement devient plat.</li>
+          <li>Avec σ petit, déplacez μ ou changez d'unité : le chiffre qui domine change. Avec σ grand, plus rien ne bouge : c'est l'invariance d'échelle de la loi de Benford.</li>
+          <li>Avec un petit échantillon (N = 10 ou 30), les fréquences observées s'écartent beaucoup des probabilités : il faut des centaines de valeurs pour tester Benford.</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// Palettes et constantes de la loi de Benford
+const COLS=['#2e8b57','#008080','#da9132','#cd5c5c','#6a8f2f','#3f7fbf','#b8742a','#8e5aa8','#4a9d8f','#c0504d'];
+const DIGCOLS=['#eef1ec','#dfe5dc','#eef1ec','#dfe5dc','#eef1ec','#dfe5dc','#eef1ec','#dfe5dc','#eef1ec'];
+const BENF=[1,2,3,4,5,6,7,8,9].map(d=>Math.log10(1+1/d));
+
+// État global
+const st={mu:Math.LOG10E, sig:0.5*Math.LOG10E, logc:0, t:1, N:1000, sample:[], show:true, anim:null};
+
+const $=id=>document.getElementById(id);
+const sMu=$('sMu'),sSig=$('sSig'),sC=$('sC'),sT=$('sT'),sN=$('sN');
+
+// Formatage des nombres (virgule française et signe moins typographique)
+function fmt(x,d){
+  const clean=Math.abs(x)<1e-10?0:x;
+  return clean.toFixed(d).replace('.',',').replace('-','−');
+}
+function fmtX(x){
+  if(x>=1e5||x<1e-2) return x.toExponential(2).replace('.',',').replace('e+','×10^').replace('e-','×10^−');
+  const d=x>=100?0:(x>=10?1:2);
+  return fmt(x,d).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+}
+function fmtTick(v,step){
+  const dec=step<0.1?2:(step<1?1:0);
+  return fmt(v,dec);
+}
+
+// Choisit un pas de graduation "propre" (1, 2, 2.5 ou 5 × 10^k) adapté à l'amplitude
+function niceStep(rawStep){
+  if(rawStep<=0||!Number.isFinite(rawStep)) return 1;
+  const exp=Math.floor(Math.log10(rawStep));
+  const frac=rawStep/Math.pow(10,exp);
+  let nice=10;
+  if(frac<=1) nice=1;
+  else if(frac<=2) nice=2;
+  else if(frac<=2.5) nice=2.5;
+  else if(frac<=5) nice=5;
+  return nice*Math.pow(10,exp);
+}
+
+// Fonctions de la loi normale
+function phi(z){return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI);}
+function Phi(z){ // Abramowitz-Stegun 7.1.26
+  const t=1/(1+0.3275911*Math.abs(z)/Math.SQRT2);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z/2);
+  return z>=0?0.5*(1+y):0.5*(1-y);
+}
+function muEff(){return st.mu+st.logc;}
+function fY(y){return phi((y-muEff())/st.sig)/st.sig;}
+function kRange(){const m=muEff(),s=st.sig;return [Math.floor(m-5*s)-1, Math.ceil(m+5*s)];}
+
+// Probabilités théoriques des 9 premiers chiffres
+function digitProbs(){
+  const [k0,k1]=kRange(),m=muEff(),s=st.sig,p=new Array(9).fill(0);
+  for(let k=k0;k<=k1;k++) for(let d=1;d<=9;d++){
+    p[d-1]+=Phi((k+Math.log10(d+1)-m)/s)-Phi((k+Math.log10(d)-m)/s);
+  }
+  return p;
+}
+
+// Échantillonnage standardisé (réutilisé lors du changement de μ, σ ou c)
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function drawSample(){
+  st.sample=[];
+  for(let i=0;i<st.N;i++) st.sample.push(randn());
+}
+function sampleFreq(){
+  const f=new Array(9).fill(0);
+  for(const z of st.sample){
+    const y=muEff()+st.sig*z;
+    const M=y-Math.floor(y);
+    const d=Math.floor(Math.pow(10,M)+1e-12);
+    f[Math.min(9,Math.max(1,d))-1]++;
+  }
+  return f.map(c=>c/st.sample.length);
+}
+
+// Configuration haute résolution (DPR) d'un canvas
+function setupCanvas(c){
+  const dpr=window.devicePixelRatio||1;
+  // Mémorise la hauteur logique CSS une seule fois pour éviter qu'elle ne soit multipliée par dpr à chaque redessin
+  if(!c.dataset.h) c.dataset.h=c.getAttribute('height')||'230';
+  const w=Math.max(1,c.clientWidth), h=parseInt(c.dataset.h,10);
+  c.width=Math.round(w*dpr);
+  c.height=Math.round(h*dpr);
+  c.style.height=h+'px';
+  const ctx=c.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w,h};
+}
+
+// =========================================================================
+// GRAPHIQUE 1 : Densité de Y = log10(X) avec échelles X et Y adaptatives
+// =========================================================================
+function drawY(){
+  const {ctx,w,h}=setupCanvas($('cY'));
+  const L=48,R=16,T=26,B=32, pw=w-L-R, ph=h-T-B;
+  const m=muEff(), s=st.sig;
+
+  // Cadrage horizontal adaptatif autour de μ ± 3,6 σ (au moins 2 tranches visibles)
+  let y0=Math.floor(m-3.6*s);
+  let y1=Math.ceil(m+3.6*s);
+  if(y1-y0<2){
+    y0=Math.floor(m)-1;
+    y1=Math.floor(m)+2;
+  }
+
+  // Échelle verticale adaptative sans plancher fixe (la cloche occupe toujours bien la hauteur)
+  const peakY=1/(s*Math.sqrt(2*Math.PI));
+  const yStep=niceStep(peakY/4);
+  const ymax=Math.max(yStep, Math.ceil((peakY*1.12)/yStep)*yStep);
+
+  const X=v=>L+(v-y0)/(y1-y0)*pw;
+  const Yp=v=>T+ph-(v/ymax)*ph;
+
+  // Grille horizontale et graduations de l'axe vertical
+  ctx.font='11px sans-serif';
+  ctx.lineWidth=1;
+  for(let v=0; v<=ymax+yStep*0.01; v+=yStep){
+    const py=Yp(v);
+    if(v>0){
+      ctx.strokeStyle='#edf2eb';
+      ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
+    }
+    ctx.fillStyle='#5b6b60';
+    ctx.textAlign='right';
+    ctx.fillText(fmtTick(v,yStep),L-6,py+4);
+  }
+
+  // Tranches colorées [k ; k+1[
+  for(let k=y0;k<y1;k++){
+    ctx.beginPath();ctx.moveTo(X(k),Yp(0));
+    for(let i=0;i<=60;i++){const y=k+i/60;ctx.lineTo(X(y),Yp(fY(y)));}
+    ctx.lineTo(X(k+1),Yp(0));ctx.closePath();
+    ctx.fillStyle=COLS[((k%COLS.length)+COLS.length)%COLS.length]+'b0';ctx.fill();
+  }
+
+  // Courbe de densité f_Y(y)
+  ctx.beginPath();
+  for(let i=0;i<=400;i++){
+    const y=y0+(y1-y0)*i/400;
+    i?ctx.lineTo(X(y),Yp(fY(y))):ctx.moveTo(X(y),Yp(fY(y)));
+  }
+  ctx.strokeStyle='#143c1e';ctx.lineWidth=2;ctx.stroke();
+
+  // Axes principaux
+  ctx.strokeStyle='#94a39a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(L,T+ph);ctx.lineTo(L+pw,T+ph);ctx.moveTo(L,T);ctx.lineTo(L,T+ph);ctx.stroke();
+
+  // Frontières entières k et étiquettes X = 10^k (espacées pour éviter tout chevauchement)
+  ctx.font='11px sans-serif';ctx.textAlign='center';
+  let lastTopLabelX=-Infinity;
+  let lastBotLabelX=-Infinity;
+  for(let k=y0;k<=y1;k++){
+    const px=X(k);
+    ctx.strokeStyle='#b7c2ba';ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(px,T);ctx.lineTo(px,T+ph);ctx.stroke();
+    ctx.setLineDash([]);
+
+    if(px-lastBotLabelX>=24){
+      ctx.fillStyle='#5b6b60';
+      ctx.fillText(String(k).replace('-','−'),px,T+ph+14);
+      lastBotLabelX=px;
+    }
+
+    const lx=Math.min(L+pw-34,Math.max(L+34,px));
+    if(lx-lastTopLabelX>=82){
+      ctx.fillStyle='#008080';
+      ctx.fillText('X = '+fmtX(Math.pow(10,k)),lx,T-8);
+      lastTopLabelX=lx;
+    }
+  }
+  ctx.fillStyle='#14301e';ctx.textAlign='right';ctx.fillText('y = log₁₀ X',L+pw,T+ph+28);
+
+  // Repère de la moyenne effective μ
+  ctx.strokeStyle='#cd5c5c';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(X(m),T+4);ctx.lineTo(X(m),T+ph);ctx.stroke();
+  ctx.fillStyle='#cd5c5c';ctx.textAlign=X(m)>L+pw-24?'right':'left';
+  ctx.fillText('μ',X(m)+(X(m)>L+pw-24?-4:4),T+14);
+}
+
+// =========================================================================
+// GRAPHIQUE 2 : Empilement des tranches sur [0 ; 1[ (densité de M)
+// =========================================================================
+function drawM(){
+  const {ctx,w,h}=setupCanvas($('cM'));
+  const L=48,R=16,T=14,B=58, pw=w-L-R, ph=h-T-B;
+  const [k0,k1]=kRange();
+  const ks=[];
+  for(let k=k0;k<=k1;k++) ks.push(k);
+
+  // Trie les tranches par masse décroissante pour empiler d'abord les tranches centrales
+  const mass=k=>Phi((k+1-muEff())/st.sig)-Phi((k-muEff())/st.sig);
+  const order=ks.filter(k=>mass(k)>1e-6).sort((a,b)=>mass(b)-mass(a));
+  const nShown=st.t*order.length;
+
+  let peak=0;
+  for(let i=0;i<=200;i++){
+    const m=i/200;
+    let sum=0;
+    for(const k of ks) sum+=fY(k+m);
+    if(sum>peak) peak=sum;
+  }
+
+  // Échelle verticale adaptative (garde toujours la droite uniforme y = 1 bien visible)
+  const rawMax=Math.max(1.25, peak*1.12);
+  const yStep=niceStep(rawMax/4);
+  const ymax=Math.max(yStep, Math.ceil(rawMax/yStep)*yStep);
+
+  const X=v=>L+v*pw;
+  const Yp=v=>T+ph-(v/ymax)*ph;
+
+  // Grille horizontale et graduations Y
+  ctx.font='11px sans-serif';
+  ctx.lineWidth=1;
+  for(let v=0; v<=ymax+yStep*0.01; v+=yStep){
+    const py=Yp(v);
+    if(v>0){
+      ctx.strokeStyle='#edf2eb';
+      ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
+    }
+    ctx.fillStyle='#5b6b60';
+    ctx.textAlign='right';
+    ctx.fillText(fmtTick(v,yStep),L-6,py+4);
+  }
+
+  // Aires empilées
+  const base=new Array(201).fill(0);
+  order.forEach((k,idx)=>{
+    const frac=Math.max(0,Math.min(1,nShown-idx));
+    if(frac<=0) return;
+    ctx.beginPath();
+    for(let i=0;i<=200;i++){
+      const m=i/200;
+      const top=base[i]+frac*fY(k+m);
+      i?ctx.lineTo(X(m),Yp(top)):ctx.moveTo(X(m),Yp(top));
+    }
+    for(let i=200;i>=0;i--) ctx.lineTo(X(i/200),Yp(base[i]));
+    ctx.closePath();
+    ctx.fillStyle=COLS[((k%COLS.length)+COLS.length)%COLS.length]+'c0';
+    ctx.fill();
+    for(let i=0;i<=200;i++) base[i]+=frac*fY(k+i/200);
+  });
+
+  // Contour supérieur de l'empilement courant
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const m=i/200;
+    i?ctx.lineTo(X(m),Yp(base[i])):ctx.moveTo(X(m),Yp(base[i]));
+  }
+  ctx.strokeStyle='#143c1e';ctx.lineWidth=1.6;ctx.stroke();
+
+  // Frontières des 9 premiers chiffres
+  ctx.strokeStyle='rgba(120,130,125,.55)';ctx.lineWidth=1;
+  for(let d=2;d<=9;d++){
+    const x=X(Math.log10(d));
+    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,T+ph);ctx.stroke();
+  }
+
+  // Droite de densité uniforme (y = 1)
+  ctx.setLineDash([7,5]);ctx.strokeStyle='#111';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(X(0),Yp(1));ctx.lineTo(X(1),Yp(1));ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Axes
+  ctx.strokeStyle='#94a39a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(L,T+ph);ctx.lineTo(L+pw,T+ph);ctx.moveTo(L,T);ctx.lineTo(L,T+ph);ctx.stroke();
+
+  ctx.font='11px sans-serif';ctx.fillStyle='#5b6b60';ctx.textAlign='center';
+  [0,0.25,0.5,0.75,1].forEach(v=>ctx.fillText(fmt(v,v%1?2:0).replace(',50',',5'),X(v),T+ph+13));
+
+  // Barre inférieure des premiers chiffres
+  const by=T+ph+19, bh=14;
+  for(let d=1;d<=9;d++){
+    const a=X(Math.log10(d)), b=X(Math.log10(d+1));
+    ctx.fillStyle=DIGCOLS[d-1];ctx.fillRect(a,by,b-a,bh);
+    ctx.strokeStyle='#143c1e';ctx.strokeRect(a,by,b-a,bh);
+    ctx.fillStyle='#14301e';ctx.textAlign='center';ctx.fillText(String(d),(a+b)/2,by+11);
+  }
+  ctx.textAlign='right';ctx.fillStyle='#14301e';
+  ctx.fillText('mantisse M ; barre : premier chiffre',L+pw,by+bh+15);
+}
+
+// =========================================================================
+// GRAPHIQUE 3 : Loi du premier chiffre avec axe % adaptatif
+// =========================================================================
+function drawD(){
+  const {ctx,w,h}=setupCanvas($('cD'));
+  const L=48,R=16,T=14,B=30, pw=w-L-R, ph=h-T-B;
+  const p=digitProbs(), f=st.show?sampleFreq():null;
+
+  const maxVal=Math.max(0.32,...p,...(f||[0]));
+  const rawMax=Math.min(1.0, maxVal*1.12);
+  const yStep=niceStep(rawMax/4);
+  const ymax=Math.min(1.0, Math.max(maxVal, Math.ceil(rawMax/yStep)*yStep));
+
+  const bw=pw/9;
+  const Yp=v=>T+ph-(v/ymax)*ph;
+
+  // Grille horizontale et graduations en %
+  ctx.strokeStyle='#e3e9e1';ctx.lineWidth=1;
+  ctx.font='11px sans-serif';ctx.fillStyle='#5b6b60';ctx.textAlign='right';
+  for(let v=0; v<=ymax+yStep*0.01; v+=yStep){
+    const clamped=Math.min(1.0,v);
+    const py=Yp(clamped);
+    ctx.beginPath();ctx.moveTo(L,py);ctx.lineTo(L+pw,py);ctx.stroke();
+    ctx.fillText(Math.round(clamped*100)+' %',L-6,py+4);
+  }
+
+  for(let d=1;d<=9;d++){
+    const x0=L+(d-1)*bw;
+    ctx.fillStyle='#5fae5fcc';
+    ctx.fillRect(x0+bw*0.2,Yp(p[d-1]),bw*0.6,Yp(0)-Yp(p[d-1]));
+    ctx.fillStyle='#14301e';ctx.textAlign='center';
+    ctx.fillText(String(d),x0+bw/2,T+ph+15);
+
+    // Points rouges : loi de Benford
+    ctx.fillStyle='#cd5c5c';
+    ctx.beginPath();ctx.arc(x0+bw/2,Yp(BENF[d-1]),4.5,0,2*Math.PI);ctx.fill();
+
+    // Losanges bleus : fréquences simulées
+    if(f){
+      ctx.fillStyle='#2f6fbf';
+      const cx=x0+bw*0.72, cy=Yp(f[d-1]);
+      ctx.beginPath();
+      ctx.moveTo(cx,cy-5);ctx.lineTo(cx+5,cy);ctx.lineTo(cx,cy+5);ctx.lineTo(cx-5,cy);
+      ctx.closePath();ctx.fill();
+    }
+  }
+
+  // Courbe de Benford
+  ctx.strokeStyle='#cd5c5c';ctx.lineWidth=1.2;
+  ctx.beginPath();
+  for(let d=1;d<=9;d++){
+    const x=L+(d-0.5)*bw;
+    d>1?ctx.lineTo(x,Yp(BENF[d-1])):ctx.moveTo(x,Yp(BENF[d-1]));
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle='#94a39a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(L,T+ph);ctx.lineTo(L+pw,T+ph);ctx.stroke();
+  ctx.textAlign='right';ctx.fillStyle='#14301e';
+  ctx.fillText('premier chiffre d',L+pw,T+ph+27);
+  return p;
+}
+
+// =========================================================================
+// MISE À JOUR GLOBALE & ÉVÉNEMENTS
+// =========================================================================
+function update(){
+  $('vMu').textContent=fmt(st.mu,2);
+  $('tMu').textContent='Médiane de X (sans changement d’unité) : 10^μ = '+fmtX(Math.pow(10,st.mu));
+  $('vSig').textContent=fmt(st.sig,2);
+  $('tSig').textContent='Écart-type de ln X : σ × ln 10 = '+fmt(st.sig*Math.LN10,2)+' · X varie environ d’un facteur '+fmtX(Math.pow(10,2*st.sig))+' (±1 écart-type)';
+  const c=Math.pow(10,st.logc);
+  $('vC').textContent='c = '+fmt(c,2);
+  $('vT').textContent=Math.round(st.t*100)+' %';
+  $('vN').textContent=String(st.N).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+
+  drawY();
+  drawM();
+  const p=drawD();
+
+  $('oMed').textContent=fmtX(Math.pow(10,muEff()));
+  $('oP1').textContent=fmt(p[0]*100,1)+' %';
+  const dev=Math.max(...p.map((v,i)=>Math.abs(v-BENF[i])));
+  $('oDev').textContent=fmt(dev*100,1)+' pts';
+
+  const v=$('verdict');
+  if(dev<0.01){
+    v.className='verdict ok';
+    v.innerHTML='<b>Benford :</b> la mantisse est presque uniforme, l’empilement est plat.';
+  }else if(dev<0.04){
+    v.className='verdict mid';
+    v.innerHTML='<b>Presque Benford :</b> l’empilement ondule encore un peu.';
+  }else{
+    v.className='verdict no';
+    const dmax=p.indexOf(Math.max(...p))+1;
+    v.innerHTML='<b>Pas Benford :</b> la cloche est trop étroite, une ou deux tranches dominent. Le chiffre le plus fréquent est '+dmax+' ('+Math.round(p[dmax-1]*100)+' %).';
+  }
+}
+
+function setFromSliders(){
+  st.mu=parseFloat(sMu.value);
+  st.sig=parseFloat(sSig.value);
+  st.logc=parseFloat(sC.value);
+  st.t=parseInt(sT.value,10)/100;
+  update();
+}
+
+function preset(mu,sig){
+  st.mu=mu;st.sig=sig;st.logc=0;
+  sMu.value=mu;sSig.value=sig;sC.value=0;
+  update();
+}
+
+[sMu,sSig,sC,sT].forEach(s=>s.addEventListener('input',setFromSliders));
+sN.addEventListener('input',()=>{
+  st.N=Math.round(Math.pow(10,parseFloat(sN.value)));
+  drawSample();
+  update();
+});
+$('bSamp').addEventListener('click',()=>{drawSample();update();});
+$('chkSamp').addEventListener('change',e=>{st.show=e.target.checked;update();});
+$('pHorm').addEventListener('click',()=>preset(Math.LOG10E,0.5*Math.LOG10E));
+$('pBact').addEventListener('click',()=>preset(4,0.8));
+$('pLarge').addEventListener('click',()=>preset(Math.LOG10E,0.6));
+$('bAnim').addEventListener('click',()=>{
+  if(st.anim) cancelAnimationFrame(st.anim);
+  const t0=performance.now(), dur=3500;
+  const step=now=>{
+    const u=Math.min(1,(now-t0)/dur);
+    st.t=u;
+    sT.value=Math.round(u*100);
+    update();
+    if(u<1) st.anim=requestAnimationFrame(step);
+    else st.anim=null;
+  };
+  st.anim=requestAnimationFrame(step);
+});
+window.addEventListener('resize',update);
+
+sMu.value=st.mu;
+sSig.value=st.sig;
+sT.value=100;
+sN.value=3;
+drawSample();
+update();
+})();
+</script>
+</body>
+</html>
